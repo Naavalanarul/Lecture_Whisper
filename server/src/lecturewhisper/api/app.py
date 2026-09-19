@@ -7,15 +7,30 @@ from contextlib import asynccontextmanager
 from collections.abc import AsyncGenerator
 from pathlib import Path
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Request, Response
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import FileResponse, JSONResponse, PlainTextResponse
 from fastapi.staticfiles import StaticFiles
 
 from lecturewhisper.api.jobs import job_queue
 
 logger = logging.getLogger(__name__)
 
-STATIC_DIR = Path(__file__).parent.parent.parent.parent / "static"
+
+def get_static_dir() -> Path | None:
+    """Find the static UI directory across package, repo, and user data locations."""
+    candidates = [
+        # 1. Package directory (when installed as a package/wheel)
+        Path(__file__).parent.parent / "static",
+        # 2. Local development checkout: server/static
+        Path(__file__).parent.parent.parent.parent / "static",
+        # 3. User data directory: ~/.lecturewhisper/static
+        Path.home() / ".lecturewhisper" / "static",
+    ]
+    for c in candidates:
+        if c.exists() and (c / "index.html").exists():
+            return c
+    return None
 
 
 @asynccontextmanager
@@ -77,9 +92,20 @@ def create_app() -> FastAPI:
     app.include_router(upload_router, prefix="/api")
 
     # Serve built UI if available
-    if STATIC_DIR.exists():
-        app.mount("/", StaticFiles(directory=str(STATIC_DIR), html=True), name="static")
+    static_dir = get_static_dir()
+    if static_dir:
+        app.mount("/", StaticFiles(directory=str(static_dir), html=True), name="static")
     else:
-        logger.warning("Static UI directory not found at %s", STATIC_DIR)
+        logger.warning("Static UI directory not found (searched package, repo, and ~/.lecturewhisper/static)")
+
+    @app.exception_handler(404)
+    async def not_found_handler(request: Request, exc: Exception) -> Response:
+        """Fallback to index.html for Single Page Application routing."""
+        if request.url.path.startswith("/api"):
+            return JSONResponse(status_code=404, content={"detail": "Not Found"})
+        discovered_dir = get_static_dir()
+        if discovered_dir and (discovered_dir / "index.html").exists():
+            return FileResponse(discovered_dir / "index.html")
+        return PlainTextResponse("Not Found", status_code=404)
 
     return app
