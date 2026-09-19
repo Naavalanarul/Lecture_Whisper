@@ -35,6 +35,7 @@ samples/*.flac
 *.flac
 # Allow tiny synthetic fixtures
 !samples/synthetic_*.wav
+*.norm.wav
 
 # Logs
 app.log

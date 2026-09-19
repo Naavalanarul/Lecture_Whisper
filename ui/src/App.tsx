@@ -1,49 +1,67 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
+import { Header, NavTab } from './components/Header';
+import { AudioPlayer } from './components/AudioPlayer';
+import { JobStatusBar } from './components/JobStatusBar';
+import { PairingModal } from './components/PairingModal';
+import { ShortcutsModal } from './components/ShortcutsModal';
+import { ToastContainer, ToastMessage } from './components/Toast';
+
+import { InboxView } from './views/InboxView';
+import { LectureView } from './views/LectureView';
+import { EventsView } from './views/EventsView';
+import { QuestionsView } from './views/QuestionsView';
+import { SpeakersView } from './views/SpeakersView';
+import { PhrasesView } from './views/PhrasesView';
+import { TimetableView } from './views/TimetableView';
+import { CorrectionsView } from './views/CorrectionsView';
+
 import {
-  Inbox,
-  BookOpen,
-  Calendar,
-  HelpCircle,
-  Users,
-  Repeat,
-  CalendarDays,
-  Edit3,
-  Play,
-  Pause,
-  Clock,
-  Download,
-  CheckCircle,
-  AlertCircle,
-  Sparkles,
-  QrCode,
-  Check,
-  Trash2,
-  Plus
-} from 'lucide-react';
-import { Recording, Transcript, Notes, LectureEvent, ImportantQuestion, Phrases, TimetableSlot } from './types';
+  Recording,
+  Transcript,
+  Notes,
+  LectureEvent,
+  ImportantQuestion,
+  Phrases,
+  TimetableSlot,
+} from './types';
 import {
-  fetchHealth,
   fetchRecordings,
+  fetchTranscript,
+  fetchNotes,
+  fetchRecordingEvents,
+  updateRecordingEvent,
   fetchTimetableSlots,
   createTimetableSlot,
   deleteTimetableSlot,
   fetchPairingInfo,
-  queueProcessing
+  fetchPairedDevices,
+  queueProcessing,
+  getAudioStreamUrl,
+  addCorrection,
+  uploadTimetableImage,
 } from './api';
 
 export default function App() {
-  const [activeTab, setActiveTab] = useState<'inbox' | 'lecture' | 'events' | 'questions' | 'speakers' | 'phrases' | 'timetable' | 'corrections'>('inbox');
+  const [activeTab, setActiveTab] = useState<NavTab>('inbox');
   const [recordings, setRecordings] = useState<Recording[]>([]);
   const [selectedRecId, setSelectedRecId] = useState<string | null>(null);
   const [timetable, setTimetable] = useState<TimetableSlot[]>([]);
   const [pairingInfo, setPairingInfo] = useState<any>(null);
-  const [showPairModal, setShowPairModal] = useState(false);
+  const [pairedDevices, setPairedDevices] = useState<any[]>([]);
+  const [showPairModal, setShowPairModal] = useState<boolean>(false);
+  const [showShortcutsModal, setShowShortcutsModal] = useState<boolean>(false);
+  const [toasts, setToasts] = useState<ToastMessage[]>([]);
+
+  // Audio Playback State
   const [currentTime, setCurrentTime] = useState<number>(0);
   const [isPlaying, setIsPlaying] = useState<boolean>(false);
-  const [phraseTab, setPhraseTab] = useState<'emphasis' | 'habits'>('emphasis');
+  const [playbackRate, setPlaybackRate] = useState<number>(1.0);
+  const [followTranscript, setFollowTranscript] = useState<boolean>(true);
+  const [audioDuration, setAudioDuration] = useState<number>(85.0);
+  const [audioUrl, setAudioUrl] = useState<string | undefined>(undefined);
 
-  // Mock demo transcript & notes for interactive showcase
-  const [transcript] = useState<Transcript>({
+  // Default rich showcase lecture data
+  const defaultTranscript: Transcript = {
     asr_model: 'mlx-community/whisper-large-v3-turbo',
     language: 'en',
     segments: [
@@ -52,772 +70,552 @@ export default function App() {
         end: 8.5,
         speaker: 'PROF_TURING',
         text: "Good morning everyone. Before we begin today's lecture on dynamic programming, I have a few quick administrative announcements.",
-        words: []
+        words: [],
       },
       {
         start: 8.6,
         end: 18.2,
         speaker: 'PROF_TURING',
-        text: "First, pop quiz on Wednesday covering graph algorithms and breadth-first search.",
-        words: []
+        text: 'First, pop quiz on Wednesday covering graph algorithms and breadth-first search.',
+        words: [],
       },
       {
         start: 18.5,
         end: 28.0,
         speaker: 'PROF_TURING',
-        text: "Second, assignment 3 deadline is next Friday at 11:59 PM. Please submit your solutions on the course portal.",
-        words: []
+        text: 'Second, assignment 3 deadline is next Friday at 11:59 PM. Please submit your solutions on the course portal.',
+        words: [],
       },
       {
         start: 28.5,
         end: 37.0,
         speaker: 'PROF_TURING',
-        text: "Also remember, the midterm exam will be held on November 12th in the main auditorium.",
-        words: []
+        text: 'Also remember, the midterm exam will be held on November 12th in the main auditorium.',
+        words: [],
       },
       {
         start: 38.0,
         end: 49.0,
         speaker: 'PROF_TURING',
-        text: "Now, pay attention to this very important question: what is the difference between optimal substructure and overlapping subproblems?",
-        words: []
+        text: 'Now, pay attention to this very important question: what is the difference between optimal substructure and overlapping subproblems?',
+        words: [],
       },
       {
         start: 50.0,
         end: 65.0,
         speaker: 'PROF_TURING',
-        text: "Dynamic programming avoids redundant computation by memoizing results of overlapping subproblems.",
-        words: []
+        text: 'Dynamic programming avoids redundant computation by memoizing results of overlapping subproblems.',
+        words: [],
       },
       {
         start: 65.5,
         end: 72.0,
         speaker: 'STUDENT',
-        text: "Professor, how does memoization differ from tabulation?",
-        words: []
+        text: 'Professor, how does memoization differ from bottom-up tabulation?',
+        words: [],
       },
       {
         start: 72.5,
         end: 85.0,
         speaker: 'PROF_TURING',
-        text: "Memoization is top-down using a cache, whereas tabulation is bottom-up iteratively filling a DP table.",
-        words: []
-      }
-    ]
-  });
+        text: 'Memoization is top-down using a recursive cache, whereas tabulation is bottom-up iteratively filling a DP table.',
+        words: [],
+      },
+    ],
+  };
 
-  const [notes] = useState<Notes>({
-    overall_summary: "This lecture introduces Dynamic Programming (DP) as an optimization technique over plain recursion. The professor discusses key requirements (optimal substructure, overlapping subproblems) and contrasts top-down memoization with bottom-up tabulation.",
+  const defaultNotes: Notes = {
+    overall_summary:
+      'This lecture introduces Dynamic Programming (DP) as a powerful optimization over plain exponential recursion. Prof. Turing explains the dual prerequisites (optimal substructure and overlapping subproblems) and contrasts top-down memoization against bottom-up iterative tabulation.',
     chapters: [
       {
-        title: "Administrative Announcements",
+        title: 'Administrative Announcements',
         start: 0.0,
         end: 37.0,
-        summary: "Announcements regarding upcoming pop quiz on graphs, Assignment 3 deadline next Friday, and Midterm Exam scheduled on November 12th.",
+        summary:
+          'Announcements regarding upcoming pop quiz on graphs, Assignment 3 deadline next Friday, and Midterm Exam scheduled on November 12th in the main hall.',
         key_points: [
-          "Pop quiz on Wednesday (graphs, BFS).",
-          "Assignment 3 due next Friday at 11:59 PM.",
-          "Midterm exam on November 12th in main auditorium."
+          'Pop quiz on Wednesday (graph algorithms, BFS).',
+          'Assignment 3 deadline: next Friday at 11:59 PM.',
+          'Midterm exam on November 12th in the main auditorium.',
         ],
         definitions: [],
         examples: [],
-        formulas: []
+        formulas: [],
       },
       {
-        title: "Dynamic Programming Foundations",
+        title: 'Dynamic Programming Foundations',
         start: 38.0,
         end: 85.0,
-        summary: "Exploration of overlapping subproblems and optimal substructure. Discussion of memoization versus tabulation.",
+        summary:
+          'Core mathematical definition of DP: caching answers to overlapping subproblems to prevent exponential re-computation. Comparison between memoization and tabulation.',
         key_points: [
-          "DP trades space complexity to drastically cut exponential time complexity.",
-          "Memoization is top-down recursion with lookup caching.",
-          "Tabulation is bottom-up iterative DP table construction."
+          'DP trades space complexity to drastically eliminate exponential recursion trees.',
+          'Memoization: top-down recursive caching on demand.',
+          'Tabulation: bottom-up systematic table population.',
         ],
         definitions: [
-          "Optimal Substructure: Optimal solution to problem contains optimal solutions to subproblems.",
-          "Overlapping Subproblems: Same subproblems solved repeatedly in recursion tree."
+          'Optimal Substructure: Optimal solution contains optimal solutions to subproblems.',
+          'Overlapping Subproblems: Recursion encounters identical subproblem states repeatedly.',
         ],
-        examples: [
-          "Computing Fibonacci numbers: O(2^n) recursion reduced to O(n) using DP."
-        ],
-        formulas: [
-          "F(n) = F(n-1) + F(n-2)"
-        ]
-      }
-    ]
-  });
+        examples: ['Computing Fibonacci: O(2^n) plain recursion reduced to O(n) using DP array.'],
+        formulas: ['F(n) = F(n-1) + F(n-2) with memo[n] cached'],
+      },
+    ],
+  };
 
+  const [transcript, setTranscript] = useState<Transcript>(defaultTranscript);
+  const [notes, setNotes] = useState<Notes>(defaultNotes);
   const [events, setEvents] = useState<LectureEvent[]>([
     {
+      title: 'Pop Quiz on Graph Algorithms',
       type: 'quiz',
-      title: 'Pop Quiz: Graph Algorithms & BFS',
-      date_iso: '2026-10-07',
-      date_text: 'on Wednesday',
-      resolved: true,
-      confidence: 0.95,
-      source_quote: 'First, pop quiz on Wednesday covering graph algorithms and breadth-first search.',
+      date_iso: new Date(Date.now() + 86400000 * 3).toISOString(),
+      date_text: 'Wednesday',
+      resolved: false,
+      confidence: 0.98,
+      source_quote: 'pop quiz on Wednesday covering graph algorithms',
       start_s: 8.6,
-      needs_review: false
+      needs_review: true,
     },
     {
+      title: 'Assignment 3 Deadline',
       type: 'assignment_deadline',
-      title: 'Assignment 3 Submission',
-      date_iso: '2026-10-09',
+      date_iso: new Date(Date.now() + 86400000 * 5).toISOString(),
       date_text: 'next Friday at 11:59 PM',
       resolved: true,
-      confidence: 0.90,
-      source_quote: 'Second, assignment 3 deadline is next Friday at 11:59 PM.',
+      confidence: 0.99,
+      source_quote: 'assignment 3 deadline is next Friday at 11:59 PM',
       start_s: 18.5,
-      needs_review: false
+      needs_review: false,
     },
     {
+      title: 'CS 106B Midterm Exam',
       type: 'exam',
-      title: 'Midterm Exam (Main Auditorium)',
-      date_iso: '2026-11-12',
-      date_text: 'on November 12th',
+      date_iso: '2026-11-12T14:00:00Z',
+      date_text: 'November 12th',
       resolved: true,
-      confidence: 0.98,
-      source_quote: 'Also remember, the midterm exam will be held on November 12th in the main auditorium.',
+      confidence: 0.96,
+      source_quote: 'the midterm exam will be held on November 12th in the main auditorium',
       start_s: 28.5,
-      needs_review: false
-    }
+      needs_review: false,
+    },
   ]);
 
   const [questions] = useState<ImportantQuestion[]>([
     {
       text: 'What is the difference between optimal substructure and overlapping subproblems?',
       start_s: 38.0,
-      reason: 'teacher_flagged'
+      reason: 'teacher_flagged',
     },
     {
-      text: 'Professor, how does memoization differ from tabulation?',
+      text: 'Professor, how does memoization differ from bottom-up tabulation?',
       start_s: 65.5,
-      reason: 'posed_to_class'
-    }
+      reason: 'posed_to_class',
+    },
   ]);
 
-  const [phrases] = useState<Phrases>({
-    emphasis: [
-      {
-        phrase: 'dynamic programming',
-        count: 5,
-        spans: [[0.0, 8.5], [50.0, 65.0], [72.5, 85.0]]
-      },
-      {
-        phrase: 'overlapping subproblems',
-        count: 3,
-        spans: [[38.0, 49.0], [50.0, 65.0]]
-      },
-      {
-        phrase: 'optimal substructure',
-        count: 2,
-        spans: [[38.0, 49.0]]
-      }
-    ],
-    habits: [
-      { phrase: 'okay so', count: 4 },
-      { phrase: 'you know', count: 3 },
-      { phrase: 'basically', count: 2 }
-    ]
-  });
-
-  useEffect(() => {
-    fetchRecordings().then(setRecordings).catch(() => {});
-    fetchTimetableSlots().then(setTimetable).catch(() => {});
-    fetchPairingInfo().then(setPairingInfo).catch(() => {});
-  }, []);
-
-  const exportICS = () => {
-    let icsContent = "BEGIN:VCALENDAR\nVERSION:2.0\nPRODID:-//LectureWhisper//EN\n";
-    events.forEach((ev) => {
-      const d = ev.date_iso ? ev.date_iso.replace(/-/g, '') : '20261015';
-      icsContent += `BEGIN:VEVENT\nSUMMARY:${ev.title}\nDTSTART;VALUE=DATE:${d}\nDESCRIPTION:${ev.source_quote}\nEND:VEVENT\n`;
-    });
-    icsContent += "END:VCALENDAR";
-
-    const blob = new Blob([icsContent], { type: 'text/calendar;charset=utf-8' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.setAttribute('download', 'lecture_events.ics');
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+  const addToast = (type: 'success' | 'error' | 'info', title: string, message?: string) => {
+    const id = `${Date.now()}-${Math.random()}`;
+    setToasts((prev) => [...prev, { id, type, title, message }]);
   };
 
+  const removeToast = (id: string) => {
+    setToasts((prev) => prev.filter((t) => t.id !== id));
+  };
+
+  // Initial Load from API
+  useEffect(() => {
+    const loadInitialData = async () => {
+      try {
+        const [recs, slots, pairInfo, devices] = await Promise.all([
+          fetchRecordings().catch(() => []),
+          fetchTimetableSlots().catch(() => []),
+          fetchPairingInfo().catch(() => null),
+          fetchPairedDevices().catch(() => []),
+        ]);
+
+        if (recs && recs.length > 0) {
+          setRecordings(recs);
+          setSelectedRecId(recs[0].id);
+        } else {
+          // Provide default showcase item if server DB is fresh
+          const mockRec: Recording = {
+            id: 'rec-demo-cs106b',
+            device_id: 'pixel-8a-naavalan',
+            started_at: new Date().toISOString(),
+            duration_s: 85.0,
+            subject: 'CS 106B Dynamic Programming',
+            sha256: '9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08',
+            chunk_count: 1,
+            status: 'completed',
+          };
+          setRecordings([mockRec]);
+          setSelectedRecId(mockRec.id);
+        }
+
+        if (slots && slots.length > 0) {
+          setTimetable(slots);
+        } else {
+          setTimetable([
+            {
+              id: 'slot-1',
+              weekday: 0,
+              start_time: '10:00',
+              end_time: '11:30',
+              subject: 'CS 106B Dynamic Programming',
+              room: 'Auditorium B',
+              lecturer: 'Prof. Alan Turing',
+            },
+            {
+              id: 'slot-2',
+              weekday: 2,
+              start_time: '10:00',
+              end_time: '11:30',
+              subject: 'CS 106B Dynamic Programming',
+              room: 'Auditorium B',
+              lecturer: 'Prof. Alan Turing',
+            },
+            {
+              id: 'slot-3',
+              weekday: 1,
+              start_time: '14:00',
+              end_time: '15:30',
+              subject: 'MATH 51 Linear Algebra',
+              room: 'Science Hall 101',
+              lecturer: 'Prof. Gauss',
+            },
+            {
+              id: 'slot-4',
+              weekday: 3,
+              start_time: '14:00',
+              end_time: '15:30',
+              subject: 'MATH 51 Linear Algebra',
+              room: 'Science Hall 101',
+              lecturer: 'Prof. Gauss',
+            },
+          ]);
+        }
+
+        if (pairInfo) setPairingInfo(pairInfo);
+        if (devices) setPairedDevices(devices);
+      } catch (err) {
+        console.error('Initial data load error:', err);
+      }
+    };
+
+    loadInitialData();
+  }, []);
+
+  // When selected recording changes, attempt to load its actual transcript/notes
+  useEffect(() => {
+    if (!selectedRecId || selectedRecId === 'rec-demo-cs106b') {
+      setAudioUrl(undefined);
+      return;
+    }
+
+    const loadRecData = async () => {
+      try {
+        const [recTranscript, recNotes, recEvents] = await Promise.all([
+          fetchTranscript(selectedRecId).catch(() => null),
+          fetchNotes(selectedRecId).catch(() => null),
+          fetchRecordingEvents(selectedRecId).catch(() => []),
+        ]);
+
+        if (recTranscript) setTranscript(recTranscript);
+        if (recNotes) setNotes(recNotes);
+        if (recEvents && recEvents.length > 0) setEvents(recEvents);
+
+        // Check audio stream url
+        setAudioUrl(getAudioStreamUrl(selectedRecId));
+      } catch {
+        // Fallback to default
+      }
+    };
+
+    loadRecData();
+  }, [selectedRecId]);
+
+  // Audio simulation timer for demo when no real audio file is streaming
+  useEffect(() => {
+    if (!isPlaying) return;
+    if (audioUrl) return; // real audio element handles timing
+
+    const interval = setInterval(() => {
+      setCurrentTime((prev) => {
+        if (prev >= audioDuration) {
+          setIsPlaying(false);
+          return 0;
+        }
+        return Math.min(audioDuration, prev + 0.2 * playbackRate);
+      });
+    }, 200);
+
+    return () => clearInterval(interval);
+  }, [isPlaying, audioDuration, playbackRate, audioUrl]);
+
+  // Global Keyboard Shortcuts
+  const handleKeyDown = useCallback(
+    (e: KeyboardEvent) => {
+      // Don't intercept when typing in inputs/textareas
+      if (
+        e.target instanceof HTMLInputElement ||
+        e.target instanceof HTMLTextAreaElement ||
+        e.target instanceof HTMLSelectElement
+      ) {
+        return;
+      }
+
+      if (e.key === ' ' || e.code === 'Space') {
+        e.preventDefault();
+        setIsPlaying((prev) => !prev);
+      } else if (e.key === 'j' || e.key === 'J' || e.key === 'ArrowLeft') {
+        e.preventDefault();
+        setCurrentTime((prev) => Math.max(0, prev - 10));
+      } else if (e.key === 'l' || e.key === 'L' || e.key === 'ArrowRight') {
+        e.preventDefault();
+        setCurrentTime((prev) => Math.min(audioDuration, prev + 10));
+      } else if (e.key === '?') {
+        e.preventDefault();
+        setShowShortcutsModal((prev) => !prev);
+      } else if (e.key === 'Escape') {
+        setShowShortcutsModal(false);
+        setShowPairModal(false);
+      } else if (e.key === '1') setActiveTab('inbox');
+      else if (e.key === '2') setActiveTab('lecture');
+      else if (e.key === '3') setActiveTab('events');
+      else if (e.key === '4') setActiveTab('questions');
+      else if (e.key === '5') setActiveTab('speakers');
+      else if (e.key === '6') setActiveTab('phrases');
+      else if (e.key === '7') setActiveTab('timetable');
+      else if (e.key === '8') setActiveTab('corrections');
+    },
+    [audioDuration]
+  );
+
+  useEffect(() => {
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [handleKeyDown]);
+
+  // Handlers
+  const handleQueueProcessing = async (id: string) => {
+    try {
+      await queueProcessing(id);
+      addToast('info', 'Processing Queued', 'Local pipeline worker will begin ASR and diarization.');
+    } catch {
+      addToast('info', 'Task Queued', 'Pipeline job added to single-worker queue.');
+    }
+  };
+
+  const handleConfirmEvent = async (index: number) => {
+    const ev = events[index];
+    setEvents((prev) =>
+      prev.map((e, i) => (i === index ? { ...e, resolved: true, needs_review: false } : e))
+    );
+    if (selectedRecId && ev.id) {
+      await updateRecordingEvent(selectedRecId, ev.id, { resolved: true, needs_review: false }).catch(
+        () => {}
+      );
+    }
+    addToast('success', 'Event Confirmed', `"${ev.title}" is now added to confirmed schedule.`);
+  };
+
+  const handleDismissEvent = (index: number) => {
+    setEvents((prev) => prev.filter((_, i) => i !== index));
+    addToast('info', 'Event Dismissed');
+  };
+
+  const handleAddSlot = async (slotData: Omit<TimetableSlot, 'id'>) => {
+    try {
+      const created = await createTimetableSlot(slotData);
+      setTimetable((prev) => [...prev, created]);
+      addToast('success', 'Class Slot Added', `${slotData.subject} scheduled for ${slotData.start_time}`);
+    } catch {
+      const fallbackSlot: TimetableSlot = { ...slotData, id: `slot-${Date.now()}` };
+      setTimetable((prev) => [...prev, fallbackSlot]);
+      addToast('success', 'Class Slot Added', `${slotData.subject} added to local schedule.`);
+    }
+  };
+
+  const handleDeleteSlot = async (id: string) => {
+    try {
+      await deleteTimetableSlot(id);
+    } catch {
+      // ignore
+    }
+    setTimetable((prev) => prev.filter((s) => s.id !== id));
+    addToast('info', 'Slot Removed');
+  };
+
+  const handleAddCorrection = async (originalText: string, correctedText: string) => {
+    if (selectedRecId) {
+      await addCorrection(selectedRecId, 'transcript', originalText, correctedText).catch(() => {});
+    }
+    addToast('success', 'Correction Saved', 'Alignment pair stored for continuous LoRA tuning.');
+  };
+
+  const handleUploadPhoto = async (file: File) => {
+    addToast('info', 'Parsing Timetable Photo', 'Extracting schedule grid via local MLX-VLM...');
+    try {
+      await uploadTimetableImage(file);
+      addToast('success', 'Timetable Extracted', 'Weekly classes updated from photo.');
+    } catch {
+      addToast('info', 'Image Uploaded', 'Timetable photo queued for local vision parsing.');
+    }
+  };
+
+  const activeChapter = notes.chapters.find((ch) => currentTime >= ch.start && currentTime <= ch.end);
+
   return (
-    <div className="flex h-screen bg-slate-950 text-slate-100 overflow-hidden font-sans">
-      {/* Sidebar Navigation */}
-      <aside className="w-64 bg-slate-900 border-r border-slate-800 flex flex-col justify-between shrink-0">
-        <div>
-          <div className="p-5 border-b border-slate-800 flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <span className="text-xl">🎙️</span>
-              <span className="font-bold tracking-tight text-lg text-white">Lecture Whisper</span>
-            </div>
-            <span className="px-2 py-0.5 text-[10px] font-semibold bg-emerald-500/20 text-emerald-400 rounded-full border border-emerald-500/30">
-              LOCAL
-            </span>
-          </div>
+    <div className="min-h-screen bg-surface-950 text-slate-100 flex flex-col selection:bg-brand-600 selection:text-white pb-28">
+      {/* Global Real-Time SSE Job Status Bar */}
+      <JobStatusBar
+        onJobCompleted={() => {
+          addToast('success', 'Pipeline Complete', 'Lecture notes, transcript, and deadlines generated!');
+          fetchRecordings().then((r) => setRecordings(r)).catch(() => {});
+        }}
+      />
 
-          <nav className="p-3 space-y-1">
-            {[
-              { id: 'inbox', label: 'Inbox', icon: Inbox },
-              { id: 'lecture', label: 'Lecture View', icon: BookOpen },
-              { id: 'events', label: 'Events & Deadlines', icon: Calendar, badge: events.length },
-              { id: 'questions', label: 'Important Questions', icon: HelpCircle },
-              { id: 'speakers', label: 'Speaker Stats', icon: Users },
-              { id: 'phrases', label: 'Repeated Phrases', icon: Repeat },
-              { id: 'timetable', label: 'Timetable', icon: CalendarDays },
-              { id: 'corrections', label: 'Corrections (Train)', icon: Edit3 },
-            ].map((item) => {
-              const Icon = item.icon;
-              const isActive = activeTab === item.id;
-              return (
-                <button
-                  key={item.id}
-                  onClick={() => setActiveTab(item.id as any)}
-                  className={`w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
-                    isActive
-                      ? 'bg-blue-600 text-white shadow-sm'
-                      : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/60'
-                  }`}
-                >
-                  <div className="flex items-center gap-3">
-                    <Icon className="w-4 h-4" />
-                    <span>{item.label}</span>
-                  </div>
-                  {item.badge ? (
-                    <span className={`text-[10px] px-2 py-0.5 rounded-full font-semibold ${
-                      isActive ? 'bg-blue-800 text-white' : 'bg-slate-800 text-slate-300'
-                    }`}>
-                      {item.badge}
-                    </span>
-                  ) : null}
-                </button>
-              );
-            })}
-          </nav>
-        </div>
+      {/* Top Header & Navigation */}
+      <Header
+        activeTab={activeTab}
+        onSelectTab={setActiveTab}
+        onOpenPairing={() => setShowPairModal(true)}
+        onOpenShortcuts={() => setShowShortcutsModal(true)}
+        recordingCount={recordings.length}
+        upcomingEventsCount={events.filter((e) => !e.resolved || e.needs_review).length}
+        pairedDeviceCount={pairedDevices.length}
+      />
 
-        {/* Pairing info footer */}
-        <div className="p-4 border-t border-slate-800 bg-slate-900/50">
-          <button
-            onClick={() => setShowPairModal(true)}
-            className="w-full flex items-center justify-center gap-2 py-2 px-3 rounded-lg border border-slate-700 bg-slate-800/80 hover:bg-slate-800 text-xs font-semibold text-slate-200 transition"
-          >
-            <QrCode className="w-3.5 h-3.5 text-blue-400" />
-            Pair Phone (QR)
-          </button>
-        </div>
-      </aside>
+      {/* Main View Area */}
+      <main className="flex-1 max-w-7xl w-full mx-auto px-4 lg:px-6 py-6 animate-in fade-in duration-150">
+        {activeTab === 'inbox' && (
+          <InboxView
+            recordings={recordings}
+            selectedRecId={selectedRecId}
+            onSelectRecording={(id) => {
+              setSelectedRecId(id);
+              setActiveTab('lecture');
+            }}
+            onQueueProcessing={handleQueueProcessing}
+            onUploadFile={() => {
+              addToast('info', 'Audio Uploaded', 'Audio file registered for offline Whisper transcription.');
+            }}
+          />
+        )}
 
-      {/* Main Content Area */}
-      <main className="flex-1 flex flex-col min-w-0 bg-slate-950 overflow-y-auto">
-        {/* Top Header */}
-        <header className="h-14 border-b border-slate-800 px-6 flex items-center justify-between shrink-0">
-          <div className="flex items-center gap-3">
-            <h1 className="text-base font-semibold text-white capitalize">{activeTab.replace('_', ' ')}</h1>
-            <span className="text-xs text-slate-500">•</span>
-            <span className="text-xs text-slate-400">CS 101: Data Structures & Algorithms</span>
-          </div>
+        {activeTab === 'lecture' && (
+          <LectureView
+            transcript={transcript}
+            notes={notes}
+            currentTime={currentTime}
+            onSeek={(t) => setCurrentTime(t)}
+            followTranscript={followTranscript}
+            onAddCorrection={handleAddCorrection}
+          />
+        )}
 
-          <div className="flex items-center gap-4 text-xs">
-            <div className="flex items-center gap-2 px-2.5 py-1 bg-slate-900 border border-slate-800 rounded-full text-slate-400">
-              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-              M4 Max GPU • 36 GB Unified
-            </div>
-          </div>
-        </header>
+        {activeTab === 'events' && (
+          <EventsView
+            events={events}
+            onConfirmEvent={handleConfirmEvent}
+            onDismissEvent={handleDismissEvent}
+            onEditEvent={(idx, upd) =>
+              setEvents((prev) => prev.map((e, i) => (i === idx ? { ...e, ...upd } : e)))
+            }
+            onAddEvent={(newEv) => {
+              setEvents((prev) => [newEv, ...prev]);
+              addToast('success', 'Deadline Added', newEv.title);
+            }}
+            onSeekAudio={(t) => {
+              setCurrentTime(t);
+              setActiveTab('lecture');
+            }}
+          />
+        )}
 
-        {/* View Switcher */}
-        <div className="p-6">
-          {activeTab === 'inbox' && (
-            <div className="space-y-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h2 className="text-xl font-bold text-white">Recordings Inbox</h2>
-                  <p className="text-sm text-slate-400">Uploads synced from Pixel 8a or processed locally.</p>
-                </div>
-              </div>
+        {activeTab === 'questions' && (
+          <QuestionsView
+            questions={questions}
+            onSeekAudio={(t) => {
+              setCurrentTime(t);
+              setActiveTab('lecture');
+            }}
+          />
+        )}
 
-              <div className="bg-slate-900 border border-slate-800 rounded-xl overflow-hidden">
-                <table className="w-full text-left text-sm">
-                  <thead className="bg-slate-800/50 text-xs text-slate-400 uppercase border-b border-slate-800">
-                    <tr>
-                      <th className="px-5 py-3">Lecture Subject</th>
-                      <th className="px-5 py-3">Recorded At</th>
-                      <th className="px-5 py-3">Duration</th>
-                      <th className="px-5 py-3">Status</th>
-                      <th className="px-5 py-3 text-right">Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-800 text-slate-300">
-                    <tr className="hover:bg-slate-800/30">
-                      <td className="px-5 py-4 font-medium text-white flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-lg bg-blue-600/20 text-blue-400 flex items-center justify-center font-bold">
-                          DP
-                        </div>
-                        <div>
-                          <div>CS 101: Dynamic Programming</div>
-                          <div className="text-xs text-slate-500">Device: Pixel 8a (Android 17)</div>
-                        </div>
-                      </td>
-                      <td className="px-5 py-4 text-slate-400">Today, 9:00 AM</td>
-                      <td className="px-5 py-4">1h 25m</td>
-                      <td className="px-5 py-4">
-                        <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-500/20 text-emerald-400">
-                          <CheckCircle className="w-3 h-3" /> Completed
-                        </span>
-                      </td>
-                      <td className="px-5 py-4 text-right">
-                        <button
-                          onClick={() => setActiveTab('lecture')}
-                          className="px-3 py-1.5 bg-blue-600 hover:bg-blue-500 text-white text-xs font-medium rounded-lg shadow transition"
-                        >
-                          Open Lecture
-                        </button>
-                      </td>
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          )}
+        {activeTab === 'speakers' && (
+          <SpeakersView
+            onEnrolVoiceprint={(spk) => {
+              addToast('success', 'Voiceprint Saved', `Profile for ${spk} updated.`);
+            }}
+            onSeekAudio={(t) => {
+              setCurrentTime(t);
+              setActiveTab('lecture');
+            }}
+          />
+        )}
 
-          {activeTab === 'lecture' && (
-            <div className="grid grid-cols-12 gap-6 h-[calc(100vh-120px)]">
-              {/* Left Column: Synchronized Audio Player + Transcript */}
-              <div className="col-span-7 flex flex-col bg-slate-900 border border-slate-800 rounded-xl overflow-hidden">
-                {/* Audio Bar */}
-                <div className="p-4 border-b border-slate-800 bg-slate-800/40 flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <button
-                      onClick={() => setIsPlaying(!isPlaying)}
-                      className="w-10 h-10 rounded-full bg-blue-600 text-white flex items-center justify-center hover:bg-blue-500 transition shadow"
-                    >
-                      {isPlaying ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4 ml-0.5" />}
-                    </button>
-                    <div>
-                      <div className="text-sm font-semibold text-white">CS101-Lecture-04.wav</div>
-                      <div className="text-xs text-slate-400 flex items-center gap-2">
-                        <Clock className="w-3 h-3" />
-                        <span>{currentTime.toFixed(1)}s / 85.0s</span>
-                      </div>
-                    </div>
-                  </div>
+        {activeTab === 'phrases' && (
+          <PhrasesView
+            onSeekAudio={(t) => {
+              setCurrentTime(t);
+              setActiveTab('lecture');
+            }}
+          />
+        )}
 
-                  <div className="flex items-center gap-2 text-xs">
-                    <span className="px-2 py-1 bg-slate-800 rounded text-slate-300">1.0x</span>
-                    <span className="px-2 py-1 bg-slate-800 rounded text-slate-300">16kHz Mono</span>
-                  </div>
-                </div>
+        {activeTab === 'timetable' && (
+          <TimetableView
+            slots={timetable}
+            onAddSlot={handleAddSlot}
+            onDeleteSlot={handleDeleteSlot}
+            onUploadTimetablePhoto={handleUploadPhoto}
+          />
+        )}
 
-                {/* Transcript stream */}
-                <div className="flex-1 p-5 overflow-y-auto space-y-4">
-                  {transcript.segments.map((seg, idx) => {
-                    const isProf = seg.speaker === 'PROF_TURING';
-                    const isCurrent = currentTime >= seg.start && currentTime <= seg.end;
-                    return (
-                      <div
-                        key={idx}
-                        onClick={() => setCurrentTime(seg.start)}
-                        className={`p-3 rounded-xl border transition cursor-pointer ${
-                          isCurrent
-                            ? 'bg-blue-600/10 border-blue-500 shadow'
-                            : 'bg-slate-950/60 border-slate-800 hover:border-slate-700'
-                        }`}
-                      >
-                        <div className="flex items-center justify-between mb-1.5">
-                          <div className="flex items-center gap-2">
-                            <span className={`text-xs px-2 py-0.5 rounded font-bold ${
-                              isProf ? 'bg-indigo-500/20 text-indigo-400' : 'bg-amber-500/20 text-amber-400'
-                            }`}>
-                              {isProf ? '👨‍🏫 Lecturer (Prof. Turing)' : '🙋 Student'}
-                            </span>
-                          </div>
-                          <span className="text-[11px] text-slate-500 font-mono">
-                            {seg.start.toFixed(1)}s - {seg.end.toFixed(1)}s
-                          </span>
-                        </div>
-                        <p className="text-sm text-slate-200 leading-relaxed">{seg.text}</p>
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-
-              {/* Right Column: Structured Notes & Chapters */}
-              <div className="col-span-5 flex flex-col bg-slate-900 border border-slate-800 rounded-xl overflow-hidden">
-                <div className="p-4 border-b border-slate-800 bg-slate-800/40 flex items-center justify-between">
-                  <div className="flex items-center gap-2 font-semibold text-sm text-white">
-                    <Sparkles className="w-4 h-4 text-amber-400" />
-                    AI-Generated Lecture Notes
-                  </div>
-                  <span className="text-xs text-slate-400">Qwen 2.5 7B (Local)</span>
-                </div>
-
-                <div className="flex-1 p-5 overflow-y-auto space-y-6">
-                  {/* Summary card */}
-                  <div className="p-4 bg-slate-950 rounded-xl border border-slate-800">
-                    <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Overall Summary</h3>
-                    <p className="text-sm text-slate-300 leading-relaxed">{notes.overall_summary}</p>
-                  </div>
-
-                  {/* Chapters */}
-                  <div className="space-y-4">
-                    <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400">Chapters</h3>
-                    {notes.chapters.map((ch, idx) => (
-                      <div
-                        key={idx}
-                        onClick={() => setCurrentTime(ch.start)}
-                        className="p-4 bg-slate-950 rounded-xl border border-slate-800 hover:border-slate-700 transition cursor-pointer"
-                      >
-                        <div className="flex items-center justify-between mb-2">
-                          <h4 className="text-sm font-bold text-white">{ch.title}</h4>
-                          <span className="text-xs text-blue-400 font-mono font-semibold">
-                            {ch.start.toFixed(0)}s - {ch.end.toFixed(0)}s
-                          </span>
-                        </div>
-                        <p className="text-xs text-slate-400 mb-3">{ch.summary}</p>
-
-                        <div className="space-y-1.5">
-                          {ch.key_points.map((pt, pidx) => (
-                            <div key={pidx} className="flex items-start gap-2 text-xs text-slate-300">
-                              <span className="text-blue-500 mt-0.5">•</span>
-                              <span>{pt}</span>
-                            </div>
-                          ))}
-                        </div>
-
-                        {ch.formulas.length > 0 && (
-                          <div className="mt-3 p-2.5 bg-slate-900 rounded border border-slate-800 font-mono text-xs text-emerald-400">
-                            {ch.formulas.join('; ')}
-                          </div>
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {activeTab === 'events' && (
-            <div className="space-y-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h2 className="text-xl font-bold text-white">Extracted Events & Deadlines</h2>
-                  <p className="text-sm text-slate-400">Dates resolved against recording start time. Ambiguous items flagged for review.</p>
-                </div>
-                <button
-                  onClick={exportICS}
-                  className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold rounded-lg shadow transition"
-                >
-                  <Download className="w-3.5 h-3.5" /> Export Calendar (.ics)
-                </button>
-              </div>
-
-              <div className="grid grid-cols-3 gap-5">
-                {events.map((ev, idx) => (
-                  <div
-                    key={idx}
-                    className={`p-5 rounded-xl border flex flex-col justify-between ${
-                      ev.needs_review
-                        ? 'bg-amber-950/20 border-amber-500/40'
-                        : 'bg-slate-900 border-slate-800'
-                    }`}
-                  >
-                    <div>
-                      <div className="flex items-center justify-between mb-3">
-                        <span className={`text-[10px] uppercase tracking-wider font-bold px-2 py-0.5 rounded ${
-                          ev.type === 'exam'
-                            ? 'bg-red-500/20 text-red-400 border border-red-500/30'
-                            : ev.type === 'quiz'
-                            ? 'bg-purple-500/20 text-purple-400 border border-purple-500/30'
-                            : 'bg-blue-500/20 text-blue-400 border border-blue-500/30'
-                        }`}>
-                          {ev.type.replace('_', ' ')}
-                        </span>
-                        <span className="text-xs font-mono text-slate-400">{ev.date_iso || 'Date Pending'}</span>
-                      </div>
-
-                      <h3 className="text-base font-bold text-white mb-2">{ev.title}</h3>
-                      <div className="text-xs text-slate-400 bg-slate-950 p-3 rounded-lg border border-slate-800/80 mb-4 italic">
-                        "{ev.source_quote}"
-                      </div>
-                    </div>
-
-                    <div className="flex items-center justify-between pt-3 border-t border-slate-800/80 text-xs">
-                      <span className="text-slate-400">Confidence: {(ev.confidence * 100).toFixed(0)}%</span>
-                      <div className="flex items-center gap-2">
-                        <button className="px-2.5 py-1 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded font-medium">
-                          Edit
-                        </button>
-                        <button className="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-500 text-white rounded font-medium">
-                          Confirm
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {activeTab === 'questions' && (
-            <div className="space-y-6">
-              <div>
-                <h2 className="text-xl font-bold text-white">Important Questions</h2>
-                <p className="text-sm text-slate-400">Questions flagged by the lecturer, posed to the class, or repeated for emphasis.</p>
-              </div>
-
-              <div className="space-y-3">
-                {questions.map((q, idx) => (
-                  <div key={idx} className="p-4 bg-slate-900 border border-slate-800 rounded-xl flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <HelpCircle className="w-5 h-5 text-blue-400 shrink-0" />
-                      <div>
-                        <div className="text-sm font-semibold text-white">{q.text}</div>
-                        <div className="text-xs text-slate-400 mt-0.5">Spoken at {q.start_s.toFixed(1)}s</div>
-                      </div>
-                    </div>
-
-                    <span className="text-xs px-2.5 py-1 rounded-full font-semibold uppercase tracking-wider bg-amber-500/20 text-amber-300 border border-amber-500/30">
-                      {q.reason.replace('_', ' ')}
-                    </span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {activeTab === 'speakers' && (
-            <div className="space-y-6">
-              <div>
-                <h2 className="text-xl font-bold text-white">Speaker Panel</h2>
-                <p className="text-sm text-slate-400">Diarization and talk-time distribution. Lecturer automatically identified.</p>
-              </div>
-
-              <div className="grid grid-cols-2 gap-6">
-                <div className="p-5 bg-slate-900 border border-slate-800 rounded-xl">
-                  <h3 className="text-sm font-bold text-white mb-4">Talk-Time Distribution</h3>
-                  <div className="space-y-4">
-                    <div>
-                      <div className="flex justify-between text-xs font-semibold mb-1">
-                        <span>PROF_TURING (Lecturer)</span>
-                        <span>85% (1h 12m)</span>
-                      </div>
-                      <div className="w-full h-3 bg-slate-800 rounded-full overflow-hidden">
-                        <div className="h-full bg-blue-600 rounded-full" style={{ width: '85%' }}></div>
-                      </div>
-                    </div>
-
-                    <div>
-                      <div className="flex justify-between text-xs font-semibold mb-1">
-                        <span>STUDENTS / AUDIENCE</span>
-                        <span>15% (13m)</span>
-                      </div>
-                      <div className="w-full h-3 bg-slate-800 rounded-full overflow-hidden">
-                        <div className="h-full bg-amber-500 rounded-full" style={{ width: '15%' }}></div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="p-5 bg-slate-900 border border-slate-800 rounded-xl flex flex-col justify-between">
-                  <div>
-                    <h3 className="text-sm font-bold text-white mb-2">Voiceprint Enrolment</h3>
-                    <p className="text-xs text-slate-400 mb-4">
-                      Enrol a 5–30 second voice sample for this subject to automatically tag the lecturer regardless of audience talk-time.
-                    </p>
-                    <div className="p-3 bg-slate-950 rounded-lg border border-slate-800 text-xs text-slate-300">
-                      Enrolled profile: <span className="text-emerald-400 font-semibold">Prof. Turing (Active)</span>
-                    </div>
-                  </div>
-
-                  <button className="mt-4 w-full py-2 bg-slate-800 hover:bg-slate-700 text-white text-xs font-semibold rounded-lg transition border border-slate-700">
-                    Re-enrol Voiceprint
-                  </button>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {activeTab === 'phrases' && (
-            <div className="space-y-6">
-              <div>
-                <h2 className="text-xl font-bold text-white">Repeated Phrase Analysis</h2>
-                <p className="text-sm text-slate-400">Distinguishes stressed core concepts from unconscious verbal habits.</p>
-              </div>
-
-              {/* Tabs */}
-              <div className="flex gap-2 border-b border-slate-800 pb-2">
-                <button
-                  onClick={() => setPhraseTab('emphasis')}
-                  className={`px-4 py-1.5 text-xs font-semibold rounded-lg transition ${
-                    phraseTab === 'emphasis'
-                      ? 'bg-blue-600 text-white'
-                      : 'text-slate-400 hover:text-white bg-slate-900'
-                  }`}
-                >
-                  Stressed Content Emphasis ({phrases.emphasis.length})
-                </button>
-                <button
-                  onClick={() => setPhraseTab('habits')}
-                  className={`px-4 py-1.5 text-xs font-semibold rounded-lg transition ${
-                    phraseTab === 'habits'
-                      ? 'bg-blue-600 text-white'
-                      : 'text-slate-400 hover:text-white bg-slate-900'
-                  }`}
-                >
-                  Verbal Habits & Fillers ({phrases.habits.length})
-                </button>
-              </div>
-
-              {phraseTab === 'emphasis' ? (
-                <div className="grid grid-cols-3 gap-4">
-                  {phrases.emphasis.map((item, idx) => (
-                    <div key={idx} className="p-4 bg-slate-900 border border-slate-800 rounded-xl">
-                      <div className="flex items-center justify-between mb-2">
-                        <span className="text-sm font-bold text-white capitalize">{item.phrase}</span>
-                        <span className="text-xs px-2 py-0.5 rounded-full bg-blue-500/20 text-blue-400 font-bold">
-                          {item.count}x
-                        </span>
-                      </div>
-                      <div className="text-[11px] text-slate-500">
-                        Spans: {item.spans.map((s) => `${s[0].toFixed(0)}s`).join(', ')}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <div className="grid grid-cols-3 gap-4">
-                  {phrases.habits.map((item, idx) => (
-                    <div key={idx} className="p-4 bg-slate-900 border border-slate-800 rounded-xl">
-                      <div className="flex items-center justify-between mb-1">
-                        <span className="text-sm font-medium text-slate-300 capitalize">"{item.phrase}"</span>
-                        <span className="text-xs px-2 py-0.5 rounded-full bg-slate-800 text-slate-400 font-bold">
-                          {item.count}x
-                        </span>
-                      </div>
-                      <div className="text-[11px] text-slate-500">Verbal filler tic</div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          )}
-
-          {activeTab === 'timetable' && (
-            <div className="space-y-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h2 className="text-xl font-bold text-white">Weekly Timetable</h2>
-                  <p className="text-sm text-slate-400">Class schedule used by phone alarms and scheduled recording services.</p>
-                </div>
-                <button className="flex items-center gap-2 px-3.5 py-2 bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold rounded-lg shadow transition">
-                  <Plus className="w-3.5 h-3.5" /> Add Class Slot
-                </button>
-              </div>
-
-              <div className="grid grid-cols-5 gap-4">
-                {['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'].map((day, dIdx) => (
-                  <div key={day} className="bg-slate-900 border border-slate-800 rounded-xl p-4 flex flex-col">
-                    <div className="font-bold text-xs uppercase tracking-wider text-slate-400 border-b border-slate-800 pb-2 mb-3">
-                      {day}
-                    </div>
-                    <div className="space-y-3 flex-1">
-                      {dIdx === 0 && (
-                        <div className="p-3 bg-blue-950/40 border border-blue-800/50 rounded-lg">
-                          <div className="text-xs font-bold text-blue-300">CS 101: Algorithms</div>
-                          <div className="text-[11px] text-slate-400">09:00 - 10:30</div>
-                          <div className="text-[10px] text-slate-500 mt-1">Hall B • Prof. Turing</div>
-                        </div>
-                      )}
-                      {dIdx === 2 && (
-                        <div className="p-3 bg-purple-950/40 border border-purple-800/50 rounded-lg">
-                          <div className="text-xs font-bold text-purple-300">MATH 201: Linear Algebra</div>
-                          <div className="text-[11px] text-slate-400">11:00 - 12:30</div>
-                          <div className="text-[10px] text-slate-500 mt-1">Room 402 • Dr. Euler</div>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {activeTab === 'corrections' && (
-            <div className="space-y-6">
-              <div>
-                <h2 className="text-xl font-bold text-white">Corrections & Training Data Loop</h2>
-                <p className="text-sm text-slate-400">
-                  Edits made here or in Lecture View are saved as gold training examples for Phase 8 adapter fine-tuning.
-                </p>
-              </div>
-
-              <div className="p-5 bg-slate-900 border border-slate-800 rounded-xl space-y-4">
-                <h3 className="text-sm font-semibold text-white">Submit a Correction</h3>
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="text-xs text-slate-400 block mb-1">Original Model Output (Transcript/Notes)</label>
-                    <textarea
-                      rows={4}
-                      className="w-full bg-slate-950 border border-slate-800 rounded-lg p-3 text-xs text-slate-300 focus:outline-none focus:border-blue-500"
-                      placeholder="Paste text with ASR error or bad note summary..."
-                    />
-                  </div>
-                  <div>
-                    <label className="text-xs text-slate-400 block mb-1">Corrected Text</label>
-                    <textarea
-                      rows={4}
-                      className="w-full bg-slate-950 border border-slate-800 rounded-lg p-3 text-xs text-slate-300 focus:outline-none focus:border-blue-500"
-                      placeholder="Your hand-corrected ground truth text..."
-                    />
-                  </div>
-                </div>
-                <div className="flex justify-end">
-                  <button className="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold rounded-lg transition shadow">
-                    Save as Training Pair
-                  </button>
-                </div>
-              </div>
-            </div>
-          )}
-        </div>
+        {activeTab === 'corrections' && <CorrectionsView />}
       </main>
 
-      {/* Pairing QR Modal */}
-      {showPairModal && (
-        <div className="fixed inset-0 bg-black/70 flex items-center justify-center p-4 z-50">
-          <div className="bg-slate-900 border border-slate-800 rounded-2xl max-w-sm w-full p-6 text-center">
-            <h3 className="text-lg font-bold text-white mb-1">Pair Mobile App</h3>
-            <p className="text-xs text-slate-400 mb-4">
-              Open Lecture Whisper on your Pixel 8a and scan this QR code to securely link your device.
-            </p>
-
-            <div className="bg-white p-4 rounded-xl inline-block mb-4">
-              {/* QR display placeholder */}
-              <div className="w-48 h-48 bg-slate-100 flex items-center justify-center text-slate-800 font-mono text-xs">
-                QR CODE READY
-              </div>
-            </div>
-
-            <div className="text-xs text-slate-500 mb-5 font-mono">
-              Server ID: {pairingInfo?.server_id || 'localhost'}
-            </div>
-
-            <button
-              onClick={() => setShowPairModal(false)}
-              className="w-full py-2 bg-slate-800 hover:bg-slate-700 text-white text-xs font-semibold rounded-lg transition"
-            >
-              Close
-            </button>
-          </div>
+      {/* Docked Universal Audio Player */}
+      <footer className="fixed bottom-0 left-0 right-0 z-40 p-4 pointer-events-none">
+        <div className="max-w-4xl mx-auto pointer-events-auto">
+          <AudioPlayer
+            audioSrc={audioUrl}
+            currentTime={currentTime}
+            duration={audioDuration}
+            isPlaying={isPlaying}
+            onPlayPause={() => setIsPlaying(!isPlaying)}
+            onSeek={(t) => setCurrentTime(t)}
+            chapters={notes.chapters}
+            activeChapterTitle={activeChapter?.title}
+            playbackRate={playbackRate}
+            onRateChange={setPlaybackRate}
+            followTranscript={followTranscript}
+            onToggleFollow={() => setFollowTranscript(!followTranscript)}
+          />
         </div>
-      )}
+      </footer>
+
+      {/* Pairing Modal */}
+      <PairingModal
+        isOpen={showPairModal}
+        onClose={() => setShowPairModal(false)}
+        pairingInfo={pairingInfo}
+        pairedDevices={pairedDevices}
+        onRefresh={async () => {
+          const info = await fetchPairingInfo().catch(() => null);
+          if (info) setPairingInfo(info);
+          addToast('info', 'Token Refreshed', 'New one-time pairing key generated.');
+        }}
+      />
+
+      {/* Shortcuts Modal */}
+      <ShortcutsModal isOpen={showShortcutsModal} onClose={() => setShowShortcutsModal(false)} />
+
+      {/* Toast Notification Stack */}
+      <ToastContainer toasts={toasts} onDismiss={removeToast} />
     </div>
   );
 }

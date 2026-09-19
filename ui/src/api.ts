@@ -72,3 +72,61 @@ export async function fetchPairedDevices(): Promise<any[]> {
   const res = await fetch(`${BASE_URL}/pairing/devices`);
   return res.json();
 }
+
+export function getAudioStreamUrl(recordingId: string): string {
+  return `${BASE_URL}/recordings/${recordingId}/audio`;
+}
+
+export async function fetchRecordingEvents(recordingId: string): Promise<any[]> {
+  const res = await fetch(`${BASE_URL}/recordings/${recordingId}/events`);
+  if (!res.ok) return [];
+  return res.json();
+}
+
+export async function updateRecordingEvent(
+  recordingId: string,
+  eventId: string,
+  data: { resolved?: boolean; needs_review?: boolean; title?: string; date_iso?: string }
+): Promise<any> {
+  const res = await fetch(`${BASE_URL}/recordings/${recordingId}/events/${eventId}`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(data),
+  });
+  return res.json();
+}
+
+export async function fetchCorrections(recordingId: string): Promise<any[]> {
+  const res = await fetch(`${BASE_URL}/recordings/${recordingId}/corrections`);
+  if (!res.ok) return [];
+  return res.json();
+}
+
+export async function addCorrection(
+  recordingId: string,
+  field: string,
+  originalValue: string,
+  correctedValue: string
+): Promise<any> {
+  const res = await fetch(`${BASE_URL}/recordings/${recordingId}/corrections`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      field,
+      original_value: originalValue,
+      corrected_value: correctedValue,
+    }),
+  });
+  return res.json();
+}
+
+export async function uploadTimetableImage(file: File): Promise<any> {
+  const formData = new FormData();
+  formData.append('image', file);
+  const res = await fetch(`${BASE_URL}/timetable/extract`, {
+    method: 'POST',
+    body: formData,
+  });
+  return res.json();
+}
+
