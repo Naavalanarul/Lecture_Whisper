@@ -27,7 +27,7 @@ jobs:
         run: brew install ffmpeg
 
       - name: Run Pytest Suite
-        run: uv run --project server pytest
+        run: uv run --project server --extra dev pytest
 
       - name: Verify CLI Doctor
         run: |
