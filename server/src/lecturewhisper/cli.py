@@ -331,7 +331,8 @@ def service() -> None:
 
 
 @service.command("install")
-def service_install() -> None:
+@click.option("--port", default=8000, type=int, help="Port number for the server.")
+def service_install(port: int) -> None:
     """Install macOS launchd agent to automatically run Lecture Whisper at login."""
     import shutil
 
@@ -353,6 +354,8 @@ def service_install() -> None:
         <string>-m</string>
         <string>lecturewhisper.cli</string>
         <string>serve</string>
+        <string>--port</string>
+        <string>{port}</string>
         <string>--no-browser</string>
     </array>
     <key>RunAtLoad</key>

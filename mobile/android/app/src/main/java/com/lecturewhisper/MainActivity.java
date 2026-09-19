@@ -7,6 +7,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
+import android.content.res.ColorStateList;
 import android.graphics.Color;
 import android.media.MediaPlayer;
 import android.net.Uri;
@@ -19,6 +20,7 @@ import android.util.Log;
 import android.view.Gravity;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.WindowInsets;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.LinearLayout;
@@ -109,6 +111,8 @@ public class MainActivity extends Activity {
     // Tab 4: Connection Views
     private EditText editServerHost;
     private EditText editServerPort;
+    private Button btnPresetUsb;
+    private Button btnPresetWifi;
     private Button btnTestConnection;
     private TextView textConnectionDiagnostic;
 
@@ -145,6 +149,15 @@ public class MainActivity extends Activity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            getWindow().setStatusBarColor(getColor(R.color.surface));
+            getWindow().setNavigationBarColor(getColor(R.color.tab_bar_bg));
+        }
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            getWindow().setDecorFitsSystemWindows(false);
+        }
+
         setContentView(R.layout.activity_main);
 
         timetableStore = new TimetableStore(this);
@@ -157,11 +170,12 @@ public class MainActivity extends Activity {
         selectedDay = (dayOfWeek + 5) % 7; // Mon=0, ..., Sun=6
 
         bindViews();
+        setupWindowInsets();
         setupListeners();
         setupDaySelector();
 
-        // Restore host settings
-        String savedHost = prefs.getString(KEY_HOST, "10.0.2.2");
+        // Restore host settings (default to 127.0.0.1 for zero-config USB reverse tethering)
+        String savedHost = prefs.getString(KEY_HOST, "127.0.0.1");
         int savedPort = prefs.getInt(KEY_PORT, 8000);
         editServerHost.setText(savedHost);
         editServerPort.setText(String.valueOf(savedPort));
@@ -173,6 +187,69 @@ public class MainActivity extends Activity {
 
         requestAppPermissions();
         mainHandler.post(pingRunnable);
+    }
+
+    private void setupWindowInsets() {
+        View rootLayout = findViewById(R.id.root_layout);
+        final View topAppBar = findViewById(R.id.top_app_bar);
+        final View bottomNavBar = findViewById(R.id.bottom_nav_bar);
+        final View sidebarDrawer = findViewById(R.id.sidebar_drawer);
+
+        if (rootLayout == null) return;
+
+        rootLayout.setOnApplyWindowInsetsListener((v, insets) -> {
+            int statusBarTop = 0;
+            int navBarBottom = 0;
+
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                android.graphics.Insets sb = insets.getInsets(
+                    WindowInsets.Type.statusBars() | WindowInsets.Type.displayCutout()
+                );
+                android.graphics.Insets nb = insets.getInsets(
+                    WindowInsets.Type.navigationBars()
+                );
+                statusBarTop = sb.top;
+                navBarBottom = nb.bottom;
+            } else {
+                statusBarTop = insets.getSystemWindowInsetTop();
+                navBarBottom = insets.getSystemWindowInsetBottom();
+            }
+
+            // Ensure ample padding for mobile status bar and camera punch-hole
+            int safeTopPadding = Math.max(statusBarTop, dpToPx(38));
+            if (topAppBar != null) {
+                topAppBar.setPadding(
+                    dpToPx(14),
+                    safeTopPadding + dpToPx(6),
+                    dpToPx(14),
+                    dpToPx(12)
+                );
+            }
+
+            if (sidebarDrawer != null) {
+                sidebarDrawer.setPadding(
+                    dpToPx(20),
+                    safeTopPadding + dpToPx(16),
+                    dpToPx(20),
+                    dpToPx(20)
+                );
+            }
+
+            // Ensure ample padding for mobile gesture navigation handle
+            int safeBottomPadding = Math.max(navBarBottom, dpToPx(10));
+            if (bottomNavBar != null) {
+                bottomNavBar.setPadding(
+                    bottomNavBar.getPaddingLeft(),
+                    dpToPx(6),
+                    bottomNavBar.getPaddingRight(),
+                    safeBottomPadding + dpToPx(6)
+                );
+            }
+
+            return insets;
+        });
+
+        rootLayout.requestApplyInsets();
     }
 
     private void bindViews() {
@@ -230,6 +307,8 @@ public class MainActivity extends Activity {
 
         editServerHost = findViewById(R.id.edit_server_host);
         editServerPort = findViewById(R.id.edit_server_port);
+        btnPresetUsb = findViewById(R.id.btn_preset_usb);
+        btnPresetWifi = findViewById(R.id.btn_preset_wifi);
         btnTestConnection = findViewById(R.id.btn_test_connection);
         textConnectionDiagnostic = findViewById(R.id.text_connection_diagnostic);
     }
@@ -246,6 +325,24 @@ public class MainActivity extends Activity {
         navBtnRecordings.setOnClickListener(v -> selectTab(2));
         navBtnConnection.setOnClickListener(v -> selectTab(3));
         chipConnectionStatus.setOnClickListener(v -> selectTab(3));
+
+        // Quick host presets
+        if (btnPresetUsb != null) {
+            btnPresetUsb.setOnClickListener(v -> {
+                editServerHost.setText("127.0.0.1");
+                editServerPort.setText("8000");
+                saveHostConfig();
+                probeLaptopConnection(true);
+            });
+        }
+        if (btnPresetWifi != null) {
+            btnPresetWifi.setOnClickListener(v -> {
+                editServerHost.setText("172.17.180.61");
+                editServerPort.setText("8000");
+                saveHostConfig();
+                probeLaptopConnection(true);
+            });
+        }
 
         // Recorder actions
         btnHeroRecord.setOnClickListener(v -> {
@@ -300,11 +397,20 @@ public class MainActivity extends Activity {
 
         int activeColor = 0xFF818CF8;
         int inactiveColor = 0xFF64748B;
+        ColorStateList activeTint = ColorStateList.valueOf(activeColor);
+        ColorStateList inactiveTint = ColorStateList.valueOf(inactiveColor);
 
         navBtnRecorder.setTextColor(tabIndex == 0 ? activeColor : inactiveColor);
+        navBtnRecorder.setCompoundDrawableTintList(tabIndex == 0 ? activeTint : inactiveTint);
+
         navBtnTimetable.setTextColor(tabIndex == 1 ? activeColor : inactiveColor);
+        navBtnTimetable.setCompoundDrawableTintList(tabIndex == 1 ? activeTint : inactiveTint);
+
         navBtnRecordings.setTextColor(tabIndex == 2 ? activeColor : inactiveColor);
+        navBtnRecordings.setCompoundDrawableTintList(tabIndex == 2 ? activeTint : inactiveTint);
+
         navBtnConnection.setTextColor(tabIndex == 3 ? activeColor : inactiveColor);
+        navBtnConnection.setCompoundDrawableTintList(tabIndex == 3 ? activeTint : inactiveTint);
 
         if (tabIndex == 1) updateTimetableSlotsList();
         if (tabIndex == 2) updateRecordingsList();
@@ -735,28 +841,21 @@ public class MainActivity extends Activity {
 
         LinearLayout layout = new LinearLayout(this);
         layout.setOrientation(LinearLayout.VERTICAL);
-        layout.setPadding(40, 20, 40, 10);
+        layout.setPadding(dpToPx(20), dpToPx(12), dpToPx(20), dpToPx(8));
 
-        final EditText subjEt = new EditText(this);
-        subjEt.setHint("Subject (e.g. CS 101: Data Structures)");
+        final EditText subjEt = createStyledDialogEditText("Subject (e.g. CS 101: Data Structures)", "");
         layout.addView(subjEt);
 
-        final EditText startEt = new EditText(this);
-        startEt.setHint("Start Time (HH:MM, e.g. 09:00)");
-        startEt.setText("09:00");
+        final EditText startEt = createStyledDialogEditText("Start Time (HH:MM, e.g. 09:00)", "09:00");
         layout.addView(startEt);
 
-        final EditText endEt = new EditText(this);
-        endEt.setHint("End Time (HH:MM, e.g. 10:30)");
-        endEt.setText("10:30");
+        final EditText endEt = createStyledDialogEditText("End Time (HH:MM, e.g. 10:30)", "10:30");
         layout.addView(endEt);
 
-        final EditText roomEt = new EditText(this);
-        roomEt.setHint("Room / Hall (optional)");
+        final EditText roomEt = createStyledDialogEditText("Room / Hall (optional)", "");
         layout.addView(roomEt);
 
-        final EditText profEt = new EditText(this);
-        profEt.setHint("Lecturer (optional)");
+        final EditText profEt = createStyledDialogEditText("Lecturer (optional)", "");
         layout.addView(profEt);
 
         builder.setView(layout);
@@ -778,6 +877,23 @@ public class MainActivity extends Activity {
         });
         builder.setNegativeButton("Cancel", null);
         builder.show();
+    }
+
+    private EditText createStyledDialogEditText(String hint, String defaultText) {
+        EditText et = new EditText(this);
+        et.setHint(hint);
+        if (!defaultText.isEmpty()) et.setText(defaultText);
+        et.setTextColor(0xFFF8FAFC);
+        et.setHintTextColor(0xFF64748B);
+        et.setTextSize(13);
+        et.setBackgroundResource(R.drawable.bg_input_field);
+        et.setPadding(dpToPx(12), dpToPx(10), dpToPx(12), dpToPx(10));
+        LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(
+            ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT
+        );
+        lp.setMargins(0, dpToPx(4), 0, dpToPx(6));
+        et.setLayoutParams(lp);
+        return et;
     }
 
     private void syncTimetableWithLaptop() {

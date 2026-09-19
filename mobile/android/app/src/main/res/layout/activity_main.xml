@@ -13,24 +13,32 @@
 
         <!-- Top App Bar -->
         <LinearLayout
+            android:id="@+id/top_app_bar"
             android:layout_width="match_parent"
-            android:layout_height="64dp"
+            android:layout_height="wrap_content"
+            android:minHeight="64dp"
             android:orientation="horizontal"
             android:gravity="center_vertical"
-            android:paddingHorizontal="16dp"
+            android:paddingHorizontal="14dp"
+            android:paddingTop="42dp"
+            android:paddingBottom="12dp"
             android:background="@color/surface">
 
-            <Button
+            <ImageButton
                 android:id="@+id/btn_open_drawer"
-                android:layout_width="40dp"
-                android:layout_height="40dp"
-                android:background="@drawable/ic_hamburger"
-                android:backgroundTint="@color/text_primary" />
+                android:layout_width="44dp"
+                android:layout_height="44dp"
+                android:padding="10dp"
+                android:scaleType="centerInside"
+                android:background="?android:attr/selectableItemBackgroundBorderless"
+                android:src="@drawable/ic_hamburger"
+                android:tint="@color/text_primary"
+                android:contentDescription="Open navigation drawer" />
 
             <ImageView
-                android:layout_width="34dp"
-                android:layout_height="34dp"
-                android:layout_marginStart="10dp"
+                android:layout_width="32dp"
+                android:layout_height="32dp"
+                android:layout_marginStart="8dp"
                 android:src="@drawable/app_logo"
                 android:contentDescription="Lecture Whisper Logo" />
 
@@ -61,12 +69,11 @@
             <LinearLayout
                 android:id="@+id/chip_connection_status"
                 android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
+                android:layout_height="32dp"
                 android:orientation="horizontal"
                 android:gravity="center_vertical"
                 android:background="@drawable/bg_pill_connected"
-                android:paddingHorizontal="10dp"
-                android:paddingVertical="5dp">
+                android:paddingHorizontal="10dp">
 
                 <View
                     android:id="@+id/view_connection_dot"
@@ -546,8 +553,40 @@
                             android:textColor="@color/text_primary"
                             android:textSize="14sp"
                             android:paddingHorizontal="12dp"
-                            android:text="10.0.2.2"
+                            android:text="127.0.0.1"
                             android:singleLine="true" />
+
+                        <!-- Quick Host Presets -->
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:orientation="horizontal"
+                            android:layout_marginTop="8dp">
+
+                            <Button
+                                android:id="@+id/btn_preset_usb"
+                                android:layout_width="0dp"
+                                android:layout_height="36dp"
+                                android:layout_weight="1"
+                                android:background="@drawable/bg_input_field"
+                                android:text="⚡ USB: 127.0.0.1"
+                                android:textColor="@color/accent"
+                                android:textSize="11sp"
+                                android:textAllCaps="false"
+                                android:layout_marginEnd="4dp" />
+
+                            <Button
+                                android:id="@+id/btn_preset_wifi"
+                                android:layout_width="0dp"
+                                android:layout_height="36dp"
+                                android:layout_weight="1"
+                                android:background="@drawable/bg_input_field"
+                                android:text="🌐 Wi-Fi: 172.17.180.61"
+                                android:textColor="@color/primary_light"
+                                android:textSize="11sp"
+                                android:textAllCaps="false"
+                                android:layout_marginStart="4dp" />
+                        </LinearLayout>
 
                         <TextView
                             android:layout_width="wrap_content"
@@ -666,53 +705,80 @@
             </ScrollView>
         </FrameLayout>
 
+        <!-- Bottom Navigation Bar Divider -->
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:background="@color/card_border" />
+
         <!-- Bottom Navigation Bar -->
         <LinearLayout
+            android:id="@+id/bottom_nav_bar"
             android:layout_width="match_parent"
-            android:layout_height="60dp"
+            android:layout_height="wrap_content"
+            android:minHeight="60dp"
             android:orientation="horizontal"
+            android:gravity="center"
+            android:paddingTop="6dp"
+            android:paddingBottom="16dp"
             android:background="@color/tab_bar_bg">
 
             <Button
                 android:id="@+id/nav_btn_recorder"
                 android:layout_width="0dp"
-                android:layout_height="match_parent"
+                android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:background="@android:color/transparent"
-                android:text="🎙️ Record"
+                android:background="?android:attr/selectableItemBackground"
+                android:drawableTop="@drawable/ic_mic"
+                android:drawablePadding="3dp"
+                android:drawableTint="@color/primary_light"
+                android:text="Record"
                 android:textColor="@color/primary_light"
-                android:textSize="12sp"
-                android:textStyle="bold" />
+                android:textSize="11sp"
+                android:textStyle="bold"
+                android:textAllCaps="false" />
 
             <Button
                 android:id="@+id/nav_btn_timetable"
                 android:layout_width="0dp"
-                android:layout_height="match_parent"
+                android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:background="@android:color/transparent"
-                android:text="📅 Schedule"
+                android:background="?android:attr/selectableItemBackground"
+                android:drawableTop="@drawable/ic_calendar"
+                android:drawablePadding="3dp"
+                android:drawableTint="@color/text_muted"
+                android:text="Schedule"
                 android:textColor="@color/text_muted"
-                android:textSize="12sp" />
+                android:textSize="11sp"
+                android:textAllCaps="false" />
 
             <Button
                 android:id="@+id/nav_btn_recordings"
                 android:layout_width="0dp"
-                android:layout_height="match_parent"
+                android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:background="@android:color/transparent"
-                android:text="📂 Audio"
+                android:background="?android:attr/selectableItemBackground"
+                android:drawableTop="@drawable/ic_folder"
+                android:drawablePadding="3dp"
+                android:drawableTint="@color/text_muted"
+                android:text="Audio"
                 android:textColor="@color/text_muted"
-                android:textSize="12sp" />
+                android:textSize="11sp"
+                android:textAllCaps="false" />
 
             <Button
                 android:id="@+id/nav_btn_connection"
                 android:layout_width="0dp"
-                android:layout_height="match_parent"
+                android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:background="@android:color/transparent"
-                android:text="📡 Connect"
+                android:background="?android:attr/selectableItemBackground"
+                android:drawableTop="@drawable/ic_wifi"
+                android:drawablePadding="3dp"
+                android:drawableTint="@color/text_muted"
+                android:text="MacBook"
                 android:textColor="@color/text_muted"
-                android:textSize="12sp" />
+                android:textSize="11sp"
+                android:textAllCaps="false" />
         </LinearLayout>
     </LinearLayout>
 
@@ -731,7 +797,9 @@
         android:layout_height="match_parent"
         android:orientation="vertical"
         android:background="@color/drawer_bg"
-        android:padding="20dp"
+        android:paddingHorizontal="20dp"
+        android:paddingTop="50dp"
+        android:paddingBottom="20dp"
         android:translationX="-320dp">
 
         <!-- Drawer Header -->
