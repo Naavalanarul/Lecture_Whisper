@@ -1,0 +1,63 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+*.egg
+.mypy_cache/
+.ruff_cache/
+.pytest_cache/
+
+# Node
+node_modules/
+dist/
+.vite/
+
+# Storage (audio files, DB)
+storage/
+*.db
+*.db-journal
+*.db-wal
+
+# Audio files — NEVER commit
+samples/*.m4a
+samples/*.mp3
+samples/*.wav
+samples/*.ogg
+samples/*.aac
+samples/*.flac
+*.m4a
+*.mp3
+*.wav
+*.ogg
+*.aac
+*.flac
+
+# Logs
+app.log
+*.log
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+
+# Secrets — NEVER commit
+.env
+.env.*
+*.token
+
+# LectureWhisper data
+~/.lecturewhisper/
+
+# Build artifacts
+server/static/
+mobile/android/app/build/
+mobile/android/.gradle/
+
+# Hugging Face cache (too large)
+.cache/
