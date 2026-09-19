@@ -27,23 +27,16 @@ def test_doctor_command():
     """Doctor command should run without crashing."""
     runner = CliRunner()
     result = runner.invoke(cli, ["doctor"])
-    # Exit code depends on system state, but it shouldn't crash
     assert result.exit_code in (0, 1)
     assert "System Diagnostics" in result.output
 
 
-def test_serve_stub():
-    """Serve command stub should print placeholder."""
-    runner = CliRunner()
-    result = runner.invoke(cli, ["serve"])
-    assert "Phase 1" in result.output
-
-
-def test_pair_stub():
-    """Pair command stub should print placeholder."""
+def test_pair_command():
+    """Pair command should attempt to show QR."""
     runner = CliRunner()
     result = runner.invoke(cli, ["pair"])
-    assert "Phase 5" in result.output
+    # Should attempt QR generation (may succeed or show warning)
+    assert result.exit_code == 0
 
 
 def test_eval_stub():
