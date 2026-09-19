@@ -14,6 +14,7 @@ import pytest
 
 from eval.run_eval import evaluate_fixtures
 from lecturewhisper.api.schemas import Transcript
+from lecturewhisper.llm.engine import LLMEngine
 from lecturewhisper.pipeline.chapters import ChapterSegmenter
 from lecturewhisper.pipeline.events import EventExtractor, QuestionExtractor
 from lecturewhisper.pipeline.notes import NotesGenerator
@@ -84,8 +85,9 @@ def test_phrase_analysis(sample_transcript: Transcript) -> None:
     assert len(common) == 0
 
 
-def test_notes_generator(sample_transcript: Transcript) -> None:
+def test_notes_generator(sample_transcript: Transcript, monkeypatch: pytest.MonkeyPatch) -> None:
     """NotesGenerator should produce structured Notes with chapters and overall summary."""
+    monkeypatch.setattr(LLMEngine, "_load", lambda self: None)
     gen = NotesGenerator()
     notes = gen.generate(sample_transcript)
 

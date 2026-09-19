@@ -11,8 +11,9 @@ from lecturewhisper.api.schemas import Timetable
 from lecturewhisper.pipeline.timetable import TimetableImageParser
 
 
-def test_timetable_parser_mock(tmp_path: Path) -> None:
+def test_timetable_parser_mock(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     """TimetableImageParser should extract timetable slots from an image."""
+    monkeypatch.setattr(TimetableImageParser, "_load", lambda self: None)
     fake_img = tmp_path / "timetable.png"
     fake_img.write_bytes(b"\x89PNG\r\n\x1a\n" + b"\x00" * 100)
 

@@ -51,11 +51,15 @@ async def get_pairing_info() -> dict:
         local_ip = "127.0.0.1"
 
     token = get_or_create_one_time_token()
+    import hashlib
+    fp = hashlib.sha256(f"{hostname}:{settings.server.port}:{token}".encode()).hexdigest()[:32]
     return {
         "host": local_ip,
         "port": settings.server.port,
         "token": token,
         "server_id": hostname,
+        "cert_fingerprint": fp,
+        "pairing_uri": f"lw://pair?host={local_ip}&port={settings.server.port}&token={token}&fp={fp}",
     }
 
 

@@ -1,0 +1,517 @@
+{
+  "metadata": {
+    "id": "phys150_electromagnetism",
+    "subject": "PHYS150: Electrodynamics",
+    "lecturer": "Prof. Richard Feynman",
+    "total_words": 73
+  },
+  "transcript": {
+    "asr_model": "mlx-community/whisper-large-v3-turbo",
+    "language": "en",
+    "segments": [
+      {
+        "start": 0.0,
+        "end": 7.2,
+        "speaker": "PROFESSOR",
+        "text": "Let's get right into Maxwell's equations and electromagnetic wave propagation today. Before we begin, remember that physics lab",
+        "words": [
+          {
+            "w": "Let's",
+            "start": 0.0,
+            "end": 0.35,
+            "conf": 0.98
+          },
+          {
+            "w": "get",
+            "start": 0.35,
+            "end": 0.7,
+            "conf": 0.98
+          },
+          {
+            "w": "right",
+            "start": 0.7,
+            "end": 1.05,
+            "conf": 0.98
+          },
+          {
+            "w": "into",
+            "start": 1.05,
+            "end": 1.4,
+            "conf": 0.98
+          },
+          {
+            "w": "Maxwell's",
+            "start": 1.4,
+            "end": 1.75,
+            "conf": 0.98
+          },
+          {
+            "w": "equations",
+            "start": 1.75,
+            "end": 2.1,
+            "conf": 0.98
+          },
+          {
+            "w": "and",
+            "start": 2.1,
+            "end": 2.45,
+            "conf": 0.98
+          },
+          {
+            "w": "electromagnetic",
+            "start": 2.45,
+            "end": 2.8,
+            "conf": 0.98
+          },
+          {
+            "w": "wave",
+            "start": 2.8,
+            "end": 3.15,
+            "conf": 0.98
+          },
+          {
+            "w": "propagation",
+            "start": 3.15,
+            "end": 3.5,
+            "conf": 0.98
+          },
+          {
+            "w": "today.",
+            "start": 3.5,
+            "end": 3.85,
+            "conf": 0.98
+          },
+          {
+            "w": "Before",
+            "start": 3.85,
+            "end": 4.2,
+            "conf": 0.98
+          },
+          {
+            "w": "we",
+            "start": 4.2,
+            "end": 4.55,
+            "conf": 0.98
+          },
+          {
+            "w": "begin,",
+            "start": 4.55,
+            "end": 4.9,
+            "conf": 0.98
+          },
+          {
+            "w": "remember",
+            "start": 4.9,
+            "end": 5.25,
+            "conf": 0.98
+          },
+          {
+            "w": "that",
+            "start": 5.25,
+            "end": 5.6,
+            "conf": 0.98
+          },
+          {
+            "w": "physics",
+            "start": 5.6,
+            "end": 5.95,
+            "conf": 0.98
+          },
+          {
+            "w": "lab",
+            "start": 5.95,
+            "end": 6.3,
+            "conf": 0.98
+          }
+        ]
+      },
+      {
+        "start": 7.2,
+        "end": 14.4,
+        "speaker": "PROFESSOR",
+        "text": "report three must be submitted by Thursday 5:00 PM. The midterm exam has been relocated to Hall A",
+        "words": [
+          {
+            "w": "report",
+            "start": 7.2,
+            "end": 7.55,
+            "conf": 0.98
+          },
+          {
+            "w": "three",
+            "start": 7.55,
+            "end": 7.9,
+            "conf": 0.98
+          },
+          {
+            "w": "must",
+            "start": 7.9,
+            "end": 8.25,
+            "conf": 0.98
+          },
+          {
+            "w": "be",
+            "start": 8.25,
+            "end": 8.6,
+            "conf": 0.98
+          },
+          {
+            "w": "submitted",
+            "start": 8.6,
+            "end": 8.95,
+            "conf": 0.98
+          },
+          {
+            "w": "by",
+            "start": 8.95,
+            "end": 9.3,
+            "conf": 0.98
+          },
+          {
+            "w": "Thursday",
+            "start": 9.3,
+            "end": 9.65,
+            "conf": 0.98
+          },
+          {
+            "w": "5:00",
+            "start": 9.65,
+            "end": 10.0,
+            "conf": 0.98
+          },
+          {
+            "w": "PM.",
+            "start": 10.0,
+            "end": 10.35,
+            "conf": 0.98
+          },
+          {
+            "w": "The",
+            "start": 10.35,
+            "end": 10.7,
+            "conf": 0.98
+          },
+          {
+            "w": "midterm",
+            "start": 10.7,
+            "end": 11.05,
+            "conf": 0.98
+          },
+          {
+            "w": "exam",
+            "start": 11.05,
+            "end": 11.4,
+            "conf": 0.98
+          },
+          {
+            "w": "has",
+            "start": 11.4,
+            "end": 11.75,
+            "conf": 0.98
+          },
+          {
+            "w": "been",
+            "start": 11.75,
+            "end": 12.1,
+            "conf": 0.98
+          },
+          {
+            "w": "relocated",
+            "start": 12.1,
+            "end": 12.45,
+            "conf": 0.98
+          },
+          {
+            "w": "to",
+            "start": 12.45,
+            "end": 12.8,
+            "conf": 0.98
+          },
+          {
+            "w": "Hall",
+            "start": 12.8,
+            "end": 13.15,
+            "conf": 0.98
+          },
+          {
+            "w": "A",
+            "start": 13.15,
+            "end": 13.5,
+            "conf": 0.98
+          }
+        ]
+      },
+      {
+        "start": 14.4,
+        "end": 21.6,
+        "speaker": "PROFESSOR",
+        "text": "on November 10th. Let me ask you this important question: how does the displacement current term resolve Ampere's",
+        "words": [
+          {
+            "w": "on",
+            "start": 14.4,
+            "end": 14.75,
+            "conf": 0.98
+          },
+          {
+            "w": "November",
+            "start": 14.75,
+            "end": 15.1,
+            "conf": 0.98
+          },
+          {
+            "w": "10th.",
+            "start": 15.1,
+            "end": 15.45,
+            "conf": 0.98
+          },
+          {
+            "w": "Let",
+            "start": 15.45,
+            "end": 15.8,
+            "conf": 0.98
+          },
+          {
+            "w": "me",
+            "start": 15.8,
+            "end": 16.15,
+            "conf": 0.98
+          },
+          {
+            "w": "ask",
+            "start": 16.15,
+            "end": 16.5,
+            "conf": 0.98
+          },
+          {
+            "w": "you",
+            "start": 16.5,
+            "end": 16.85,
+            "conf": 0.98
+          },
+          {
+            "w": "this",
+            "start": 16.85,
+            "end": 17.2,
+            "conf": 0.98
+          },
+          {
+            "w": "important",
+            "start": 17.2,
+            "end": 17.55,
+            "conf": 0.98
+          },
+          {
+            "w": "question:",
+            "start": 17.55,
+            "end": 17.9,
+            "conf": 0.98
+          },
+          {
+            "w": "how",
+            "start": 17.9,
+            "end": 18.25,
+            "conf": 0.98
+          },
+          {
+            "w": "does",
+            "start": 18.25,
+            "end": 18.6,
+            "conf": 0.98
+          },
+          {
+            "w": "the",
+            "start": 18.6,
+            "end": 18.95,
+            "conf": 0.98
+          },
+          {
+            "w": "displacement",
+            "start": 18.95,
+            "end": 19.3,
+            "conf": 0.98
+          },
+          {
+            "w": "current",
+            "start": 19.3,
+            "end": 19.65,
+            "conf": 0.98
+          },
+          {
+            "w": "term",
+            "start": 19.65,
+            "end": 20.0,
+            "conf": 0.98
+          },
+          {
+            "w": "resolve",
+            "start": 20.0,
+            "end": 20.35,
+            "conf": 0.98
+          },
+          {
+            "w": "Ampere's",
+            "start": 20.35,
+            "end": 20.7,
+            "conf": 0.98
+          }
+        ]
+      },
+      {
+        "start": 21.6,
+        "end": 28.8,
+        "speaker": "PROFESSOR",
+        "text": "law contradiction in an alternating capacitor circuit? Maxwell added the time-varying electric flux term to ensure conservation of",
+        "words": [
+          {
+            "w": "law",
+            "start": 21.6,
+            "end": 21.95,
+            "conf": 0.98
+          },
+          {
+            "w": "contradiction",
+            "start": 21.95,
+            "end": 22.3,
+            "conf": 0.98
+          },
+          {
+            "w": "in",
+            "start": 22.3,
+            "end": 22.65,
+            "conf": 0.98
+          },
+          {
+            "w": "an",
+            "start": 22.65,
+            "end": 23.0,
+            "conf": 0.98
+          },
+          {
+            "w": "alternating",
+            "start": 23.0,
+            "end": 23.35,
+            "conf": 0.98
+          },
+          {
+            "w": "capacitor",
+            "start": 23.35,
+            "end": 23.7,
+            "conf": 0.98
+          },
+          {
+            "w": "circuit?",
+            "start": 23.7,
+            "end": 24.05,
+            "conf": 0.98
+          },
+          {
+            "w": "Maxwell",
+            "start": 24.05,
+            "end": 24.4,
+            "conf": 0.98
+          },
+          {
+            "w": "added",
+            "start": 24.4,
+            "end": 24.75,
+            "conf": 0.98
+          },
+          {
+            "w": "the",
+            "start": 24.75,
+            "end": 25.1,
+            "conf": 0.98
+          },
+          {
+            "w": "time-varying",
+            "start": 25.1,
+            "end": 25.45,
+            "conf": 0.98
+          },
+          {
+            "w": "electric",
+            "start": 25.45,
+            "end": 25.8,
+            "conf": 0.98
+          },
+          {
+            "w": "flux",
+            "start": 25.8,
+            "end": 26.15,
+            "conf": 0.98
+          },
+          {
+            "w": "term",
+            "start": 26.15,
+            "end": 26.5,
+            "conf": 0.98
+          },
+          {
+            "w": "to",
+            "start": 26.5,
+            "end": 26.85,
+            "conf": 0.98
+          },
+          {
+            "w": "ensure",
+            "start": 26.85,
+            "end": 27.2,
+            "conf": 0.98
+          },
+          {
+            "w": "conservation",
+            "start": 27.2,
+            "end": 27.55,
+            "conf": 0.98
+          },
+          {
+            "w": "of",
+            "start": 27.55,
+            "end": 27.9,
+            "conf": 0.98
+          }
+        ]
+      },
+      {
+        "start": 28.8,
+        "end": 29.2,
+        "speaker": "PROFESSOR",
+        "text": "charge.",
+        "words": [
+          {
+            "w": "charge.",
+            "start": 28.8,
+            "end": 29.15,
+            "conf": 0.98
+          }
+        ]
+      }
+    ]
+  },
+  "ground_truth": {
+    "events": [
+      {
+        "type": "assignment_deadline",
+        "keyword": "lab report",
+        "source_quote": "physics lab report three must be submitted by Thursday 5:00 PM"
+      },
+      {
+        "type": "exam",
+        "keyword": "midterm",
+        "source_quote": "midterm exam has been relocated to Hall A on November 10th"
+      }
+    ],
+    "questions": [
+      {
+        "keyword": "how does the displacement current term",
+        "reason": "teacher_flagged"
+      }
+    ],
+    "key_facts": [
+      "Maxwell added displacement current dD/dt to Ampere's circuital law.",
+      "Electromagnetic radiation propagates in vacuum at the speed of light c."
+    ],
+    "clean_text": "Let's get right into Maxwell's equations and electromagnetic wave propagation today. Before we begin, remember that physics lab report three must be submitted by Thursday 5:00 PM. The midterm exam has been relocated to Hall A on November 10th. Let me ask you this important question: how does the displacement current term resolve Ampere's law contradiction in an alternating capacitor circuit? Maxwell added the time-varying electric flux term to ensure conservation of charge."
+  }
+}

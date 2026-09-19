@@ -1,0 +1,734 @@
+{
+  "metadata": {
+    "id": "cs101_algorithms_dp",
+    "subject": "CS101: Data Structures and Algorithms",
+    "lecturer": "Prof. Alan Turing",
+    "total_words": 107
+  },
+  "transcript": {
+    "asr_model": "mlx-community/whisper-large-v3-turbo",
+    "language": "en",
+    "segments": [
+      {
+        "start": 0.0,
+        "end": 7.2,
+        "speaker": "PROFESSOR",
+        "text": "Good morning everyone. Welcome back to CS101. Today we are exploring dynamic programming, focusing on overlapping subproblems and",
+        "words": [
+          {
+            "w": "Good",
+            "start": 0.0,
+            "end": 0.35,
+            "conf": 0.98
+          },
+          {
+            "w": "morning",
+            "start": 0.35,
+            "end": 0.7,
+            "conf": 0.98
+          },
+          {
+            "w": "everyone.",
+            "start": 0.7,
+            "end": 1.05,
+            "conf": 0.98
+          },
+          {
+            "w": "Welcome",
+            "start": 1.05,
+            "end": 1.4,
+            "conf": 0.98
+          },
+          {
+            "w": "back",
+            "start": 1.4,
+            "end": 1.75,
+            "conf": 0.98
+          },
+          {
+            "w": "to",
+            "start": 1.75,
+            "end": 2.1,
+            "conf": 0.98
+          },
+          {
+            "w": "CS101.",
+            "start": 2.1,
+            "end": 2.45,
+            "conf": 0.98
+          },
+          {
+            "w": "Today",
+            "start": 2.45,
+            "end": 2.8,
+            "conf": 0.98
+          },
+          {
+            "w": "we",
+            "start": 2.8,
+            "end": 3.15,
+            "conf": 0.98
+          },
+          {
+            "w": "are",
+            "start": 3.15,
+            "end": 3.5,
+            "conf": 0.98
+          },
+          {
+            "w": "exploring",
+            "start": 3.5,
+            "end": 3.85,
+            "conf": 0.98
+          },
+          {
+            "w": "dynamic",
+            "start": 3.85,
+            "end": 4.2,
+            "conf": 0.98
+          },
+          {
+            "w": "programming,",
+            "start": 4.2,
+            "end": 4.55,
+            "conf": 0.98
+          },
+          {
+            "w": "focusing",
+            "start": 4.55,
+            "end": 4.9,
+            "conf": 0.98
+          },
+          {
+            "w": "on",
+            "start": 4.9,
+            "end": 5.25,
+            "conf": 0.98
+          },
+          {
+            "w": "overlapping",
+            "start": 5.25,
+            "end": 5.6,
+            "conf": 0.98
+          },
+          {
+            "w": "subproblems",
+            "start": 5.6,
+            "end": 5.95,
+            "conf": 0.98
+          },
+          {
+            "w": "and",
+            "start": 5.95,
+            "end": 6.3,
+            "conf": 0.98
+          }
+        ]
+      },
+      {
+        "start": 7.2,
+        "end": 14.4,
+        "speaker": "PROFESSOR",
+        "text": "optimal substructure. Before we dive into the recurrence relations, I have three critical academic announcements. First, there will",
+        "words": [
+          {
+            "w": "optimal",
+            "start": 7.2,
+            "end": 7.55,
+            "conf": 0.98
+          },
+          {
+            "w": "substructure.",
+            "start": 7.55,
+            "end": 7.9,
+            "conf": 0.98
+          },
+          {
+            "w": "Before",
+            "start": 7.9,
+            "end": 8.25,
+            "conf": 0.98
+          },
+          {
+            "w": "we",
+            "start": 8.25,
+            "end": 8.6,
+            "conf": 0.98
+          },
+          {
+            "w": "dive",
+            "start": 8.6,
+            "end": 8.95,
+            "conf": 0.98
+          },
+          {
+            "w": "into",
+            "start": 8.95,
+            "end": 9.3,
+            "conf": 0.98
+          },
+          {
+            "w": "the",
+            "start": 9.3,
+            "end": 9.65,
+            "conf": 0.98
+          },
+          {
+            "w": "recurrence",
+            "start": 9.65,
+            "end": 10.0,
+            "conf": 0.98
+          },
+          {
+            "w": "relations,",
+            "start": 10.0,
+            "end": 10.35,
+            "conf": 0.98
+          },
+          {
+            "w": "I",
+            "start": 10.35,
+            "end": 10.7,
+            "conf": 0.98
+          },
+          {
+            "w": "have",
+            "start": 10.7,
+            "end": 11.05,
+            "conf": 0.98
+          },
+          {
+            "w": "three",
+            "start": 11.05,
+            "end": 11.4,
+            "conf": 0.98
+          },
+          {
+            "w": "critical",
+            "start": 11.4,
+            "end": 11.75,
+            "conf": 0.98
+          },
+          {
+            "w": "academic",
+            "start": 11.75,
+            "end": 12.1,
+            "conf": 0.98
+          },
+          {
+            "w": "announcements.",
+            "start": 12.1,
+            "end": 12.45,
+            "conf": 0.98
+          },
+          {
+            "w": "First,",
+            "start": 12.45,
+            "end": 12.8,
+            "conf": 0.98
+          },
+          {
+            "w": "there",
+            "start": 12.8,
+            "end": 13.15,
+            "conf": 0.98
+          },
+          {
+            "w": "will",
+            "start": 13.15,
+            "end": 13.5,
+            "conf": 0.98
+          }
+        ]
+      },
+      {
+        "start": 14.4,
+        "end": 21.6,
+        "speaker": "PROFESSOR",
+        "text": "be an unannounced pop quiz this Wednesday covering graph traversals and breadth first search. Second, assignment three programming",
+        "words": [
+          {
+            "w": "be",
+            "start": 14.4,
+            "end": 14.75,
+            "conf": 0.98
+          },
+          {
+            "w": "an",
+            "start": 14.75,
+            "end": 15.1,
+            "conf": 0.98
+          },
+          {
+            "w": "unannounced",
+            "start": 15.1,
+            "end": 15.45,
+            "conf": 0.98
+          },
+          {
+            "w": "pop",
+            "start": 15.45,
+            "end": 15.8,
+            "conf": 0.98
+          },
+          {
+            "w": "quiz",
+            "start": 15.8,
+            "end": 16.15,
+            "conf": 0.98
+          },
+          {
+            "w": "this",
+            "start": 16.15,
+            "end": 16.5,
+            "conf": 0.98
+          },
+          {
+            "w": "Wednesday",
+            "start": 16.5,
+            "end": 16.85,
+            "conf": 0.98
+          },
+          {
+            "w": "covering",
+            "start": 16.85,
+            "end": 17.2,
+            "conf": 0.98
+          },
+          {
+            "w": "graph",
+            "start": 17.2,
+            "end": 17.55,
+            "conf": 0.98
+          },
+          {
+            "w": "traversals",
+            "start": 17.55,
+            "end": 17.9,
+            "conf": 0.98
+          },
+          {
+            "w": "and",
+            "start": 17.9,
+            "end": 18.25,
+            "conf": 0.98
+          },
+          {
+            "w": "breadth",
+            "start": 18.25,
+            "end": 18.6,
+            "conf": 0.98
+          },
+          {
+            "w": "first",
+            "start": 18.6,
+            "end": 18.95,
+            "conf": 0.98
+          },
+          {
+            "w": "search.",
+            "start": 18.95,
+            "end": 19.3,
+            "conf": 0.98
+          },
+          {
+            "w": "Second,",
+            "start": 19.3,
+            "end": 19.65,
+            "conf": 0.98
+          },
+          {
+            "w": "assignment",
+            "start": 19.65,
+            "end": 20.0,
+            "conf": 0.98
+          },
+          {
+            "w": "three",
+            "start": 20.0,
+            "end": 20.35,
+            "conf": 0.98
+          },
+          {
+            "w": "programming",
+            "start": 20.35,
+            "end": 20.7,
+            "conf": 0.98
+          }
+        ]
+      },
+      {
+        "start": 21.6,
+        "end": 28.8,
+        "speaker": "PROFESSOR",
+        "text": "solutions are due next Friday October 16 at 11:59 PM sharp on Gradescope. Third, mark your calendars for",
+        "words": [
+          {
+            "w": "solutions",
+            "start": 21.6,
+            "end": 21.95,
+            "conf": 0.98
+          },
+          {
+            "w": "are",
+            "start": 21.95,
+            "end": 22.3,
+            "conf": 0.98
+          },
+          {
+            "w": "due",
+            "start": 22.3,
+            "end": 22.65,
+            "conf": 0.98
+          },
+          {
+            "w": "next",
+            "start": 22.65,
+            "end": 23.0,
+            "conf": 0.98
+          },
+          {
+            "w": "Friday",
+            "start": 23.0,
+            "end": 23.35,
+            "conf": 0.98
+          },
+          {
+            "w": "October",
+            "start": 23.35,
+            "end": 23.7,
+            "conf": 0.98
+          },
+          {
+            "w": "16",
+            "start": 23.7,
+            "end": 24.05,
+            "conf": 0.98
+          },
+          {
+            "w": "at",
+            "start": 24.05,
+            "end": 24.4,
+            "conf": 0.98
+          },
+          {
+            "w": "11:59",
+            "start": 24.4,
+            "end": 24.75,
+            "conf": 0.98
+          },
+          {
+            "w": "PM",
+            "start": 24.75,
+            "end": 25.1,
+            "conf": 0.98
+          },
+          {
+            "w": "sharp",
+            "start": 25.1,
+            "end": 25.45,
+            "conf": 0.98
+          },
+          {
+            "w": "on",
+            "start": 25.45,
+            "end": 25.8,
+            "conf": 0.98
+          },
+          {
+            "w": "Gradescope.",
+            "start": 25.8,
+            "end": 26.15,
+            "conf": 0.98
+          },
+          {
+            "w": "Third,",
+            "start": 26.15,
+            "end": 26.5,
+            "conf": 0.98
+          },
+          {
+            "w": "mark",
+            "start": 26.5,
+            "end": 26.85,
+            "conf": 0.98
+          },
+          {
+            "w": "your",
+            "start": 26.85,
+            "end": 27.2,
+            "conf": 0.98
+          },
+          {
+            "w": "calendars",
+            "start": 27.2,
+            "end": 27.55,
+            "conf": 0.98
+          },
+          {
+            "w": "for",
+            "start": 27.55,
+            "end": 27.9,
+            "conf": 0.98
+          }
+        ]
+      },
+      {
+        "start": 28.8,
+        "end": 36.0,
+        "speaker": "PROFESSOR",
+        "text": "the midterm examination on November 12th in the grand auditorium. Now, pay close attention to this vital question:",
+        "words": [
+          {
+            "w": "the",
+            "start": 28.8,
+            "end": 29.15,
+            "conf": 0.98
+          },
+          {
+            "w": "midterm",
+            "start": 29.15,
+            "end": 29.5,
+            "conf": 0.98
+          },
+          {
+            "w": "examination",
+            "start": 29.5,
+            "end": 29.85,
+            "conf": 0.98
+          },
+          {
+            "w": "on",
+            "start": 29.85,
+            "end": 30.2,
+            "conf": 0.98
+          },
+          {
+            "w": "November",
+            "start": 30.2,
+            "end": 30.55,
+            "conf": 0.98
+          },
+          {
+            "w": "12th",
+            "start": 30.55,
+            "end": 30.9,
+            "conf": 0.98
+          },
+          {
+            "w": "in",
+            "start": 30.9,
+            "end": 31.25,
+            "conf": 0.98
+          },
+          {
+            "w": "the",
+            "start": 31.25,
+            "end": 31.6,
+            "conf": 0.98
+          },
+          {
+            "w": "grand",
+            "start": 31.6,
+            "end": 31.95,
+            "conf": 0.98
+          },
+          {
+            "w": "auditorium.",
+            "start": 31.95,
+            "end": 32.3,
+            "conf": 0.98
+          },
+          {
+            "w": "Now,",
+            "start": 32.3,
+            "end": 32.65,
+            "conf": 0.98
+          },
+          {
+            "w": "pay",
+            "start": 32.65,
+            "end": 33.0,
+            "conf": 0.98
+          },
+          {
+            "w": "close",
+            "start": 33.0,
+            "end": 33.35,
+            "conf": 0.98
+          },
+          {
+            "w": "attention",
+            "start": 33.35,
+            "end": 33.7,
+            "conf": 0.98
+          },
+          {
+            "w": "to",
+            "start": 33.7,
+            "end": 34.05,
+            "conf": 0.98
+          },
+          {
+            "w": "this",
+            "start": 34.05,
+            "end": 34.4,
+            "conf": 0.98
+          },
+          {
+            "w": "vital",
+            "start": 34.4,
+            "end": 34.75,
+            "conf": 0.98
+          },
+          {
+            "w": "question:",
+            "start": 34.75,
+            "end": 35.1,
+            "conf": 0.98
+          }
+        ]
+      },
+      {
+        "start": 36.0,
+        "end": 42.8,
+        "speaker": "PROFESSOR",
+        "text": "why does memoization fail to reduce asymptotic time complexity when subproblems do not overlap? Let's trace Fibonacci.",
+        "words": [
+          {
+            "w": "why",
+            "start": 36.0,
+            "end": 36.35,
+            "conf": 0.98
+          },
+          {
+            "w": "does",
+            "start": 36.35,
+            "end": 36.7,
+            "conf": 0.98
+          },
+          {
+            "w": "memoization",
+            "start": 36.7,
+            "end": 37.05,
+            "conf": 0.98
+          },
+          {
+            "w": "fail",
+            "start": 37.05,
+            "end": 37.4,
+            "conf": 0.98
+          },
+          {
+            "w": "to",
+            "start": 37.4,
+            "end": 37.75,
+            "conf": 0.98
+          },
+          {
+            "w": "reduce",
+            "start": 37.75,
+            "end": 38.1,
+            "conf": 0.98
+          },
+          {
+            "w": "asymptotic",
+            "start": 38.1,
+            "end": 38.45,
+            "conf": 0.98
+          },
+          {
+            "w": "time",
+            "start": 38.45,
+            "end": 38.8,
+            "conf": 0.98
+          },
+          {
+            "w": "complexity",
+            "start": 38.8,
+            "end": 39.15,
+            "conf": 0.98
+          },
+          {
+            "w": "when",
+            "start": 39.15,
+            "end": 39.5,
+            "conf": 0.98
+          },
+          {
+            "w": "subproblems",
+            "start": 39.5,
+            "end": 39.85,
+            "conf": 0.98
+          },
+          {
+            "w": "do",
+            "start": 39.85,
+            "end": 40.2,
+            "conf": 0.98
+          },
+          {
+            "w": "not",
+            "start": 40.2,
+            "end": 40.55,
+            "conf": 0.98
+          },
+          {
+            "w": "overlap?",
+            "start": 40.55,
+            "end": 40.9,
+            "conf": 0.98
+          },
+          {
+            "w": "Let's",
+            "start": 40.9,
+            "end": 41.25,
+            "conf": 0.98
+          },
+          {
+            "w": "trace",
+            "start": 41.25,
+            "end": 41.6,
+            "conf": 0.98
+          },
+          {
+            "w": "Fibonacci.",
+            "start": 41.6,
+            "end": 41.95,
+            "conf": 0.98
+          }
+        ]
+      }
+    ]
+  },
+  "ground_truth": {
+    "events": [
+      {
+        "type": "quiz",
+        "keyword": "pop quiz",
+        "source_quote": "pop quiz this Wednesday covering graph traversals"
+      },
+      {
+        "type": "assignment_deadline",
+        "keyword": "assignment",
+        "source_quote": "assignment three programming solutions are due next Friday October 16"
+      },
+      {
+        "type": "exam",
+        "keyword": "midterm",
+        "source_quote": "midterm examination on November 12th in the grand auditorium"
+      }
+    ],
+    "questions": [
+      {
+        "keyword": "why does memoization fail",
+        "reason": "teacher_flagged"
+      }
+    ],
+    "key_facts": [
+      "Dynamic programming requires optimal substructure and overlapping subproblems.",
+      "Memoization caches subproblem solutions to prevent exponential recomputation."
+    ],
+    "clean_text": "Good morning everyone. Welcome back to CS101. Today we are exploring dynamic programming, focusing on overlapping subproblems and optimal substructure. Before we dive into the recurrence relations, I have three critical academic announcements. First, there will be an unannounced pop quiz this Wednesday covering graph traversals and breadth first search. Second, assignment three programming solutions are due next Friday October 16 at 11:59 PM sharp on Gradescope. Third, mark your calendars for the midterm examination on November 12th in the grand auditorium. Now, pay close attention to this vital question: why does memoization fail to reduce asymptotic time complexity when subproblems do not overlap? Let's trace Fibonacci."
+  }
+}

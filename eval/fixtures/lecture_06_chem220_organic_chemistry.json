@@ -1,0 +1,523 @@
+{
+  "metadata": {
+    "id": "chem220_organic_chemistry",
+    "subject": "CHEM220: Organic Chemistry",
+    "lecturer": "Dr. Marie Curie",
+    "total_words": 74
+  },
+  "transcript": {
+    "asr_model": "mlx-community/whisper-large-v3-turbo",
+    "language": "en",
+    "segments": [
+      {
+        "start": 0.0,
+        "end": 7.2,
+        "speaker": "PROFESSOR",
+        "text": "Today we differentiate bimolecular SN2 reactions from unimolecular SN1 mechanisms. Pay attention to course deadlines: online pre-lab assignment",
+        "words": [
+          {
+            "w": "Today",
+            "start": 0.0,
+            "end": 0.35,
+            "conf": 0.98
+          },
+          {
+            "w": "we",
+            "start": 0.35,
+            "end": 0.7,
+            "conf": 0.98
+          },
+          {
+            "w": "differentiate",
+            "start": 0.7,
+            "end": 1.05,
+            "conf": 0.98
+          },
+          {
+            "w": "bimolecular",
+            "start": 1.05,
+            "end": 1.4,
+            "conf": 0.98
+          },
+          {
+            "w": "SN2",
+            "start": 1.4,
+            "end": 1.75,
+            "conf": 0.98
+          },
+          {
+            "w": "reactions",
+            "start": 1.75,
+            "end": 2.1,
+            "conf": 0.98
+          },
+          {
+            "w": "from",
+            "start": 2.1,
+            "end": 2.45,
+            "conf": 0.98
+          },
+          {
+            "w": "unimolecular",
+            "start": 2.45,
+            "end": 2.8,
+            "conf": 0.98
+          },
+          {
+            "w": "SN1",
+            "start": 2.8,
+            "end": 3.15,
+            "conf": 0.98
+          },
+          {
+            "w": "mechanisms.",
+            "start": 3.15,
+            "end": 3.5,
+            "conf": 0.98
+          },
+          {
+            "w": "Pay",
+            "start": 3.5,
+            "end": 3.85,
+            "conf": 0.98
+          },
+          {
+            "w": "attention",
+            "start": 3.85,
+            "end": 4.2,
+            "conf": 0.98
+          },
+          {
+            "w": "to",
+            "start": 4.2,
+            "end": 4.55,
+            "conf": 0.98
+          },
+          {
+            "w": "course",
+            "start": 4.55,
+            "end": 4.9,
+            "conf": 0.98
+          },
+          {
+            "w": "deadlines:",
+            "start": 4.9,
+            "end": 5.25,
+            "conf": 0.98
+          },
+          {
+            "w": "online",
+            "start": 5.25,
+            "end": 5.6,
+            "conf": 0.98
+          },
+          {
+            "w": "pre-lab",
+            "start": 5.6,
+            "end": 5.95,
+            "conf": 0.98
+          },
+          {
+            "w": "assignment",
+            "start": 5.95,
+            "end": 6.3,
+            "conf": 0.98
+          }
+        ]
+      },
+      {
+        "start": 7.2,
+        "end": 14.4,
+        "speaker": "PROFESSOR",
+        "text": "five is due this evening at 8:00 PM. We also have a laboratory safety quiz scheduled for next",
+        "words": [
+          {
+            "w": "five",
+            "start": 7.2,
+            "end": 7.55,
+            "conf": 0.98
+          },
+          {
+            "w": "is",
+            "start": 7.55,
+            "end": 7.9,
+            "conf": 0.98
+          },
+          {
+            "w": "due",
+            "start": 7.9,
+            "end": 8.25,
+            "conf": 0.98
+          },
+          {
+            "w": "this",
+            "start": 8.25,
+            "end": 8.6,
+            "conf": 0.98
+          },
+          {
+            "w": "evening",
+            "start": 8.6,
+            "end": 8.95,
+            "conf": 0.98
+          },
+          {
+            "w": "at",
+            "start": 8.95,
+            "end": 9.3,
+            "conf": 0.98
+          },
+          {
+            "w": "8:00",
+            "start": 9.3,
+            "end": 9.65,
+            "conf": 0.98
+          },
+          {
+            "w": "PM.",
+            "start": 9.65,
+            "end": 10.0,
+            "conf": 0.98
+          },
+          {
+            "w": "We",
+            "start": 10.0,
+            "end": 10.35,
+            "conf": 0.98
+          },
+          {
+            "w": "also",
+            "start": 10.35,
+            "end": 10.7,
+            "conf": 0.98
+          },
+          {
+            "w": "have",
+            "start": 10.7,
+            "end": 11.05,
+            "conf": 0.98
+          },
+          {
+            "w": "a",
+            "start": 11.05,
+            "end": 11.4,
+            "conf": 0.98
+          },
+          {
+            "w": "laboratory",
+            "start": 11.4,
+            "end": 11.75,
+            "conf": 0.98
+          },
+          {
+            "w": "safety",
+            "start": 11.75,
+            "end": 12.1,
+            "conf": 0.98
+          },
+          {
+            "w": "quiz",
+            "start": 12.1,
+            "end": 12.45,
+            "conf": 0.98
+          },
+          {
+            "w": "scheduled",
+            "start": 12.45,
+            "end": 12.8,
+            "conf": 0.98
+          },
+          {
+            "w": "for",
+            "start": 12.8,
+            "end": 13.15,
+            "conf": 0.98
+          },
+          {
+            "w": "next",
+            "start": 13.15,
+            "end": 13.5,
+            "conf": 0.98
+          }
+        ]
+      },
+      {
+        "start": 14.4,
+        "end": 21.6,
+        "speaker": "PROFESSOR",
+        "text": "Monday morning at 9:00 AM. Here is the key diagnostic question: why does an SN2 substitution at a",
+        "words": [
+          {
+            "w": "Monday",
+            "start": 14.4,
+            "end": 14.75,
+            "conf": 0.98
+          },
+          {
+            "w": "morning",
+            "start": 14.75,
+            "end": 15.1,
+            "conf": 0.98
+          },
+          {
+            "w": "at",
+            "start": 15.1,
+            "end": 15.45,
+            "conf": 0.98
+          },
+          {
+            "w": "9:00",
+            "start": 15.45,
+            "end": 15.8,
+            "conf": 0.98
+          },
+          {
+            "w": "AM.",
+            "start": 15.8,
+            "end": 16.15,
+            "conf": 0.98
+          },
+          {
+            "w": "Here",
+            "start": 16.15,
+            "end": 16.5,
+            "conf": 0.98
+          },
+          {
+            "w": "is",
+            "start": 16.5,
+            "end": 16.85,
+            "conf": 0.98
+          },
+          {
+            "w": "the",
+            "start": 16.85,
+            "end": 17.2,
+            "conf": 0.98
+          },
+          {
+            "w": "key",
+            "start": 17.2,
+            "end": 17.55,
+            "conf": 0.98
+          },
+          {
+            "w": "diagnostic",
+            "start": 17.55,
+            "end": 17.9,
+            "conf": 0.98
+          },
+          {
+            "w": "question:",
+            "start": 17.9,
+            "end": 18.25,
+            "conf": 0.98
+          },
+          {
+            "w": "why",
+            "start": 18.25,
+            "end": 18.6,
+            "conf": 0.98
+          },
+          {
+            "w": "does",
+            "start": 18.6,
+            "end": 18.95,
+            "conf": 0.98
+          },
+          {
+            "w": "an",
+            "start": 18.95,
+            "end": 19.3,
+            "conf": 0.98
+          },
+          {
+            "w": "SN2",
+            "start": 19.3,
+            "end": 19.65,
+            "conf": 0.98
+          },
+          {
+            "w": "substitution",
+            "start": 19.65,
+            "end": 20.0,
+            "conf": 0.98
+          },
+          {
+            "w": "at",
+            "start": 20.0,
+            "end": 20.35,
+            "conf": 0.98
+          },
+          {
+            "w": "a",
+            "start": 20.35,
+            "end": 20.7,
+            "conf": 0.98
+          }
+        ]
+      },
+      {
+        "start": 21.6,
+        "end": 28.8,
+        "speaker": "PROFESSOR",
+        "text": "chiral carbon center cause complete Walden inversion of configuration? Because backside nucleophilic attack occurs 180 degrees opposite the",
+        "words": [
+          {
+            "w": "chiral",
+            "start": 21.6,
+            "end": 21.95,
+            "conf": 0.98
+          },
+          {
+            "w": "carbon",
+            "start": 21.95,
+            "end": 22.3,
+            "conf": 0.98
+          },
+          {
+            "w": "center",
+            "start": 22.3,
+            "end": 22.65,
+            "conf": 0.98
+          },
+          {
+            "w": "cause",
+            "start": 22.65,
+            "end": 23.0,
+            "conf": 0.98
+          },
+          {
+            "w": "complete",
+            "start": 23.0,
+            "end": 23.35,
+            "conf": 0.98
+          },
+          {
+            "w": "Walden",
+            "start": 23.35,
+            "end": 23.7,
+            "conf": 0.98
+          },
+          {
+            "w": "inversion",
+            "start": 23.7,
+            "end": 24.05,
+            "conf": 0.98
+          },
+          {
+            "w": "of",
+            "start": 24.05,
+            "end": 24.4,
+            "conf": 0.98
+          },
+          {
+            "w": "configuration?",
+            "start": 24.4,
+            "end": 24.75,
+            "conf": 0.98
+          },
+          {
+            "w": "Because",
+            "start": 24.75,
+            "end": 25.1,
+            "conf": 0.98
+          },
+          {
+            "w": "backside",
+            "start": 25.1,
+            "end": 25.45,
+            "conf": 0.98
+          },
+          {
+            "w": "nucleophilic",
+            "start": 25.45,
+            "end": 25.8,
+            "conf": 0.98
+          },
+          {
+            "w": "attack",
+            "start": 25.8,
+            "end": 26.15,
+            "conf": 0.98
+          },
+          {
+            "w": "occurs",
+            "start": 26.15,
+            "end": 26.5,
+            "conf": 0.98
+          },
+          {
+            "w": "180",
+            "start": 26.5,
+            "end": 26.85,
+            "conf": 0.98
+          },
+          {
+            "w": "degrees",
+            "start": 26.85,
+            "end": 27.2,
+            "conf": 0.98
+          },
+          {
+            "w": "opposite",
+            "start": 27.2,
+            "end": 27.55,
+            "conf": 0.98
+          },
+          {
+            "w": "the",
+            "start": 27.55,
+            "end": 27.9,
+            "conf": 0.98
+          }
+        ]
+      },
+      {
+        "start": 28.8,
+        "end": 29.6,
+        "speaker": "PROFESSOR",
+        "text": "leaving group.",
+        "words": [
+          {
+            "w": "leaving",
+            "start": 28.8,
+            "end": 29.15,
+            "conf": 0.98
+          },
+          {
+            "w": "group.",
+            "start": 29.15,
+            "end": 29.5,
+            "conf": 0.98
+          }
+        ]
+      }
+    ]
+  },
+  "ground_truth": {
+    "events": [
+      {
+        "type": "assignment_deadline",
+        "keyword": "pre-lab assignment",
+        "source_quote": "online pre-lab assignment five is due this evening at 8:00 PM"
+      },
+      {
+        "type": "quiz",
+        "keyword": "safety quiz",
+        "source_quote": "laboratory safety quiz scheduled for next Monday morning"
+      }
+    ],
+    "questions": [
+      {
+        "keyword": "why does an SN2 substitution",
+        "reason": "teacher_flagged"
+      }
+    ],
+    "key_facts": [
+      "SN2 is a concerted bimolecular reaction leading to stereochemical inversion.",
+      "SN1 proceeds via carbocation intermediate yielding racemic mixtures."
+    ],
+    "clean_text": "Today we differentiate bimolecular SN2 reactions from unimolecular SN1 mechanisms. Pay attention to course deadlines: online pre-lab assignment five is due this evening at 8:00 PM. We also have a laboratory safety quiz scheduled for next Monday morning at 9:00 AM. Here is the key diagnostic question: why does an SN2 substitution at a chiral carbon center cause complete Walden inversion of configuration? Because backside nucleophilic attack occurs 180 degrees opposite the leaving group."
+  }
+}

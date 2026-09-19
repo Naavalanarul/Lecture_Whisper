@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Header, NavTab } from './components/Header';
+import { Header, NavTab, ThemeMode } from './components/Header';
 import { AudioPlayer } from './components/AudioPlayer';
 import { JobStatusBar } from './components/JobStatusBar';
 import { PairingModal } from './components/PairingModal';
@@ -51,6 +51,56 @@ export default function App() {
   const [showPairModal, setShowPairModal] = useState<boolean>(false);
   const [showShortcutsModal, setShowShortcutsModal] = useState<boolean>(false);
   const [toasts, setToasts] = useState<ToastMessage[]>([]);
+
+  // Theme Management (System, Light, Dark)
+  const [theme, setTheme] = useState<ThemeMode>(() => {
+    const saved = localStorage.getItem('lecturewhisper_theme');
+    if (saved === 'light' || saved === 'dark' || saved === 'system') return saved;
+    return 'system';
+  });
+
+  useEffect(() => {
+    const root = document.documentElement;
+    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+
+    const applyTheme = (currentTheme: ThemeMode) => {
+      root.classList.remove('light', 'dark');
+      if (currentTheme === 'dark') {
+        root.classList.add('dark');
+        root.setAttribute('data-theme', 'dark');
+      } else if (currentTheme === 'light') {
+        root.classList.add('light');
+        root.setAttribute('data-theme', 'light');
+      } else {
+        root.removeAttribute('data-theme');
+        if (mediaQuery.matches) {
+          root.classList.add('dark');
+        } else {
+          root.classList.add('light');
+        }
+      }
+    };
+
+    applyTheme(theme);
+    localStorage.setItem('lecturewhisper_theme', theme);
+
+    const listener = () => {
+      if (theme === 'system') {
+        applyTheme('system');
+      }
+    };
+
+    mediaQuery.addEventListener('change', listener);
+    return () => mediaQuery.removeEventListener('change', listener);
+  }, [theme]);
+
+  const handleToggleTheme = () => {
+    setTheme((prev) => {
+      if (prev === 'system') return 'light';
+      if (prev === 'light') return 'dark';
+      return 'system';
+    });
+  };
 
   // Audio Playback State
   const [currentTime, setCurrentTime] = useState<number>(0);
@@ -468,7 +518,7 @@ export default function App() {
   const activeChapter = notes.chapters.find((ch) => currentTime >= ch.start && currentTime <= ch.end);
 
   return (
-    <div className="min-h-screen bg-surface-950 text-slate-100 flex flex-col selection:bg-brand-600 selection:text-white pb-28">
+    <div className="min-h-screen bg-bg text-text flex flex-col selection:bg-brand-600 selection:text-white pb-28">
       {/* Global Real-Time SSE Job Status Bar */}
       <JobStatusBar
         onJobCompleted={() => {
@@ -486,6 +536,8 @@ export default function App() {
         recordingCount={recordings.length}
         upcomingEventsCount={events.filter((e) => !e.resolved || e.needs_review).length}
         pairedDeviceCount={pairedDevices.length}
+        theme={theme}
+        onToggleTheme={handleToggleTheme}
       />
 
       {/* Main View Area */}

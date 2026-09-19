@@ -50,6 +50,7 @@ public class MainActivity extends Activity {
     private static final String PREFS_NAME = "lw_prefs";
     private static final String KEY_HOST = "server_host";
     private static final String KEY_PORT = "server_port";
+    private static final String KEY_THEME = "app_theme";
 
     // Stores
     private TimetableStore timetableStore;
@@ -69,6 +70,9 @@ public class MainActivity extends Activity {
     private TextView textStorageSyncedStatus;
     private Button btnDrawerPruneCache;
     private Button btnDrawerBatteryOpt;
+    private Button btnThemeSystem;
+    private Button btnThemeLight;
+    private Button btnThemeDark;
 
     // Tabs
     private View viewTabRecorder;
@@ -150,19 +154,38 @@ public class MainActivity extends Activity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
+        prefs = getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
+        String savedTheme = prefs.getString(KEY_THEME, "system");
+        applySavedNightMode(savedTheme);
+
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
             getWindow().setStatusBarColor(getColor(R.color.surface));
             getWindow().setNavigationBarColor(getColor(R.color.tab_bar_bg));
         }
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
             getWindow().setDecorFitsSystemWindows(false);
+            android.view.WindowInsetsController controller = getWindow().getInsetsController();
+            if (controller != null) {
+                int nightMode = getResources().getConfiguration().uiMode & android.content.res.Configuration.UI_MODE_NIGHT_MASK;
+                boolean isNight = (nightMode == android.content.res.Configuration.UI_MODE_NIGHT_YES);
+                if (isNight) {
+                    controller.setSystemBarsAppearance(0,
+                        android.view.WindowInsetsController.APPEARANCE_LIGHT_STATUS_BARS |
+                        android.view.WindowInsetsController.APPEARANCE_LIGHT_NAVIGATION_BARS);
+                } else {
+                    controller.setSystemBarsAppearance(
+                        android.view.WindowInsetsController.APPEARANCE_LIGHT_STATUS_BARS |
+                        android.view.WindowInsetsController.APPEARANCE_LIGHT_NAVIGATION_BARS,
+                        android.view.WindowInsetsController.APPEARANCE_LIGHT_STATUS_BARS |
+                        android.view.WindowInsetsController.APPEARANCE_LIGHT_NAVIGATION_BARS);
+                }
+            }
         }
 
         setContentView(R.layout.activity_main);
 
         timetableStore = new TimetableStore(this);
         recordingStore = new RecordingStore(this);
-        prefs = getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
 
         // Determine initial selected day (today)
         Calendar cal = Calendar.getInstance();
@@ -173,10 +196,11 @@ public class MainActivity extends Activity {
         setupWindowInsets();
         setupListeners();
         setupDaySelector();
+        updateThemeButtons(savedTheme);
 
-        // Restore host settings (default to 127.0.0.1 for zero-config USB reverse tethering)
+        // Restore host settings (default to 127.0.0.1:8420 for zero-config USB reverse tethering)
         String savedHost = prefs.getString(KEY_HOST, "127.0.0.1");
-        int savedPort = prefs.getInt(KEY_PORT, 8000);
+        int savedPort = prefs.getInt(KEY_PORT, 8420);
         editServerHost.setText(savedHost);
         editServerPort.setText(String.valueOf(savedPort));
 
@@ -264,6 +288,9 @@ public class MainActivity extends Activity {
         textStorageSyncedStatus = findViewById(R.id.text_storage_synced_status);
         btnDrawerPruneCache = findViewById(R.id.btn_drawer_prune_cache);
         btnDrawerBatteryOpt = findViewById(R.id.btn_drawer_battery_opt);
+        btnThemeSystem = findViewById(R.id.btn_theme_system);
+        btnThemeLight = findViewById(R.id.btn_theme_light);
+        btnThemeDark = findViewById(R.id.btn_theme_dark);
 
         viewTabRecorder = findViewById(R.id.view_tab_recorder);
         viewTabTimetable = findViewById(R.id.view_tab_timetable);
@@ -319,6 +346,10 @@ public class MainActivity extends Activity {
         findViewById(R.id.btn_close_drawer).setOnClickListener(v -> closeDrawer());
         drawerScrim.setOnClickListener(v -> closeDrawer());
 
+        if (btnThemeSystem != null) btnThemeSystem.setOnClickListener(v -> setAppTheme("system"));
+        if (btnThemeLight != null) btnThemeLight.setOnClickListener(v -> setAppTheme("light"));
+        if (btnThemeDark != null) btnThemeDark.setOnClickListener(v -> setAppTheme("dark"));
+
         // Nav tabs
         navBtnRecorder.setOnClickListener(v -> selectTab(0));
         navBtnTimetable.setOnClickListener(v -> selectTab(1));
@@ -330,7 +361,7 @@ public class MainActivity extends Activity {
         if (btnPresetUsb != null) {
             btnPresetUsb.setOnClickListener(v -> {
                 editServerHost.setText("127.0.0.1");
-                editServerPort.setText("8000");
+                editServerPort.setText("8420");
                 saveHostConfig();
                 probeLaptopConnection(true);
             });
@@ -338,7 +369,7 @@ public class MainActivity extends Activity {
         if (btnPresetWifi != null) {
             btnPresetWifi.setOnClickListener(v -> {
                 editServerHost.setText("172.17.180.61");
-                editServerPort.setText("8000");
+                editServerPort.setText("8420");
                 saveHostConfig();
                 probeLaptopConnection(true);
             });
@@ -1015,6 +1046,44 @@ public class MainActivity extends Activity {
     private int dpToPx(int dp) {
         float density = getResources().getDisplayMetrics().density;
         return Math.round(dp * density);
+    }
+
+    private void applySavedNightMode(String mode) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            android.app.UiModeManager uiModeManager = (android.app.UiModeManager) getSystemService(Context.UI_MODE_SERVICE);
+            if (uiModeManager != null) {
+                if ("dark".equalsIgnoreCase(mode)) {
+                    uiModeManager.setApplicationNightMode(android.app.UiModeManager.MODE_NIGHT_YES);
+                } else if ("light".equalsIgnoreCase(mode)) {
+                    uiModeManager.setApplicationNightMode(android.app.UiModeManager.MODE_NIGHT_NO);
+                } else {
+                    uiModeManager.setApplicationNightMode(android.app.UiModeManager.MODE_NIGHT_AUTO);
+                }
+            }
+        }
+    }
+
+    private void setAppTheme(String mode) {
+        prefs.edit().putString(KEY_THEME, mode).apply();
+        applySavedNightMode(mode);
+        updateThemeButtons(mode);
+        recreate();
+    }
+
+    private void updateThemeButtons(String mode) {
+        if (btnThemeSystem == null || btnThemeLight == null || btnThemeDark == null) return;
+        boolean isSystem = "system".equalsIgnoreCase(mode);
+        boolean isLight = "light".equalsIgnoreCase(mode);
+        boolean isDark = "dark".equalsIgnoreCase(mode);
+
+        btnThemeSystem.setBackgroundResource(isSystem ? R.drawable.bg_btn_primary : R.drawable.bg_input_field);
+        btnThemeSystem.setTextColor(getColor(isSystem ? R.color.tab_text_active : R.color.text_primary));
+
+        btnThemeLight.setBackgroundResource(isLight ? R.drawable.bg_btn_primary : R.drawable.bg_input_field);
+        btnThemeLight.setTextColor(getColor(isLight ? R.color.tab_text_active : R.color.text_primary));
+
+        btnThemeDark.setBackgroundResource(isDark ? R.drawable.bg_btn_primary : R.drawable.bg_input_field);
+        btnThemeDark.setTextColor(getColor(isDark ? R.color.tab_text_active : R.color.text_primary));
     }
 
     @Override

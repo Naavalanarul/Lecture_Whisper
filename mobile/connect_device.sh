@@ -38,9 +38,10 @@ ANDROID_VER=$(adb shell getprop ro.build.version.release 2>/dev/null | tr -d '\r
 echo "   Device:  ${DEVICE_MODEL} (Android ${ANDROID_VER})"
 
 echo ""
-echo "🔗 Setting up Zero-Latency USB Reverse Tethering (tcp:8000)..."
-adb reverse tcp:8000 tcp:8000
-echo "   ✓ adb reverse tcp:8000 tcp:8000 active"
+echo "🔗 Setting up Zero-Latency USB Reverse Tethering (tcp:8420)..."
+adb reverse tcp:8420 tcp:8420
+adb reverse tcp:8000 tcp:8000 2>/dev/null || true
+echo "   ✓ adb reverse tcp:8420 tcp:8420 active"
 
 echo ""
 echo "📱 Checking app installation on device..."
@@ -66,7 +67,7 @@ adb shell am start -n com.lecturewhisper/.MainActivity >/dev/null 2>&1 || true
 echo ""
 echo "========================================================"
 echo "🎉 Phone connected and ready!"
-echo "   • USB Host: 127.0.0.1 (Port 8000)"
-echo "   • Wi-Fi Host: ${LOCAL_IP} (Port 8000)"
-echo "   • Web Dashboard: http://localhost:8000"
+echo "   • USB Host: 127.0.0.1 (Port 8420)"
+echo "   • Wi-Fi Host: ${LOCAL_IP} (Port 8420)"
+echo "   • Web Dashboard: http://localhost:8420"
 echo "========================================================"

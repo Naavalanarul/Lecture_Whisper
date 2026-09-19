@@ -239,9 +239,10 @@ async def upload_recording(
     file_bytes = await file.read()
     sha256 = hashlib.sha256(file_bytes).hexdigest()
 
-    # Save audio file
+    # Save chunk and assemble continuous master audio track
     store = FileStore()
-    audio_path = store.save_recording(rec_id, file_bytes)
+    store.save_chunk(rec_id, chunk_index, file_bytes)
+    audio_path = store.stitch_chunks(rec_id)
 
     # Parse slot ID if provided
     parsed_slot_id: UUID | None = None

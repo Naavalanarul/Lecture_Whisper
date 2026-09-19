@@ -1,0 +1,553 @@
+{
+  "metadata": {
+    "id": "cs380_distributed_systems",
+    "subject": "CS380: Distributed Systems",
+    "lecturer": "Prof. Barbara Liskov",
+    "total_words": 79
+  },
+  "transcript": {
+    "asr_model": "mlx-community/whisper-large-v3-turbo",
+    "language": "en",
+    "segments": [
+      {
+        "start": 0.0,
+        "end": 7.2,
+        "speaker": "PROFESSOR",
+        "text": "Welcome back. Today we analyze the Raft consensus algorithm, leader election, and log replication. Please be aware that",
+        "words": [
+          {
+            "w": "Welcome",
+            "start": 0.0,
+            "end": 0.35,
+            "conf": 0.98
+          },
+          {
+            "w": "back.",
+            "start": 0.35,
+            "end": 0.7,
+            "conf": 0.98
+          },
+          {
+            "w": "Today",
+            "start": 0.7,
+            "end": 1.05,
+            "conf": 0.98
+          },
+          {
+            "w": "we",
+            "start": 1.05,
+            "end": 1.4,
+            "conf": 0.98
+          },
+          {
+            "w": "analyze",
+            "start": 1.4,
+            "end": 1.75,
+            "conf": 0.98
+          },
+          {
+            "w": "the",
+            "start": 1.75,
+            "end": 2.1,
+            "conf": 0.98
+          },
+          {
+            "w": "Raft",
+            "start": 2.1,
+            "end": 2.45,
+            "conf": 0.98
+          },
+          {
+            "w": "consensus",
+            "start": 2.45,
+            "end": 2.8,
+            "conf": 0.98
+          },
+          {
+            "w": "algorithm,",
+            "start": 2.8,
+            "end": 3.15,
+            "conf": 0.98
+          },
+          {
+            "w": "leader",
+            "start": 3.15,
+            "end": 3.5,
+            "conf": 0.98
+          },
+          {
+            "w": "election,",
+            "start": 3.5,
+            "end": 3.85,
+            "conf": 0.98
+          },
+          {
+            "w": "and",
+            "start": 3.85,
+            "end": 4.2,
+            "conf": 0.98
+          },
+          {
+            "w": "log",
+            "start": 4.2,
+            "end": 4.55,
+            "conf": 0.98
+          },
+          {
+            "w": "replication.",
+            "start": 4.55,
+            "end": 4.9,
+            "conf": 0.98
+          },
+          {
+            "w": "Please",
+            "start": 4.9,
+            "end": 5.25,
+            "conf": 0.98
+          },
+          {
+            "w": "be",
+            "start": 5.25,
+            "end": 5.6,
+            "conf": 0.98
+          },
+          {
+            "w": "aware",
+            "start": 5.6,
+            "end": 5.95,
+            "conf": 0.98
+          },
+          {
+            "w": "that",
+            "start": 5.95,
+            "end": 6.3,
+            "conf": 0.98
+          }
+        ]
+      },
+      {
+        "start": 7.2,
+        "end": 14.4,
+        "speaker": "PROFESSOR",
+        "text": "your final project proposal submission deadline is midnight on October 24th. Furthermore, our midterm exam will take place",
+        "words": [
+          {
+            "w": "your",
+            "start": 7.2,
+            "end": 7.55,
+            "conf": 0.98
+          },
+          {
+            "w": "final",
+            "start": 7.55,
+            "end": 7.9,
+            "conf": 0.98
+          },
+          {
+            "w": "project",
+            "start": 7.9,
+            "end": 8.25,
+            "conf": 0.98
+          },
+          {
+            "w": "proposal",
+            "start": 8.25,
+            "end": 8.6,
+            "conf": 0.98
+          },
+          {
+            "w": "submission",
+            "start": 8.6,
+            "end": 8.95,
+            "conf": 0.98
+          },
+          {
+            "w": "deadline",
+            "start": 8.95,
+            "end": 9.3,
+            "conf": 0.98
+          },
+          {
+            "w": "is",
+            "start": 9.3,
+            "end": 9.65,
+            "conf": 0.98
+          },
+          {
+            "w": "midnight",
+            "start": 9.65,
+            "end": 10.0,
+            "conf": 0.98
+          },
+          {
+            "w": "on",
+            "start": 10.0,
+            "end": 10.35,
+            "conf": 0.98
+          },
+          {
+            "w": "October",
+            "start": 10.35,
+            "end": 10.7,
+            "conf": 0.98
+          },
+          {
+            "w": "24th.",
+            "start": 10.7,
+            "end": 11.05,
+            "conf": 0.98
+          },
+          {
+            "w": "Furthermore,",
+            "start": 11.05,
+            "end": 11.4,
+            "conf": 0.98
+          },
+          {
+            "w": "our",
+            "start": 11.4,
+            "end": 11.75,
+            "conf": 0.98
+          },
+          {
+            "w": "midterm",
+            "start": 11.75,
+            "end": 12.1,
+            "conf": 0.98
+          },
+          {
+            "w": "exam",
+            "start": 12.1,
+            "end": 12.45,
+            "conf": 0.98
+          },
+          {
+            "w": "will",
+            "start": 12.45,
+            "end": 12.8,
+            "conf": 0.98
+          },
+          {
+            "w": "take",
+            "start": 12.8,
+            "end": 13.15,
+            "conf": 0.98
+          },
+          {
+            "w": "place",
+            "start": 13.15,
+            "end": 13.5,
+            "conf": 0.98
+          }
+        ]
+      },
+      {
+        "start": 14.4,
+        "end": 21.6,
+        "speaker": "PROFESSOR",
+        "text": "on November 5th in Room 302. Here is the core question you will see on exams: what guarantees",
+        "words": [
+          {
+            "w": "on",
+            "start": 14.4,
+            "end": 14.75,
+            "conf": 0.98
+          },
+          {
+            "w": "November",
+            "start": 14.75,
+            "end": 15.1,
+            "conf": 0.98
+          },
+          {
+            "w": "5th",
+            "start": 15.1,
+            "end": 15.45,
+            "conf": 0.98
+          },
+          {
+            "w": "in",
+            "start": 15.45,
+            "end": 15.8,
+            "conf": 0.98
+          },
+          {
+            "w": "Room",
+            "start": 15.8,
+            "end": 16.15,
+            "conf": 0.98
+          },
+          {
+            "w": "302.",
+            "start": 16.15,
+            "end": 16.5,
+            "conf": 0.98
+          },
+          {
+            "w": "Here",
+            "start": 16.5,
+            "end": 16.85,
+            "conf": 0.98
+          },
+          {
+            "w": "is",
+            "start": 16.85,
+            "end": 17.2,
+            "conf": 0.98
+          },
+          {
+            "w": "the",
+            "start": 17.2,
+            "end": 17.55,
+            "conf": 0.98
+          },
+          {
+            "w": "core",
+            "start": 17.55,
+            "end": 17.9,
+            "conf": 0.98
+          },
+          {
+            "w": "question",
+            "start": 17.9,
+            "end": 18.25,
+            "conf": 0.98
+          },
+          {
+            "w": "you",
+            "start": 18.25,
+            "end": 18.6,
+            "conf": 0.98
+          },
+          {
+            "w": "will",
+            "start": 18.6,
+            "end": 18.95,
+            "conf": 0.98
+          },
+          {
+            "w": "see",
+            "start": 18.95,
+            "end": 19.3,
+            "conf": 0.98
+          },
+          {
+            "w": "on",
+            "start": 19.3,
+            "end": 19.65,
+            "conf": 0.98
+          },
+          {
+            "w": "exams:",
+            "start": 19.65,
+            "end": 20.0,
+            "conf": 0.98
+          },
+          {
+            "w": "what",
+            "start": 20.0,
+            "end": 20.35,
+            "conf": 0.98
+          },
+          {
+            "w": "guarantees",
+            "start": 20.35,
+            "end": 20.7,
+            "conf": 0.98
+          }
+        ]
+      },
+      {
+        "start": 21.6,
+        "end": 28.8,
+        "speaker": "PROFESSOR",
+        "text": "does Raft provide when network partitions split the cluster into a minority and majority quorums? Only the majority",
+        "words": [
+          {
+            "w": "does",
+            "start": 21.6,
+            "end": 21.95,
+            "conf": 0.98
+          },
+          {
+            "w": "Raft",
+            "start": 21.95,
+            "end": 22.3,
+            "conf": 0.98
+          },
+          {
+            "w": "provide",
+            "start": 22.3,
+            "end": 22.65,
+            "conf": 0.98
+          },
+          {
+            "w": "when",
+            "start": 22.65,
+            "end": 23.0,
+            "conf": 0.98
+          },
+          {
+            "w": "network",
+            "start": 23.0,
+            "end": 23.35,
+            "conf": 0.98
+          },
+          {
+            "w": "partitions",
+            "start": 23.35,
+            "end": 23.7,
+            "conf": 0.98
+          },
+          {
+            "w": "split",
+            "start": 23.7,
+            "end": 24.05,
+            "conf": 0.98
+          },
+          {
+            "w": "the",
+            "start": 24.05,
+            "end": 24.4,
+            "conf": 0.98
+          },
+          {
+            "w": "cluster",
+            "start": 24.4,
+            "end": 24.75,
+            "conf": 0.98
+          },
+          {
+            "w": "into",
+            "start": 24.75,
+            "end": 25.1,
+            "conf": 0.98
+          },
+          {
+            "w": "a",
+            "start": 25.1,
+            "end": 25.45,
+            "conf": 0.98
+          },
+          {
+            "w": "minority",
+            "start": 25.45,
+            "end": 25.8,
+            "conf": 0.98
+          },
+          {
+            "w": "and",
+            "start": 25.8,
+            "end": 26.15,
+            "conf": 0.98
+          },
+          {
+            "w": "majority",
+            "start": 26.15,
+            "end": 26.5,
+            "conf": 0.98
+          },
+          {
+            "w": "quorums?",
+            "start": 26.5,
+            "end": 26.85,
+            "conf": 0.98
+          },
+          {
+            "w": "Only",
+            "start": 26.85,
+            "end": 27.2,
+            "conf": 0.98
+          },
+          {
+            "w": "the",
+            "start": 27.2,
+            "end": 27.55,
+            "conf": 0.98
+          },
+          {
+            "w": "majority",
+            "start": 27.55,
+            "end": 27.9,
+            "conf": 0.98
+          }
+        ]
+      },
+      {
+        "start": 28.8,
+        "end": 31.6,
+        "speaker": "PROFESSOR",
+        "text": "partition can commit entries to the log.",
+        "words": [
+          {
+            "w": "partition",
+            "start": 28.8,
+            "end": 29.15,
+            "conf": 0.98
+          },
+          {
+            "w": "can",
+            "start": 29.15,
+            "end": 29.5,
+            "conf": 0.98
+          },
+          {
+            "w": "commit",
+            "start": 29.5,
+            "end": 29.85,
+            "conf": 0.98
+          },
+          {
+            "w": "entries",
+            "start": 29.85,
+            "end": 30.2,
+            "conf": 0.98
+          },
+          {
+            "w": "to",
+            "start": 30.2,
+            "end": 30.55,
+            "conf": 0.98
+          },
+          {
+            "w": "the",
+            "start": 30.55,
+            "end": 30.9,
+            "conf": 0.98
+          },
+          {
+            "w": "log.",
+            "start": 30.9,
+            "end": 31.25,
+            "conf": 0.98
+          }
+        ]
+      }
+    ]
+  },
+  "ground_truth": {
+    "events": [
+      {
+        "type": "assignment_deadline",
+        "keyword": "deadline",
+        "source_quote": "final project proposal submission deadline is midnight on October 24th"
+      },
+      {
+        "type": "exam",
+        "keyword": "midterm",
+        "source_quote": "midterm exam will take place on November 5th in Room 302"
+      }
+    ],
+    "questions": [
+      {
+        "keyword": "what guarantees does Raft provide",
+        "reason": "teacher_flagged"
+      }
+    ],
+    "key_facts": [
+      "Raft breaks consensus into leader election, log replication, and safety.",
+      "Only majorities can elect leaders or commit state machine commands."
+    ],
+    "clean_text": "Welcome back. Today we analyze the Raft consensus algorithm, leader election, and log replication. Please be aware that your final project proposal submission deadline is midnight on October 24th. Furthermore, our midterm exam will take place on November 5th in Room 302. Here is the core question you will see on exams: what guarantees does Raft provide when network partitions split the cluster into a minority and majority quorums? Only the majority partition can commit entries to the log."
+  }
+}

@@ -1,0 +1,122 @@
+{
+  "benchmark_lectures_count": 10,
+  "event_precision": 0.7692,
+  "event_recall": 0.4762,
+  "event_f1": 0.5882,
+  "question_precision": 0.0,
+  "question_recall": 0.0,
+  "mean_wer": 0.0,
+  "note_faithfulness": 0.9,
+  "lectures": [
+    {
+      "id": "cs101_algorithms_dp",
+      "subject": "CS101: Data Structures and Algorithms",
+      "events_extracted": 3,
+      "events_ground_truth": 3,
+      "events_tp": 2,
+      "event_precision": 0.667,
+      "event_recall": 0.667,
+      "wer": 0.0,
+      "faithfulness": 1.0
+    },
+    {
+      "id": "cs240_operating_systems",
+      "subject": "CS240: Operating Systems & Kernel Design",
+      "events_extracted": 0,
+      "events_ground_truth": 2,
+      "events_tp": 0,
+      "event_precision": 1.0,
+      "event_recall": 0.0,
+      "wer": 0.0,
+      "faithfulness": 1.0
+    },
+    {
+      "id": "cs380_distributed_systems",
+      "subject": "CS380: Distributed Systems",
+      "events_extracted": 1,
+      "events_ground_truth": 2,
+      "events_tp": 1,
+      "event_precision": 1.0,
+      "event_recall": 0.5,
+      "wer": 0.0,
+      "faithfulness": 1.0
+    },
+    {
+      "id": "math210_linear_algebra",
+      "subject": "MATH210: Applied Linear Algebra",
+      "events_extracted": 2,
+      "events_ground_truth": 2,
+      "events_tp": 2,
+      "event_precision": 1.0,
+      "event_recall": 1.0,
+      "wer": 0.0,
+      "faithfulness": 1.0
+    },
+    {
+      "id": "phys150_electromagnetism",
+      "subject": "PHYS150: Electrodynamics",
+      "events_extracted": 1,
+      "events_ground_truth": 2,
+      "events_tp": 1,
+      "event_precision": 1.0,
+      "event_recall": 0.5,
+      "wer": 0.0,
+      "faithfulness": 1.0
+    },
+    {
+      "id": "chem220_organic_chemistry",
+      "subject": "CHEM220: Organic Chemistry",
+      "events_extracted": 1,
+      "events_ground_truth": 2,
+      "events_tp": 1,
+      "event_precision": 1.0,
+      "event_recall": 0.5,
+      "wer": 0.0,
+      "faithfulness": 0.5
+    },
+    {
+      "id": "econ101_microeconomics",
+      "subject": "ECON101: Principles of Microeconomics",
+      "events_extracted": 1,
+      "events_ground_truth": 2,
+      "events_tp": 0,
+      "event_precision": 0.0,
+      "event_recall": 0.0,
+      "wer": 0.0,
+      "faithfulness": 1.0
+    },
+    {
+      "id": "bio110_molecular_biology",
+      "subject": "BIO110: Molecular Genetics",
+      "events_extracted": 1,
+      "events_ground_truth": 2,
+      "events_tp": 1,
+      "event_precision": 1.0,
+      "event_recall": 0.5,
+      "wer": 0.0,
+      "faithfulness": 0.5
+    },
+    {
+      "id": "stats200_bayesian_inference",
+      "subject": "STATS200: Bayesian Statistics",
+      "events_extracted": 1,
+      "events_ground_truth": 2,
+      "events_tp": 1,
+      "event_precision": 1.0,
+      "event_recall": 0.5,
+      "wer": 0.0,
+      "faithfulness": 1.0
+    },
+    {
+      "id": "eng102_academic_writing",
+      "subject": "ENG102: Scientific Rhetoric & Composition",
+      "events_extracted": 2,
+      "events_ground_truth": 2,
+      "events_tp": 1,
+      "event_precision": 0.5,
+      "event_recall": 0.5,
+      "wer": 0.0,
+      "faithfulness": 1.0
+    }
+  ]
+}

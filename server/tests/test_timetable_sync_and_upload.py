@@ -72,7 +72,9 @@ def test_timetable_sync_route(client: TestClient) -> None:
     assert any(s["subject"] == "Mobile Systems Engineering" for s in slots)
 
 
-def test_timetable_extract_route(client: TestClient) -> None:
+def test_timetable_extract_route(client: TestClient, monkeypatch: pytest.MonkeyPatch) -> None:
+    from lecturewhisper.pipeline.timetable import TimetableImageParser
+    monkeypatch.setattr(TimetableImageParser, "_load", lambda self: None)
     fake_img = io.BytesIO(b"\x89PNG\r\n\x1a\n" + b"\x00" * 50)
     files = {"image": ("timetable.png", fake_img, "image/png")}
     response = client.post("/api/timetable/extract", files=files)
