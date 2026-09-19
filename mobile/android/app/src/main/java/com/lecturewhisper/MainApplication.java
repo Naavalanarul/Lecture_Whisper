@@ -13,6 +13,25 @@ public class MainApplication extends Application {
     @Override
     public void onCreate() {
         super.onCreate();
+
+        final Thread.UncaughtExceptionHandler defaultHandler = Thread.getDefaultUncaughtExceptionHandler();
+        Thread.setDefaultUncaughtExceptionHandler((thread, throwable) -> {
+            try {
+                android.util.Log.e("LectureWhisper", "FATAL UNCAUGHT EXCEPTION on thread " + thread.getName(), throwable);
+                java.io.File file = new java.io.File(getFilesDir(), "last_crash.txt");
+                try (java.io.PrintWriter pw = new java.io.PrintWriter(new java.io.FileOutputStream(file))) {
+                    pw.println("Timestamp: " + new java.util.Date());
+                    pw.println("Thread: " + thread.getName());
+                    pw.println("Exception: " + throwable.getClass().getName() + ": " + throwable.getMessage());
+                    throwable.printStackTrace(pw);
+                }
+            } catch (Throwable ignored) {}
+
+            if (defaultHandler != null) {
+                defaultHandler.uncaughtException(thread, throwable);
+            }
+        });
+
         createNotificationChannels();
     }
 

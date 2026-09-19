@@ -8,6 +8,7 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.content.res.ColorStateList;
+import android.content.res.Configuration;
 import android.graphics.Color;
 import android.media.MediaPlayer;
 import android.net.Uri;
@@ -151,12 +152,29 @@ public class MainActivity extends Activity {
     };
 
     @Override
+    protected void attachBaseContext(Context newBase) {
+        try {
+            SharedPreferences sp = newBase.getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
+            String theme = sp.getString(KEY_THEME, "system");
+            if ("dark".equalsIgnoreCase(theme) || "light".equalsIgnoreCase(theme)) {
+                Configuration config = new Configuration(newBase.getResources().getConfiguration());
+                int nightFlag = "dark".equalsIgnoreCase(theme) ? Configuration.UI_MODE_NIGHT_YES : Configuration.UI_MODE_NIGHT_NO;
+                config.uiMode = (config.uiMode & ~Configuration.UI_MODE_NIGHT_MASK) | nightFlag;
+                super.attachBaseContext(newBase.createConfigurationContext(config));
+                return;
+            }
+        } catch (Throwable t) {
+            Log.w(TAG, "Failed setting configuration in attachBaseContext", t);
+        }
+        super.attachBaseContext(newBase);
+    }
+
+    @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
         prefs = getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
         String savedTheme = prefs.getString(KEY_THEME, "system");
-        applySavedNightMode(savedTheme);
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
             getWindow().setStatusBarColor(getColor(R.color.surface));
@@ -164,22 +182,6 @@ public class MainActivity extends Activity {
         }
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
             getWindow().setDecorFitsSystemWindows(false);
-            android.view.WindowInsetsController controller = getWindow().getInsetsController();
-            if (controller != null) {
-                int nightMode = getResources().getConfiguration().uiMode & android.content.res.Configuration.UI_MODE_NIGHT_MASK;
-                boolean isNight = (nightMode == android.content.res.Configuration.UI_MODE_NIGHT_YES);
-                if (isNight) {
-                    controller.setSystemBarsAppearance(0,
-                        android.view.WindowInsetsController.APPEARANCE_LIGHT_STATUS_BARS |
-                        android.view.WindowInsetsController.APPEARANCE_LIGHT_NAVIGATION_BARS);
-                } else {
-                    controller.setSystemBarsAppearance(
-                        android.view.WindowInsetsController.APPEARANCE_LIGHT_STATUS_BARS |
-                        android.view.WindowInsetsController.APPEARANCE_LIGHT_NAVIGATION_BARS,
-                        android.view.WindowInsetsController.APPEARANCE_LIGHT_STATUS_BARS |
-                        android.view.WindowInsetsController.APPEARANCE_LIGHT_NAVIGATION_BARS);
-                }
-            }
         }
 
         setContentView(R.layout.activity_main);
@@ -197,6 +199,7 @@ public class MainActivity extends Activity {
         setupListeners();
         setupDaySelector();
         updateThemeButtons(savedTheme);
+        checkPreviousCrashLog();
 
         // Restore host settings (default to 127.0.0.1:8420 for zero-config USB reverse tethering)
         String savedHost = prefs.getString(KEY_HOST, "127.0.0.1");
@@ -218,6 +221,8 @@ public class MainActivity extends Activity {
         final View topAppBar = findViewById(R.id.top_app_bar);
         final View bottomNavBar = findViewById(R.id.bottom_nav_bar);
         final View sidebarDrawer = findViewById(R.id.sidebar_drawer);
+
+        updateSystemBarsAppearance();
 
         if (rootLayout == null) return;
 
@@ -1048,24 +1053,51 @@ public class MainActivity extends Activity {
         return Math.round(dp * density);
     }
 
-    private void applySavedNightMode(String mode) {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-            android.app.UiModeManager uiModeManager = (android.app.UiModeManager) getSystemService(Context.UI_MODE_SERVICE);
-            if (uiModeManager != null) {
-                if ("dark".equalsIgnoreCase(mode)) {
-                    uiModeManager.setApplicationNightMode(android.app.UiModeManager.MODE_NIGHT_YES);
-                } else if ("light".equalsIgnoreCase(mode)) {
-                    uiModeManager.setApplicationNightMode(android.app.UiModeManager.MODE_NIGHT_NO);
-                } else {
-                    uiModeManager.setApplicationNightMode(android.app.UiModeManager.MODE_NIGHT_AUTO);
+    private void updateSystemBarsAppearance() {
+        try {
+            int nightMode = getResources().getConfiguration().uiMode & Configuration.UI_MODE_NIGHT_MASK;
+            boolean isNight = (nightMode == Configuration.UI_MODE_NIGHT_YES);
+
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                android.view.WindowInsetsController controller = getWindow().getInsetsController();
+                if (controller != null) {
+                    int flags = android.view.WindowInsetsController.APPEARANCE_LIGHT_STATUS_BARS |
+                                android.view.WindowInsetsController.APPEARANCE_LIGHT_NAVIGATION_BARS;
+                    controller.setSystemBarsAppearance(isNight ? 0 : flags, flags);
                 }
+            } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                View decor = getWindow().getDecorView();
+                int flags = decor.getSystemUiVisibility();
+                if (isNight) {
+                    flags &= ~View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR;
+                } else {
+                    flags |= View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR;
+                }
+                decor.setSystemUiVisibility(flags);
             }
+        } catch (Throwable t) {
+            Log.w(TAG, "Failed to update system bars appearance", t);
         }
+    }
+
+    private void checkPreviousCrashLog() {
+        try {
+            File crashFile = new File(getFilesDir(), "last_crash.txt");
+            if (crashFile.exists()) {
+                byte[] bytes = java.nio.file.Files.readAllBytes(crashFile.toPath());
+                String details = new String(bytes, java.nio.charset.StandardCharsets.UTF_8);
+                crashFile.delete();
+                new AlertDialog.Builder(this)
+                        .setTitle("Previous Crash Diagnostic")
+                        .setMessage(details.length() > 800 ? details.substring(0, 800) + "\n..." : details)
+                        .setPositiveButton("OK", null)
+                        .show();
+            }
+        } catch (Throwable ignored) {}
     }
 
     private void setAppTheme(String mode) {
         prefs.edit().putString(KEY_THEME, mode).apply();
-        applySavedNightMode(mode);
         updateThemeButtons(mode);
         recreate();
     }
