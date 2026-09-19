@@ -29,7 +29,7 @@ export const PairingModal: React.FC<PairingModalProps> = ({
     const payload = JSON.stringify({
       server_id: pairingInfo.server_id,
       host: pairingInfo.host || window.location.hostname,
-      port: pairingInfo.port || 8000,
+      port: pairingInfo.port || 8420,
       token: pairingInfo.token,
     });
 
@@ -121,7 +121,7 @@ export const PairingModal: React.FC<PairingModalProps> = ({
         <div className="bg-surface-950/80 rounded-xl p-3 border border-white/5 mb-5">
           <div className="flex items-center justify-between text-xs text-slate-400 mb-1">
             <span>One-Time Pairing Token</span>
-            <span className="font-mono text-[11px] text-slate-500">{window.location.hostname}:8000</span>
+            <span className="font-mono text-[11px] text-slate-500">{window.location.hostname}:{pairingInfo?.port || 8420}</span>
           </div>
           <div className="flex items-center gap-2">
             <code className="flex-1 font-mono text-xs text-brand-300 bg-surface-900 px-2.5 py-1.5 rounded-lg truncate border border-white/5">

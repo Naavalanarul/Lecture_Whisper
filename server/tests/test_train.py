@@ -109,6 +109,7 @@ def test_adapter_evaluator_decision() -> None:
         event_recall=0.75,
         hallucination_rate=0.10,
         rouge_l=0.60,
+        wer=0.18,
     )
 
     better_adapter_metrics = EvalMetrics(
@@ -117,9 +118,10 @@ def test_adapter_evaluator_decision() -> None:
         event_recall=0.90,
         hallucination_rate=0.02,
         rouge_l=0.75,
+        wer=0.12,
     )
 
-    decision = evaluator.decide_promotion(baseline_metrics, better_adapter_metrics)
+    decision = evaluator.decide_promotion(baseline_metrics, better_adapter_metrics, human_pair_count=50)
     assert decision.promoted is True
 
     worse_adapter_metrics = EvalMetrics(
@@ -128,7 +130,8 @@ def test_adapter_evaluator_decision() -> None:
         event_recall=0.65,
         hallucination_rate=0.20,
         rouge_l=0.50,
+        wer=0.25,
     )
 
-    decision_worse = evaluator.decide_promotion(baseline_metrics, worse_adapter_metrics)
+    decision_worse = evaluator.decide_promotion(baseline_metrics, worse_adapter_metrics, human_pair_count=50)
     assert decision_worse.promoted is False

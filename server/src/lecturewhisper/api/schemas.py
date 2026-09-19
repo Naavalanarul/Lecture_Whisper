@@ -94,6 +94,9 @@ class SpeakerStats(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
     speakers: List[SpeakerInfo]
+    total_speech_time_s: Optional[float] = None
+    total_duration_s: Optional[float] = None
+    silence_time_s: Optional[float] = None
 
 
 class ChapterNotes(BaseModel):
@@ -119,6 +122,7 @@ class Notes(BaseModel):
 class Event(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
+    id: Optional[str] = None
     type: Literal['quiz', 'seminar', 'assignment_deadline', 'exam', 'project', 'schedule_change', 'other']
     title: str
     date_iso: Optional[str] = None
@@ -128,6 +132,7 @@ class Event(BaseModel):
     source_quote: str
     start_s: float
     needs_review: bool
+    candidate_dates: Optional[List[str]] = None
 
 
 class ImportantQuestion(BaseModel):
@@ -135,7 +140,15 @@ class ImportantQuestion(BaseModel):
 
     text: str
     start_s: float
+    end_s: Optional[float] = None
     reason: Literal['teacher_flagged', 'posed_to_class', 'repeated']
+    answer_text: Optional[str] = None
+    answer_start_s: Optional[float] = None
+    answer_end_s: Optional[float] = None
+    transcript_snippet: Optional[str] = None
+    answer_snippet: Optional[str] = None
+    lecturer_self_answered: bool = False
+    student_asked: bool = False
 
 
 class EmphasisPhrase(BaseModel):
@@ -144,6 +157,8 @@ class EmphasisPhrase(BaseModel):
     phrase: str
     count: int
     spans: List[Tuple[float, float]]
+    context_snippet: Optional[str] = None
+    description: Optional[str] = None
 
 
 class HabitPhrase(BaseModel):
@@ -151,6 +166,11 @@ class HabitPhrase(BaseModel):
 
     phrase: str
     count: int
+    context_snippet: Optional[str] = None
+    first_occurrence_s: Optional[float] = None
+    last_occurrence_s: Optional[float] = None
+    mean_inter_arrival_s: Optional[float] = None
+    description: Optional[str] = None
 
 
 class Phrases(BaseModel):

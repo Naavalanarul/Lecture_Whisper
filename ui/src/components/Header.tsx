@@ -78,7 +78,7 @@ export const Header: React.FC<HeaderProps> = ({
             </div>
             <div className="flex items-center gap-1.5 text-[11px] text-muted">
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-              <span>Apple Silicon M4 Max · 36GB Unified</span>
+              <span>Local backend active · 127.0.0.1:8420</span>
             </div>
           </div>
         </div>
@@ -157,10 +157,12 @@ export const Header: React.FC<HeaderProps> = ({
 
           {/* Keyboard Shortcuts Modal Trigger */}
           <button
-            onClick={onOpenShortcuts}
-            className="w-8 h-8 rounded-xl bg-surface hover:bg-surface-elevated text-muted hover:text-text border border-border flex items-center justify-center transition-all shadow-sm active:scale-95"
-            title="Keyboard shortcuts (⌘K or ?)"
-            aria-label="Keyboard shortcuts"
+            onClick={(e) => {
+              (e.currentTarget as HTMLButtonElement).blur();
+              onOpenShortcuts();
+            }}
+            className="w-8 h-8 rounded-xl bg-surface hover:bg-surface-elevated text-muted hover:text-text border border-border flex items-center justify-center transition-all shadow-sm active:scale-95 focus:outline-none"
+            aria-label="Keyboard shortcuts (⌘K or ?)"
           >
             <Command className="w-3.5 h-3.5" />
           </button>

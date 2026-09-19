@@ -591,7 +591,7 @@
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="Port (default: 8000):"
+                            android:text="Port (default: 8420):"
                             android:textColor="@color/text_secondary"
                             android:textSize="12sp"
                             android:layout_marginTop="12dp"
@@ -605,7 +605,7 @@
                             android:textColor="@color/text_primary"
                             android:textSize="14sp"
                             android:paddingHorizontal="12dp"
-                            android:text="8000"
+                            android:text="8420"
                             android:inputType="number"
                             android:singleLine="true" />
 
@@ -696,7 +696,7 @@
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="• Connect Pixel 8a to MacBook with USB-C cable.\n• In MacBook terminal run:\n  adb reverse tcp:8000 tcp:8000\n• In app set Host to '127.0.0.1' or 'localhost'.\n• Works instantly without any network setup!"
+                            android:text="• Connect Pixel 8a to MacBook with USB-C cable.\n• In MacBook terminal run:\n  adb reverse tcp:8420 tcp:8420\n• In app set Host to '127.0.0.1' or 'localhost'.\n• Works instantly without any network setup!"
                             android:textColor="@color/text_secondary"
                             android:textSize="12sp"
                             android:layout_marginTop="4dp" />
@@ -833,7 +833,7 @@
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="v1.0.0 Production • Android 17"
+                    android:text="v1.0.0 Beta • Android 17"
                     android:textColor="@color/accent"
                     android:textSize="11sp" />
             </LinearLayout>

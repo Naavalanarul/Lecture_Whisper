@@ -1,4 +1,4 @@
-import React, { useRef, useEffect, useState } from 'react';
+import React, { useRef, useEffect, useState, useMemo } from 'react';
 import {
   Play,
   Pause,
@@ -6,9 +6,8 @@ import {
   RotateCw,
   Volume2,
   VolumeX,
-  FastForward,
   Bookmark,
-  Sparkles,
+  Check,
 } from 'lucide-react';
 import { formatTime } from '../utils/formatters';
 import { ChapterNotes } from '../types';
@@ -49,14 +48,11 @@ export const AudioPlayer: React.FC<AudioPlayerProps> = ({
   const [hoverTime, setHoverTime] = useState<number | null>(null);
   const [hoverPos, setHoverPos] = useState<number>(0);
 
-  // Sync actual HTML5 audio element
+  // Sync HTML5 audio element
   useEffect(() => {
     if (!audioRef.current || !audioSrc) return;
-
     if (isPlaying) {
-      audioRef.current.play().catch(() => {
-        // Autoplay policy fallback
-      });
+      audioRef.current.play().catch(() => {});
     } else {
       audioRef.current.pause();
     }
@@ -98,19 +94,23 @@ export const AudioPlayer: React.FC<AudioPlayerProps> = ({
     setHoverTime(null);
   };
 
-  const handleSkip = (seconds: number) => {
-    const target = Math.max(0, Math.min(duration, currentTime + seconds));
-    onSeek(target);
-    if (audioRef.current) {
-      audioRef.current.currentTime = target;
+  // Deterministic waveform bars (64 bars)
+  const waveformBars = useMemo(() => {
+    const bars = [];
+    const count = 72;
+    for (let i = 0; i < count; i++) {
+      // Deterministic heights between 20% and 100%
+      const val = Math.sin(i * 0.28) * 0.35 + Math.cos(i * 0.15) * 0.25 + 0.4;
+      bars.push(Math.max(0.18, Math.min(0.95, val)));
     }
-  };
+    return bars;
+  }, []);
 
-  const progressPercent = duration > 0 ? (currentTime / duration) * 100 : 0;
+  const progressFraction = duration > 0 ? Math.min(1, Math.max(0, currentTime / duration)) : 0;
   const rates = [0.75, 1.0, 1.25, 1.5, 2.0];
 
   return (
-    <div className="w-full glass-card rounded-2xl p-4 shadow-xl border border-white/10 relative overflow-visible">
+    <div className="w-full bg-surface/95 backdrop-blur-md border border-border rounded-xl shadow-xl p-3 text-text transition-all">
       {audioSrc && (
         <audio
           ref={audioRef}
@@ -118,130 +118,123 @@ export const AudioPlayer: React.FC<AudioPlayerProps> = ({
           onTimeUpdate={() => {
             if (audioRef.current) onSeek(audioRef.current.currentTime);
           }}
-          onEnded={onPlayPause}
+          onEnded={() => onPlayPause()}
         />
       )}
 
-      {/* Chapter pill indicator */}
-      {activeChapterTitle && (
-        <div className="flex items-center justify-between gap-2 mb-3 pb-2.5 border-b border-white/5 text-xs text-slate-400">
-          <div className="flex items-center gap-2 truncate">
-            <Bookmark className="w-3.5 h-3.5 text-brand-400 shrink-0" />
-            <span className="font-medium text-slate-300 truncate">{activeChapterTitle}</span>
-          </div>
-          <button
-            onClick={onToggleFollow}
-            className={`px-2 py-0.5 rounded text-[11px] font-medium transition-colors ${
-              followTranscript
-                ? 'bg-brand-500/20 text-brand-300 border border-brand-500/30'
-                : 'bg-white/5 text-slate-400 hover:text-white'
-            }`}
-            title="Auto-scroll transcript along with audio"
-          >
-            Follow Audio: {followTranscript ? 'ON' : 'OFF'}
-          </button>
-        </div>
-      )}
-
-      {/* Scrubber track */}
-      <div className="relative mb-3 group select-none">
+      {/* Waveform Scrubber Bar */}
+      <div className="relative mb-2">
         <div
           ref={progressBarRef}
           onClick={handleProgressClick}
           onMouseMove={handleProgressMouseMove}
           onMouseLeave={handleProgressMouseLeave}
-          className="h-3 bg-surface-950 rounded-full cursor-pointer relative overflow-hidden border border-white/10"
+          className="h-10 w-full flex items-end gap-[2px] cursor-pointer relative group px-1 py-1 bg-bg/50 rounded-md border border-border select-none"
         >
-          {/* Progress bar fill */}
-          <div
-            className="h-full bg-gradient-to-r from-brand-500 to-cyan-400 rounded-full transition-all duration-75 relative"
-            style={{ width: `${progressPercent}%` }}
-          >
-            <div className="absolute right-0 top-1/2 -translate-y-1/2 w-3.5 h-3.5 bg-white rounded-full shadow-md scale-0 group-hover:scale-100 transition-transform" />
-          </div>
+          {/* Waveform Bars */}
+          {waveformBars.map((height, i) => {
+            const barFraction = i / waveformBars.length;
+            const isPlayed = barFraction <= progressFraction;
+
+            return (
+              <div
+                key={i}
+                style={{ height: `${height * 100}%` }}
+                className={`flex-1 rounded-sm transition-all ${
+                  isPlayed
+                    ? 'bg-accent group-hover:opacity-90'
+                    : 'bg-muted/30 group-hover:bg-muted/40'
+                }`}
+              />
+            );
+          })}
 
           {/* Chapter markers */}
-          {duration > 0 &&
-            chapters.map((ch, idx) => {
-              const markerPercent = (ch.start / duration) * 100;
-              if (markerPercent <= 0 || markerPercent >= 100) return null;
-              return (
-                <div
-                  key={idx}
-                  className="absolute top-0 bottom-0 w-0.5 bg-white/40 pointer-events-none hover:bg-brand-400"
-                  style={{ left: `${markerPercent}%` }}
-                  title={`${ch.title} (${formatTime(ch.start)})`}
-                />
-              );
-            })}
-        </div>
+          {chapters.map((ch, idx) => {
+            const leftPct = duration > 0 ? (ch.start / duration) * 100 : 0;
+            return (
+              <div
+                key={idx}
+                style={{ left: `${leftPct}%` }}
+                className="absolute top-0 bottom-0 w-[1.5px] bg-accent/60 pointer-events-none"
+                title={`${ch.title} (${formatTime(ch.start)})`}
+              />
+            );
+          })}
 
-        {/* Hover preview tooltip */}
-        {hoverTime !== null && (
-          <div
-            className="absolute -top-7 -translate-x-1/2 px-2 py-0.5 bg-surface-900 border border-white/10 rounded text-[10px] font-mono text-white pointer-events-none shadow-lg z-20 tabular-nums"
-            style={{ left: `${hoverPos}px` }}
-          >
-            {formatTime(hoverTime)}
-          </div>
-        )}
+          {/* Hover timestamp tooltip */}
+          {hoverTime !== null && (
+            <div
+              style={{ left: `${hoverPos}px` }}
+              className="absolute -top-7 -translate-x-1/2 px-2 py-0.5 rounded bg-text text-bg text-[11px] font-mono tabular-nums shadow pointer-events-none whitespace-nowrap"
+            >
+              {formatTime(hoverTime)}
+            </div>
+          )}
+        </div>
       </div>
 
-      {/* Controls row */}
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        {/* Left: Time display */}
-        <div className="text-xs font-mono text-slate-300 tabular-nums min-w-[100px]">
-          <span className="text-white font-semibold">{formatTime(currentTime)}</span>
-          <span className="text-slate-500 mx-1">/</span>
-          <span className="text-slate-400">{formatTime(duration)}</span>
-        </div>
-
-        {/* Center: Play / Pause / Skip */}
+      {/* Controls Row */}
+      <div className="flex flex-wrap items-center justify-between gap-3 text-xs">
+        {/* Left: Playback Controls & Timestamps */}
         <div className="flex items-center gap-2 sm:gap-3">
           <button
-            onClick={() => handleSkip(-10)}
-            className="p-2 text-slate-400 hover:text-white rounded-lg hover:bg-white/5 transition-all active:scale-95"
-            title="Rewind 10s (J)"
-            aria-label="Rewind 10 seconds"
+            onClick={() => onSeek(Math.max(0, currentTime - 10))}
+            className="p-1.5 rounded-md hover:bg-bg text-muted hover:text-text transition-colors"
+            title="Skip back 10s (j)"
+            aria-label="Skip backward 10 seconds"
           >
             <RotateCcw className="w-4 h-4" />
           </button>
 
           <button
             onClick={onPlayPause}
-            className="w-11 h-11 rounded-full bg-gradient-to-tr from-brand-600 to-indigo-500 hover:from-brand-500 hover:to-indigo-400 text-white flex items-center justify-center shadow-lg shadow-brand-500/30 transition-all active:scale-95"
-            title="Play/Pause (Space)"
-            aria-label={isPlaying ? 'Pause' : 'Play'}
+            className="w-8 h-8 rounded-full bg-accent text-on-accent flex items-center justify-center hover:opacity-90 transition-opacity shadow-sm"
+            title="Play / Pause (Space)"
+            aria-label={isPlaying ? 'Pause audio' : 'Play audio'}
           >
             {isPlaying ? (
-              <Pause className="w-5 h-5 fill-current" />
+              <Pause className="w-4 h-4 fill-current" />
             ) : (
-              <Play className="w-5 h-5 fill-current translate-x-0.5" />
+              <Play className="w-4 h-4 fill-current ml-0.5" />
             )}
           </button>
 
           <button
-            onClick={() => handleSkip(10)}
-            className="p-2 text-slate-400 hover:text-white rounded-lg hover:bg-white/5 transition-all active:scale-95"
-            title="Forward 10s (L)"
-            aria-label="Fast forward 10 seconds"
+            onClick={() => onSeek(Math.min(duration, currentTime + 10))}
+            className="p-1.5 rounded-md hover:bg-bg text-muted hover:text-text transition-colors"
+            title="Skip forward 10s (l)"
+            aria-label="Skip forward 10 seconds"
           >
             <RotateCw className="w-4 h-4" />
           </button>
+
+          <div className="font-mono text-xs tabular-nums text-muted ml-1">
+            <span className="text-text font-medium">{formatTime(currentTime)}</span>
+            <span> / </span>
+            <span>{formatTime(duration)}</span>
+          </div>
+
+          {activeChapterTitle && (
+            <div className="hidden md:flex items-center gap-1.5 text-xs text-muted max-w-[200px] truncate border-l border-border pl-3">
+              <Bookmark className="w-3.5 h-3.5 text-accent shrink-0" />
+              <span className="truncate">{activeChapterTitle}</span>
+            </div>
+          )}
         </div>
 
-        {/* Right: Speed & Volume */}
-        <div className="flex items-center gap-3">
-          {/* Playback speed pills */}
-          <div className="flex items-center bg-surface-950 p-0.5 rounded-lg border border-white/5">
+        {/* Right: Rate Buttons, Follow Toggle & Volume */}
+        <div className="flex items-center gap-2 sm:gap-3">
+          {/* Speed Selector */}
+          <div className="inline-flex rounded-md border border-border bg-bg p-0.5 text-[11px] font-mono">
             {rates.map((r) => (
               <button
                 key={r}
                 onClick={() => onRateChange(r)}
-                className={`px-1.5 py-0.5 text-[10px] font-semibold rounded transition-colors tabular-nums ${
+                className={`px-1.5 py-0.5 rounded transition-colors ${
                   playbackRate === r
-                    ? 'bg-brand-600 text-white shadow-sm'
-                    : 'text-slate-400 hover:text-slate-200'
+                    ? 'bg-accent text-on-accent font-semibold'
+                    : 'text-muted hover:text-text'
                 }`}
               >
                 {r}x
@@ -249,32 +242,46 @@ export const AudioPlayer: React.FC<AudioPlayerProps> = ({
             ))}
           </div>
 
-          {/* Volume toggle */}
-          <div className="hidden sm:flex items-center gap-1.5">
+          {/* Follow Transcript Toggle */}
+          <button
+            onClick={onToggleFollow}
+            className={`hidden sm:inline-flex items-center gap-1 px-2 py-1 rounded text-xs transition-colors border ${
+              followTranscript
+                ? 'bg-accent-tint border-accent/30 text-accent font-medium'
+                : 'border-border bg-bg text-muted hover:text-text'
+            }`}
+            title="Auto-scroll transcript to match audio"
+          >
+            {followTranscript && <Check className="w-3 h-3" />}
+            <span>Follow text</span>
+          </button>
+
+          {/* Volume Control */}
+          <div className="flex items-center gap-1.5">
             <button
               onClick={() => setIsMuted(!isMuted)}
-              className="p-1.5 text-slate-400 hover:text-white rounded-md hover:bg-white/5 transition-colors"
-              title="Mute / Unmute (M)"
-              aria-label={isMuted ? 'Unmute' : 'Mute'}
+              className="p-1 rounded text-muted hover:text-text transition-colors"
+              title={isMuted ? 'Unmute' : 'Mute'}
+              aria-label={isMuted ? 'Unmute audio' : 'Mute audio'}
             >
               {isMuted || volume === 0 ? (
-                <VolumeX className="w-4 h-4 text-rose-400" />
+                <VolumeX className="w-4 h-4 text-alert" />
               ) : (
                 <Volume2 className="w-4 h-4" />
               )}
             </button>
             <input
               type="range"
-              min="0"
-              max="1"
-              step="0.05"
+              min={0}
+              max={1}
+              step={0.05}
               value={isMuted ? 0 : volume}
               onChange={(e) => {
                 setVolume(parseFloat(e.target.value));
                 setIsMuted(false);
               }}
-              className="w-16 h-1 bg-surface-950 rounded-lg appearance-none cursor-pointer accent-brand-500"
-              aria-label="Volume slider"
+              className="w-16 h-1 bg-bg rounded-lg appearance-none cursor-pointer accent-accent"
+              aria-label="Volume level"
             />
           </div>
         </div>

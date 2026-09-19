@@ -32,7 +32,7 @@ lecturewhisper doctor
 ```bash
 lecturewhisper serve
 ```
-Launches the FastAPI server at `http://localhost:8000`, starts Bonjour local network advertisement, generates pairing QR codes, and opens the React web dashboard in your default browser.
+Launches the FastAPI server at `http://localhost:8420`, starts Bonjour local network advertisement, generates pairing QR codes, and opens the React web dashboard in your default browser.
 
 ---
 

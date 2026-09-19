@@ -35,4 +35,4 @@ npm run dev
 # Build production assets directly into server/static/
 npm run build
 ```
-The build outputs directly to `../server/static/`, which is immediately served by the FastAPI backend at `http://localhost:8000`.
+The build outputs directly to `../server/static/`, which is immediately served by the FastAPI backend at `http://localhost:8420`.

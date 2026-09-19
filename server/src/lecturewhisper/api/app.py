@@ -37,9 +37,14 @@ def get_static_dir() -> Path | None:
 async def lifespan(app: FastAPI) -> AsyncGenerator[None]:
     """Start/stop background services and initialize database."""
     from lecturewhisper.store.database import get_default_engine
+    from lecturewhisper.demo import should_seed_demo, seed_demo_data
+    from sqlmodel import Session
 
     # Ensure SQLite tables exist
-    get_default_engine()
+    engine = get_default_engine()
+    if should_seed_demo():
+        with Session(engine) as session:
+            seed_demo_data(session)
 
     await job_queue.start()
     logger.info("Lecture Whisper server started")

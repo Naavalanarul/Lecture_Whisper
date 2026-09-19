@@ -32,9 +32,14 @@ def doctor() -> None:
 @click.option("--host", default=None, help="Bind address.")
 @click.option("--port", default=None, type=int, help="Port number.")
 @click.option("--no-browser", is_flag=True, help="Don't open browser.")
-def serve(host: str | None, port: int | None, no_browser: bool) -> None:
+@click.option("--demo", is_flag=True, default=False, help="Seed demo lecture, schedule, and deadline dataset.")
+def serve(host: str | None, port: int | None, no_browser: bool, demo: bool = False) -> None:
     """Start the Lecture Whisper server."""
+    import os
     import uvicorn
+
+    if demo:
+        os.environ["DEMO_MODE"] = "1"
 
     from lecturewhisper.config import ensure_data_dirs, get_settings
 
@@ -331,7 +336,7 @@ def service() -> None:
 
 
 @service.command("install")
-@click.option("--port", default=8000, type=int, help="Port number for the server.")
+@click.option("--port", default=8420, type=int, help="Port number for the server.")
 def service_install(port: int) -> None:
     """Install macOS launchd agent to automatically run Lecture Whisper at login."""
     import shutil

@@ -1,6 +1,15 @@
 import React, { useState } from 'react';
-import { Repeat, Sparkles, MessageSquare, Play, Flame, BarChart2 } from 'lucide-react';
-import { Phrases } from '../types';
+import {
+  Repeat,
+  Sparkles,
+  MessageSquare,
+  Play,
+  Quote,
+  Clock,
+  Activity,
+  Flame,
+} from 'lucide-react';
+import { Phrases, EmphasisPhrase, HabitPhrase } from '../types';
 import { formatTime } from '../utils/formatters';
 
 interface PhrasesViewProps {
@@ -11,146 +20,216 @@ interface PhrasesViewProps {
 export const PhrasesView: React.FC<PhrasesViewProps> = ({ phrases, onSeekAudio }) => {
   const [activeTab, setActiveTab] = useState<'emphasis' | 'habits'>('emphasis');
 
-  const defaultEmphasis = [
-    { phrase: 'dynamic programming', count: 7, spans: [[0.0, 8.5], [50.0, 65.0]] as [number, number][] },
-    { phrase: 'optimal substructure', count: 5, spans: [[38.0, 49.0]] as [number, number][] },
-    { phrase: 'overlapping subproblems', count: 4, spans: [[38.0, 49.0], [50.0, 65.0]] as [number, number][] },
-    { phrase: 'memoization cache', count: 3, spans: [[72.5, 85.0]] as [number, number][] },
-    { phrase: 'bottom-up tabulation', count: 2, spans: [[72.5, 85.0]] as [number, number][] },
-  ];
-
-  const defaultHabits = [
-    { phrase: 'you know', count: 12 },
-    { phrase: 'basically', count: 8 },
-    { phrase: 'so to speak', count: 5 },
-    { phrase: 'essentially', count: 4 },
-  ];
-
-  const emphasisList = phrases?.emphasis && phrases.emphasis.length > 0 ? phrases.emphasis : defaultEmphasis;
-  const habitsList = phrases?.habits && phrases.habits.length > 0 ? phrases.habits : defaultHabits;
+  const emphasisList = phrases?.emphasis || [];
+  const habitsList = phrases?.habits || [];
 
   return (
     <div className="space-y-6">
-      {/* Header with Tab Switcher */}
-      <div className="glass-card p-5 rounded-2xl border border-white/10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+      {/* Header with Segmented Tab Switcher */}
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-border pb-4">
         <div>
-          <div className="flex items-center gap-2">
-            <Repeat className="w-5 h-5 text-brand-400" />
-            <h3 className="text-base font-bold text-white">Repeated Phrases & Verbal Cadence</h3>
-          </div>
-          <p className="text-xs text-slate-400 mt-1">
-            N-gram frequency separation distinguishing core conceptual themes from subconscious speaker fillers
+          <h2 className="text-xl font-semibold tracking-tight text-text">Verbal habits & key phrases</h2>
+          <p className="text-xs text-muted mt-0.5">
+            Differentiates technical emphasis terms from subconscious filler phrases with real transcript context.
           </p>
         </div>
 
-        <div className="flex items-center bg-surface-950 p-1 rounded-xl border border-white/5 text-xs">
+        <div className="inline-flex rounded-md border border-border bg-surface p-0.5 text-xs">
           <button
             onClick={() => setActiveTab('emphasis')}
-            className={`px-3 py-1.5 rounded-lg font-medium transition-colors flex items-center gap-1.5 ${
+            className={`px-3 py-1 rounded font-medium transition-colors flex items-center gap-1.5 ${
               activeTab === 'emphasis'
-                ? 'bg-brand-600 text-white font-semibold shadow-sm'
-                : 'text-slate-400 hover:text-slate-200'
+                ? 'bg-accent text-on-accent'
+                : 'text-muted hover:text-text'
             }`}
           >
-            <Flame className="w-3.5 h-3.5 text-amber-400" />
-            <span>Conceptual Emphasis ({emphasisList.length})</span>
+            <Sparkles className="w-3.5 h-3.5" />
+            <span>Key concepts ({emphasisList.length})</span>
           </button>
           <button
             onClick={() => setActiveTab('habits')}
-            className={`px-3 py-1.5 rounded-lg font-medium transition-colors flex items-center gap-1.5 ${
+            className={`px-3 py-1 rounded font-medium transition-colors flex items-center gap-1.5 ${
               activeTab === 'habits'
-                ? 'bg-brand-600 text-white font-semibold shadow-sm'
-                : 'text-slate-400 hover:text-slate-200'
+                ? 'bg-accent text-on-accent'
+                : 'text-muted hover:text-text'
             }`}
           >
-            <MessageSquare className="w-3.5 h-3.5 text-cyan-400" />
-            <span>Verbal Habits & Fillers ({habitsList.length})</span>
+            <MessageSquare className="w-3.5 h-3.5" />
+            <span>Verbal habits ({habitsList.length})</span>
           </button>
         </div>
       </div>
 
-      {/* Conceptual Emphasis View */}
-      {activeTab === 'emphasis' ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {emphasisList.map((item, idx) => (
-            <div
-              key={idx}
-              className="glass-card rounded-2xl p-5 border border-white/10 hover-glow flex flex-col justify-between transition-all"
-            >
-              <div>
-                <div className="flex items-center justify-between gap-2 mb-2">
-                  <span className="text-xs font-bold uppercase tracking-wider text-brand-400 flex items-center gap-1">
-                    <Sparkles className="w-3 h-3" />
-                    <span>Key Concept</span>
-                  </span>
-
-                  <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-brand-500/10 text-brand-300 border border-brand-500/20 font-mono">
-                    {item.count} occurrences
-                  </span>
-                </div>
-
-                <h4 className="text-base font-bold text-white mb-2 capitalize">
-                  "{item.phrase}"
-                </h4>
-
-                <p className="text-xs text-slate-300 leading-relaxed bg-surface-950/60 p-3 rounded-xl border border-white/5">
-                  Frequently emphasized by the lecturer during theoretical formulations and proofs.
-                </p>
-              </div>
-
-              <div className="pt-3 mt-4 border-t border-white/5 flex items-center justify-between">
-                <span className="text-xs text-slate-400 font-mono">
-                  First spoken at: {item.spans && item.spans[0] ? formatTime(item.spans[0][0]) : '00:00'}
-                </span>
-
-                {item.spans && item.spans[0] && onSeekAudio && (
-                  <button
-                    onClick={() => onSeekAudio(item.spans[0][0])}
-                    className="px-2.5 py-1 bg-brand-600/20 hover:bg-brand-600/30 text-brand-300 hover:text-white rounded-lg text-xs font-semibold flex items-center gap-1.5 border border-brand-500/30 transition-colors"
-                  >
-                    <Play className="w-3 h-3 fill-current" />
-                    <span>Jump to Audio</span>
-                  </button>
-                )}
-              </div>
-            </div>
-          ))}
-        </div>
-      ) : (
-        /* Verbal Habits View */
-        <div className="glass-card rounded-2xl border border-white/10 p-6 space-y-4">
-          <div className="flex items-center justify-between text-xs text-slate-400 pb-2 border-b border-white/5">
-            <span>Discourse Filler Marker</span>
-            <span>Frequency Count</span>
+      {/* Conceptual Emphasis Tab */}
+      {activeTab === 'emphasis' && (
+        emphasisList.length === 0 ? (
+          <div className="text-center py-20 rounded-lg border border-border bg-surface p-6">
+            <Repeat className="w-10 h-10 text-muted mx-auto mb-3 opacity-40" />
+            <h3 className="text-base font-semibold text-text">No technical key phrases detected</h3>
+            <p className="text-xs text-muted mt-1 max-w-sm mx-auto">
+              Repeated technical terminology and emphasized theoretical concepts will appear here once analyzed.
+            </p>
           </div>
-
-          <div className="space-y-4">
-            {habitsList.map((item, idx) => {
-              const maxCount = Math.max(...habitsList.map((h) => h.count), 1);
-              const percent = (item.count / maxCount) * 100;
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {emphasisList.map((item, idx) => {
+              const firstTime = item.first_occurrence_s ?? (item.spans?.[0]?.[0] || 0);
+              const lastTime = item.last_occurrence_s ?? (item.spans?.[item.spans.length - 1]?.[0] || firstTime);
+              const interArrival = item.mean_inter_arrival_s ? Math.round(item.mean_inter_arrival_s) : null;
 
               return (
-                <div key={idx} className="space-y-1.5">
-                  <div className="flex items-center justify-between text-xs">
-                    <span className="font-semibold text-slate-200 capitalize">"{item.phrase}"</span>
-                    <span className="font-mono text-slate-400 font-medium">{item.count} times</span>
+                <div
+                  key={idx}
+                  className="rounded-lg border border-border bg-surface p-4 flex flex-col justify-between space-y-3 hover:border-accent/40 transition-colors"
+                >
+                  <div className="space-y-2.5">
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="text-xs font-medium text-accent flex items-center gap-1">
+                        <Sparkles className="w-3 h-3" />
+                        <span>Core concept</span>
+                      </span>
+
+                      <span className="px-2 py-0.5 rounded text-[11px] font-mono border border-accent/20 bg-accent-tint text-accent">
+                        {item.count} {item.count === 1 ? 'occurrence' : 'occurrences'}
+                      </span>
+                    </div>
+
+                    <h4 className="text-base font-semibold text-text capitalize">
+                      "{item.phrase}"
+                    </h4>
+
+                    {/* Grounded Transcript Context */}
+                    {item.context_snippet ? (
+                      <div className="p-2.5 rounded bg-bg border border-border text-xs text-muted italic flex items-start gap-2">
+                        <Quote className="w-3.5 h-3.5 text-accent shrink-0 mt-0.5" />
+                        <p className="leading-relaxed">"{item.context_snippet}"</p>
+                      </div>
+                    ) : item.description ? (
+                      <p className="text-xs text-muted leading-relaxed">
+                        {item.description}
+                      </p>
+                    ) : null}
+
+                    {/* Occurrence Metrics */}
+                    <div className="flex flex-wrap items-center gap-3 text-[11px] font-mono text-muted pt-1">
+                      <span>First: {formatTime(firstTime)}</span>
+                      <span>•</span>
+                      <span>Last: {formatTime(lastTime)}</span>
+                      {interArrival !== null && (
+                        <>
+                          <span>•</span>
+                          <span>Cadence: ~{interArrival}s</span>
+                        </>
+                      )}
+                    </div>
                   </div>
 
-                  <div className="h-2 bg-surface-950 rounded-full overflow-hidden border border-white/5">
-                    <div
-                      className="h-full bg-gradient-to-r from-cyan-500 to-indigo-500 rounded-full"
-                      style={{ width: `${percent}%` }}
-                    />
+                  <div className="pt-3 border-t border-border flex items-center justify-between text-xs">
+                    <span className="text-muted font-mono tabular-nums">
+                      {formatTime(firstTime)}
+                    </span>
+
+                    {onSeekAudio && (
+                      <button
+                        onClick={() => onSeekAudio(firstTime)}
+                        className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded bg-accent text-on-accent text-xs font-medium hover:opacity-90 transition-opacity"
+                      >
+                        <Play className="w-3 h-3 fill-current" />
+                        <span>Listen</span>
+                      </button>
+                    )}
                   </div>
                 </div>
               );
             })}
           </div>
+        )
+      )}
 
-          <p className="text-xs text-slate-500 italic pt-2">
-            These verbal mannerisms are automatically filtered out of chapter notes and executive summaries.
-          </p>
-        </div>
+      {/* Verbal Habits Tab */}
+      {activeTab === 'habits' && (
+        habitsList.length === 0 ? (
+          <div className="text-center py-20 rounded-lg border border-border bg-surface p-6">
+            <MessageSquare className="w-10 h-10 text-muted mx-auto mb-3 opacity-40" />
+            <h3 className="text-base font-semibold text-text">No verbal habit fillers detected</h3>
+            <p className="text-xs text-muted mt-1 max-w-sm mx-auto">
+              Conversational fillers like "you know" or "basically" will be measured here.
+            </p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {habitsList.map((item, idx) => {
+              const firstTime = item.first_occurrence_s ?? 0;
+              const lastTime = item.last_occurrence_s ?? 0;
+              const interArrival = item.mean_inter_arrival_s ? Math.round(item.mean_inter_arrival_s) : null;
+
+              return (
+                <div
+                  key={idx}
+                  className="rounded-lg border border-border bg-surface p-4 flex flex-col justify-between space-y-3 hover:border-accent/40 transition-colors"
+                >
+                  <div className="space-y-2.5">
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="text-xs font-medium text-muted flex items-center gap-1">
+                        <MessageSquare className="w-3 h-3" />
+                        <span>Conversational filler</span>
+                      </span>
+
+                      <span className="px-2 py-0.5 rounded text-[11px] font-mono border border-border bg-bg text-text">
+                        {item.count} times
+                      </span>
+                    </div>
+
+                    <h4 className="text-base font-semibold text-text">
+                      "{item.phrase}"
+                    </h4>
+
+                    {/* Grounded Transcript Context */}
+                    {item.context_snippet ? (
+                      <div className="p-2.5 rounded bg-bg border border-border text-xs text-muted italic flex items-start gap-2">
+                        <Quote className="w-3.5 h-3.5 text-accent shrink-0 mt-0.5" />
+                        <p className="leading-relaxed">"{item.context_snippet}"</p>
+                      </div>
+                    ) : item.description ? (
+                      <p className="text-xs text-muted leading-relaxed">
+                        {item.description}
+                      </p>
+                    ) : null}
+
+                    {/* Occurrence Metrics */}
+                    <div className="flex flex-wrap items-center gap-3 text-[11px] font-mono text-muted pt-1">
+                      <span>First: {formatTime(firstTime)}</span>
+                      <span>•</span>
+                      <span>Last: {formatTime(lastTime)}</span>
+                      {interArrival !== null && (
+                        <>
+                          <span>•</span>
+                          <span>Mean interval: ~{interArrival}s</span>
+                        </>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="pt-3 border-t border-border flex items-center justify-between text-xs">
+                    <span className="text-muted font-mono tabular-nums">
+                      {formatTime(firstTime)}
+                    </span>
+
+                    {onSeekAudio && (
+                      <button
+                        onClick={() => onSeekAudio(firstTime)}
+                        className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded border border-border bg-surface text-text hover:border-accent hover:text-accent text-xs font-medium transition-colors"
+                      >
+                        <Play className="w-3 h-3 fill-current" />
+                        <span>Listen</span>
+                      </button>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )
       )}
     </div>
   );

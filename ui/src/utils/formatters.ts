@@ -102,6 +102,52 @@ export function downloadICS(event: LectureEvent, subject = 'Academic Lecture'): 
   URL.revokeObjectURL(url);
 }
 
+export function downloadAllICS(events: LectureEvent[], subject = 'Academic Deadlines'): void {
+  if (!events || events.length === 0) return;
+  const pad = (n: number) => n.toString().padStart(2, '0');
+  const formatDateICS = (d: Date) =>
+    `${d.getUTCFullYear()}${pad(d.getUTCMonth() + 1)}${pad(d.getUTCDate())}T${pad(d.getUTCHours())}${pad(d.getUTCMinutes())}00Z`;
+
+  const now = formatDateICS(new Date());
+
+  const vevents = events.map((ev, idx) => {
+    const dt = ev.date_iso ? new Date(ev.date_iso) : new Date(Date.now() + 86400000 * (idx + 1));
+    const dtStart = formatDateICS(dt);
+    const dtEnd = formatDateICS(new Date(dt.getTime() + 3600000));
+    return [
+      'BEGIN:VEVENT',
+      `UID:lw-${Date.now()}-${idx}@lecturewhisper.local`,
+      `DTSTAMP:${now}`,
+      `DTSTART:${dtStart}`,
+      `DTEND:${dtEnd}`,
+      `SUMMARY:${ev.title}`,
+      `DESCRIPTION:${ev.source_quote || 'Academic event detected from lecture.'}\\n\\nType: ${ev.type}`,
+      'STATUS:CONFIRMED',
+      'END:VEVENT',
+    ].join('\r\n');
+  });
+
+  const icsContent = [
+    'BEGIN:VCALENDAR',
+    'VERSION:2.0',
+    'PRODID:-//Lecture Whisper//Local Academic Notes//EN',
+    'CALSCALE:GREGORIAN',
+    'METHOD:PUBLISH',
+    ...vevents,
+    'END:VCALENDAR',
+  ].join('\r\n');
+
+  const blob = new Blob([icsContent], { type: 'text/calendar;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.setAttribute('download', `${subject.replace(/[^a-zA-Z0-9_-]/g, '_')}_calendar.ics`);
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  URL.revokeObjectURL(url);
+}
+
 export function downloadMarkdown(notes: Notes, title: string): void {
   const lines: string[] = [
     `# ${title}`,

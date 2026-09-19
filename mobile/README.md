@@ -10,7 +10,7 @@ The mobile companion application for Lecture Whisper, engineered specifically fo
 
 ## 🚀 Download & Installation
 
-The signed production release APK is published on GitHub:
+The signed v1.0.0 (Beta) release APK is published on GitHub:
 👉 **[Download LectureWhisper-v1.0.0-release.apk](https://github.com/Naavalanarul/Lecture_Whisper/releases/latest)**
 
 ### Fast ADB Sideload:
@@ -24,9 +24,9 @@ adb install -r mobile/release/LectureWhisper-v1.0.0-release.apk
 
 ---
 
-## 📱 Production Android Frontend (Material 3 Dark)
+## 📱 Android Client — Beta (Material 3 Dark)
 
-The mobile client is built as a production-grade academic tool with 4 dedicated views, a sliding navigation sidebar, timetable OCR, and automatic laptop synchronization:
+The mobile client is engineered as a resilient academic companion with 4 dedicated views, a sliding navigation sidebar, timetable OCR, and automatic laptop synchronization:
 
 ### 1. Dynamic Class Banner & Live Recorder (Tab 1)
 - **Schedule-Aware Auto-Tagging**: Detects current day of the week and active time slot from the timetable. Ongoing lectures are highlighted (`🟢 CURRENT CLASS IN PROGRESS`), automatically tagging audio sessions and chunk folders with the subject, room, and lecturer.
@@ -49,7 +49,7 @@ The mobile client is built as a production-grade academic tool with 4 dedicated 
 - **Interactive Connection Guide**:
   1. **Wi-Fi LAN**: Connect both devices to the same router and enter Mac LAN IP.
   2. **Personal Hotspot**: Bypass university network client isolation by connecting via mobile or Mac hotspot.
-  3. **Zero-Latency USB Cable**: Plug in USB-C cable, run `adb reverse tcp:8000 tcp:8000`, and connect via `127.0.0.1` without any network setup.
+  3. **Zero-Latency USB Cable**: Plug in USB-C cable, run `adb reverse tcp:8420 tcp:8420`, and connect via `127.0.0.1` without any network setup.
 
 ### 5. Sliding Navigation Sidebar
 - **Live Storage Metrics**: Uses Android `StatFs` to report internal phone free space, app audio cache footprint in MB, and pending upload queues.

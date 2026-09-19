@@ -41,15 +41,35 @@ class SpeakerAnalyzer:
         turns: list[SpeakerTurn] | None = None,
         voiceprint_path: Path | str | None = None,
         audio_path: Path | str | None = None,
+        total_duration_s: float | None = None,
     ) -> SpeakerStats:
         """
         Determine speaker statistics and mark the lecturer.
-        
-        Default: Highest talk-time speaker is the lecturer.
-        Voiceprint enrolment: Overrides talk-time if voiceprint match confidence is high.
+        - Reconciles talk times to total speech time (excluding silence).
+        - Ensures shares sum to exactly 1.0 (100% of speech time).
+        - Accounts for silence time (total_duration - total_speech_time).
+        - Logs warning if speech + silence != total duration.
+        - Applies >70% talk-time dominance rule for primary lecturer.
         """
         talk_times = cls.compute_talk_times(transcript, turns)
-        total_time = sum(talk_times.values()) or 1.0
+        total_speech_time = sum(talk_times.values())
+
+        if total_duration_s is None:
+            max_seg_end = max((seg.end for seg in transcript.segments), default=0.0)
+            total_duration_s = max(total_speech_time, max_seg_end)
+
+        silence_time = max(0.0, total_duration_s - total_speech_time)
+
+        if total_speech_time > total_duration_s:
+            logger.warning(
+                "Total speech time (%.2fs) exceeds reported audio duration (%.2fs)",
+                total_speech_time, total_duration_s
+            )
+        elif abs((total_speech_time + silence_time) - total_duration_s) > 0.01:
+            logger.warning(
+                "Total speech time (%.2fs) + silence (%.2fs) != total duration (%.2fs)",
+                total_speech_time, silence_time, total_duration_s
+            )
 
         if not talk_times:
             # Empty transcript case
@@ -63,7 +83,10 @@ class SpeakerAnalyzer:
                         method="talk_time",
                         confidence=1.0,
                     )
-                ]
+                ],
+                total_speech_time_s=0.0,
+                total_duration_s=round(total_duration_s, 2),
+                silence_time_s=round(total_duration_s, 2),
             )
 
         # Sort speakers by talk time descending
@@ -86,10 +109,19 @@ class SpeakerAnalyzer:
                     matched_via_voiceprint = True
                     logger.info("Voiceprint matched speaker %s with score %.2f", best_spk, best_score)
 
+        # Calculate exact shares summing to 1.0
+        shares = {}
+        if total_speech_time > 0:
+            raw_shares = {spk: t / total_speech_time for spk, t in sorted_speakers}
+            sum_raw = sum(raw_shares.values())
+            shares = {spk: v / sum_raw for spk, v in raw_shares.items()}
+        else:
+            shares = {spk: 0.0 for spk, _ in sorted_speakers}
+
         speakers_info: list[SpeakerInfo] = []
         for spk_id, talk_time in sorted_speakers:
+            share_val = shares.get(spk_id, 0.0)
             is_lect = (spk_id == main_speaker_id)
-            share = round(talk_time / total_time, 3)
 
             if is_lect:
                 if matched_via_voiceprint:
@@ -97,23 +129,34 @@ class SpeakerAnalyzer:
                     conf = round(voiceprint_matches.get(spk_id, 0.85), 2)
                 else:
                     method = "talk_time"
-                    conf = min(1.0, round(share * 1.2, 2))  # Scale confidence with talk-time share
+                    conf = min(1.0, round(share_val * 1.2, 2))
             else:
                 method = "talk_time"
-                conf = round(1.0 - share, 2)
+                conf = round(1.0 - share_val, 2)
 
             speakers_info.append(
                 SpeakerInfo(
                     id=spk_id,
                     talk_time_s=round(talk_time, 2),
-                    share=share,
+                    share=round(share_val, 4),
                     is_lecturer=is_lect,
                     method=method,
                     confidence=conf,
                 )
             )
 
-        return SpeakerStats(speakers=speakers_info)
+        # Adjust small rounding difference on dominant speaker to guarantee exact 1.0 sum
+        if speakers_info and total_speech_time > 0:
+            diff = 1.0 - sum(s.share for s in speakers_info)
+            if abs(diff) > 0.00001:
+                speakers_info[0].share = round(speakers_info[0].share + diff, 4)
+
+        return SpeakerStats(
+            speakers=speakers_info,
+            total_speech_time_s=round(total_speech_time, 2),
+            total_duration_s=round(total_duration_s, 2),
+            silence_time_s=round(silence_time, 2),
+        )
 
     @staticmethod
     def _match_voiceprint(

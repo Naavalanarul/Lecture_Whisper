@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import {
   Calendar,
   AlertCircle,
@@ -9,13 +9,14 @@ import {
   Play,
   Check,
   X,
-  Edit2,
   CalendarCheck,
   Tag,
   Quote,
+  HelpCircle,
+  ArrowRight,
 } from 'lucide-react';
 import { LectureEvent, EventType } from '../types';
-import { formatDate, formatRelative, formatTime, downloadICS } from '../utils/formatters';
+import { formatDate, formatTime, downloadICS, downloadAllICS } from '../utils/formatters';
 
 interface EventsViewProps {
   events: LectureEvent[];
@@ -34,37 +35,65 @@ export const EventsView: React.FC<EventsViewProps> = ({
   onAddEvent,
   onSeekAudio,
 }) => {
-  const [filter, setFilter] = useState<string>('all');
+  const [filterType, setFilterType] = useState<string>('all');
   const [showAddModal, setShowAddModal] = useState<boolean>(false);
   const [newEventTitle, setNewEventTitle] = useState<string>('');
   const [newEventType, setNewEventType] = useState<EventType>('assignment_deadline');
   const [newEventDate, setNewEventDate] = useState<string>('');
 
-  const filtered = events.filter((ev) => {
-    if (filter === 'all') return true;
-    if (filter === 'review') return ev.needs_review;
-    if (filter === 'confirmed') return ev.resolved;
-    if (filter === 'exams') return ev.type === 'exam' || ev.type === 'quiz';
-    if (filter === 'assignments') return ev.type === 'assignment_deadline';
-    return true;
-  });
+  // Group events temporally
+  const now = new Date();
+  const oneWeekLater = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
+  const twoWeeksLater = new Date(now.getTime() + 14 * 24 * 60 * 60 * 1000);
+
+  const filteredEvents = useMemo(() => {
+    return events.filter((ev) => {
+      if (filterType === 'all') return true;
+      if (filterType === 'review') return ev.needs_review;
+      if (filterType === 'confirmed') return ev.resolved;
+      if (filterType === 'exams') return ev.type === 'exam' || ev.type === 'quiz';
+      if (filterType === 'assignments') return ev.type === 'assignment_deadline';
+      return true;
+    });
+  }, [events, filterType]);
+
+  const groups = useMemo(() => {
+    const thisWeek: { event: LectureEvent; index: number }[] = [];
+    const nextWeek: { event: LectureEvent; index: number }[] = [];
+    const later: { event: LectureEvent; index: number }[] = [];
+    const past: { event: LectureEvent; index: number }[] = [];
+
+    filteredEvents.forEach((ev) => {
+      const originalIndex = events.indexOf(ev);
+      if (!ev.date_iso) {
+        later.push({ event: ev, index: originalIndex });
+        return;
+      }
+      const d = new Date(ev.date_iso);
+      if (d < now && !ev.needs_review) {
+        past.push({ event: ev, index: originalIndex });
+      } else if (d <= oneWeekLater) {
+        thisWeek.push({ event: ev, index: originalIndex });
+      } else if (d <= twoWeeksLater) {
+        nextWeek.push({ event: ev, index: originalIndex });
+      } else {
+        later.push({ event: ev, index: originalIndex });
+      }
+    });
+
+    return { thisWeek, nextWeek, later, past };
+  }, [filteredEvents, events, now, oneWeekLater, twoWeeksLater]);
 
   const needsReviewCount = events.filter((e) => e.needs_review).length;
-  const examCount = events.filter((e) => e.type === 'exam' || e.type === 'quiz').length;
+  const confirmedCount = events.filter((e) => e.resolved).length;
 
-  const getTypeStyle = (type: EventType) => {
-    switch (type) {
-      case 'exam':
-        return 'bg-rose-500/10 text-rose-300 border-rose-500/20';
-      case 'quiz':
-        return 'bg-amber-500/10 text-amber-300 border-amber-500/20';
-      case 'assignment_deadline':
-        return 'bg-brand-500/10 text-brand-300 border-brand-500/20';
-      case 'seminar':
-        return 'bg-purple-500/10 text-purple-300 border-purple-500/20';
-      default:
-        return 'bg-slate-800 text-slate-300 border-slate-700';
-    }
+  const handleResolveCandidate = (evIndex: number, chosenDate: string) => {
+    onEditEvent(evIndex, {
+      date_iso: chosenDate,
+      date_text: formatDate(chosenDate),
+      needs_review: false,
+      resolved: true,
+    });
   };
 
   const handleCreateEvent = (e: React.FormEvent) => {
@@ -75,10 +104,10 @@ export const EventsView: React.FC<EventsViewProps> = ({
       title: newEventTitle,
       type: newEventType,
       date_iso: newEventDate ? new Date(newEventDate).toISOString() : null,
-      date_text: newEventDate || 'Custom date',
+      date_text: newEventDate ? formatDate(newEventDate) : 'Custom date',
       resolved: true,
       confidence: 1.0,
-      source_quote: 'Manually scheduled by student',
+      source_quote: 'Manually added by student',
       start_s: 0,
       needs_review: false,
     });
@@ -88,224 +117,339 @@ export const EventsView: React.FC<EventsViewProps> = ({
     setShowAddModal(false);
   };
 
+  const renderEventCard = ({ event: ev, index: evIndex }: { event: LectureEvent; index: number }) => {
+    const isUrgent = ev.needs_review || (ev.date_iso && new Date(ev.date_iso) <= oneWeekLater);
+
+    return (
+      <div
+        key={ev.id || evIndex}
+        className={`rounded-lg border bg-surface p-4 transition-all flex flex-col justify-between gap-3 ${
+          ev.needs_review
+            ? 'border-alert/50 ring-1 ring-alert/20'
+            : ev.resolved
+            ? 'border-border'
+            : 'border-border hover:border-accent/40'
+        }`}
+      >
+        <div>
+          {/* Top meta row */}
+          <div className="flex items-center justify-between gap-2 mb-2">
+            <div className="flex items-center gap-2">
+              <span className="px-2 py-0.5 rounded text-[11px] font-mono capitalize border border-border bg-bg text-text">
+                {ev.type.replace('_', ' ')}
+              </span>
+              {ev.needs_review ? (
+                <span className="inline-flex items-center gap-1 text-[11px] font-medium text-alert">
+                  <AlertCircle className="w-3 h-3" />
+                  <span>Needs date review</span>
+                </span>
+              ) : ev.resolved ? (
+                <span className="inline-flex items-center gap-1 text-[11px] font-medium text-accent">
+                  <CheckCircle2 className="w-3 h-3" />
+                  <span>Confirmed</span>
+                </span>
+              ) : null}
+            </div>
+
+            <span className="text-xs font-mono tabular-nums text-muted">
+              {ev.date_iso ? formatDate(ev.date_iso) : ev.date_text || 'Date TBA'}
+            </span>
+          </div>
+
+          <h4 className="text-sm font-semibold text-text leading-snug mb-2">{ev.title}</h4>
+
+          {/* Transcript Quote */}
+          {ev.source_quote && (
+            <div className="rounded bg-bg p-2.5 text-xs text-muted border border-border mb-3 flex items-start gap-2">
+              <Quote className="w-3.5 h-3.5 text-accent shrink-0 mt-0.5" />
+              <p className="italic leading-relaxed">"{ev.source_quote}"</p>
+            </div>
+          )}
+
+          {/* Candidate Dates Disambiguation Interface (Section A1 Parity) */}
+          {ev.needs_review && ev.candidate_dates && ev.candidate_dates.length > 0 && (
+            <div className="rounded-md border border-alert/30 bg-alert/5 p-3 mb-3 space-y-2">
+              <p className="text-xs font-medium text-alert flex items-center gap-1.5">
+                <HelpCircle className="w-3.5 h-3.5" />
+                <span>Multiple date interpretations detected:</span>
+              </p>
+              <div className="flex flex-wrap gap-2">
+                {ev.candidate_dates.map((candidate, cIdx) => (
+                  <button
+                    key={cIdx}
+                    onClick={() => handleResolveCandidate(evIndex, candidate)}
+                    className="px-2.5 py-1 text-xs font-mono rounded border border-border bg-surface text-text hover:border-accent hover:text-accent transition-colors flex items-center gap-1"
+                  >
+                    <span>{formatDate(candidate)}</span>
+                    <ArrowRight className="w-3 h-3" />
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Footer Actions */}
+        <div className="flex items-center justify-between pt-3 border-t border-border text-xs">
+          <div className="flex items-center gap-2">
+            {ev.start_s !== undefined && ev.start_s > 0 && onSeekAudio && (
+              <button
+                onClick={() => onSeekAudio(ev.start_s)}
+                className="inline-flex items-center gap-1 text-muted hover:text-accent transition-colors"
+                title="Listen to lecture context"
+              >
+                <Play className="w-3 h-3 fill-current" />
+                <span className="font-mono tabular-nums">{formatTime(ev.start_s)}</span>
+              </button>
+            )}
+          </div>
+
+          <div className="flex items-center gap-1.5">
+            {!ev.resolved && (
+              <button
+                onClick={() => onConfirmEvent(evIndex)}
+                className="inline-flex items-center gap-1 px-2.5 py-1 rounded bg-accent text-on-accent text-xs font-medium hover:opacity-90 transition-opacity"
+              >
+                <Check className="w-3 h-3" />
+                <span>Confirm</span>
+              </button>
+            )}
+            <button
+              onClick={() => downloadICS(ev)}
+              className="p-1.5 rounded border border-border hover:border-accent hover:text-accent text-muted transition-colors"
+              title="Download .ics event"
+              aria-label="Download calendar event"
+            >
+              <Download className="w-3.5 h-3.5" />
+            </button>
+            <button
+              onClick={() => onDismissEvent(evIndex)}
+              className="p-1.5 rounded border border-border hover:border-alert hover:text-alert text-muted transition-colors"
+              title="Dismiss deadline"
+              aria-label="Dismiss deadline"
+            >
+              <X className="w-3.5 h-3.5" />
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
   return (
     <div className="space-y-6">
-      {/* Top Banner Row */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 glass-card p-5 rounded-2xl border border-white/10">
+      {/* Top Banner & Actions */}
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-border pb-4">
         <div>
-          <div className="flex items-center gap-2">
-            <Calendar className="w-5 h-5 text-brand-400" />
-            <h3 className="text-base font-bold text-white">Actionable Deadlines & Academic Events</h3>
-          </div>
-          <p className="text-xs text-slate-400 mt-1">
-            Automatically extracted by MLX-LM and resolved against lecture timestamps
+          <h2 className="text-xl font-semibold tracking-tight text-text">Deadlines & events</h2>
+          <p className="text-xs text-muted mt-0.5">
+            Academic milestones, homework deadlines, and exams extracted from lecture speech.
           </p>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
+          {events.length > 0 && (
+            <button
+              onClick={() => downloadAllICS(events)}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md border border-border bg-surface text-xs font-medium text-text hover:border-accent hover:text-accent transition-colors"
+            >
+              <Download className="w-3.5 h-3.5 text-accent" />
+              <span>Export all (.ics)</span>
+            </button>
+          )}
+
           <button
             onClick={() => setShowAddModal(true)}
-            className="px-3 py-2 bg-brand-600 hover:bg-brand-500 text-white rounded-xl text-xs font-semibold flex items-center gap-1.5 transition-all shadow-md active:scale-95"
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-accent text-on-accent text-xs font-medium hover:opacity-90 transition-opacity"
           >
             <Plus className="w-3.5 h-3.5" />
-            <span>Add Deadline</span>
+            <span>Add deadline</span>
           </button>
         </div>
       </div>
 
-      {/* Filter Tabs */}
-      <div className="flex items-center gap-2 overflow-x-auto pb-1 no-scrollbar">
-        {[
-          { id: 'all', label: `All Events (${events.length})` },
-          { id: 'review', label: `Needs Review (${needsReviewCount})`, alert: needsReviewCount > 0 },
-          { id: 'confirmed', label: 'Confirmed' },
-          { id: 'exams', label: `Exams & Quizzes (${examCount})` },
-          { id: 'assignments', label: 'Assignments' },
-        ].map((tab) => (
-          <button
-            key={tab.id}
-            onClick={() => setFilter(tab.id)}
-            className={`px-3 py-1.5 rounded-xl text-xs font-medium shrink-0 flex items-center gap-1.5 border transition-all ${
-              filter === tab.id
-                ? 'bg-brand-600 border-brand-500 text-white font-semibold shadow-md shadow-brand-600/20'
-                : 'bg-surface-900 border-white/5 text-slate-400 hover:text-white hover:bg-surface-850'
-            }`}
-          >
-            <span>{tab.label}</span>
-            {tab.alert && <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse" />}
-          </button>
-        ))}
+      {/* Filter Segmented Controls */}
+      <div className="inline-flex rounded-md border border-border bg-surface p-0.5 text-xs">
+        <button
+          onClick={() => setFilterType('all')}
+          className={`px-3 py-1 rounded font-medium transition-colors ${
+            filterType === 'all' ? 'bg-accent text-on-accent' : 'text-muted hover:text-text'
+          }`}
+        >
+          All ({events.length})
+        </button>
+        <button
+          onClick={() => setFilterType('review')}
+          className={`px-3 py-1 rounded font-medium transition-colors ${
+            filterType === 'review' ? 'bg-accent text-on-accent' : 'text-muted hover:text-text'
+          }`}
+        >
+          Needs review ({needsReviewCount})
+        </button>
+        <button
+          onClick={() => setFilterType('confirmed')}
+          className={`px-3 py-1 rounded font-medium transition-colors ${
+            filterType === 'confirmed' ? 'bg-accent text-on-accent' : 'text-muted hover:text-text'
+          }`}
+        >
+          Confirmed ({confirmedCount})
+        </button>
+        <button
+          onClick={() => setFilterType('exams')}
+          className={`px-3 py-1 rounded font-medium transition-colors ${
+            filterType === 'exams' ? 'bg-accent text-on-accent' : 'text-muted hover:text-text'
+          }`}
+        >
+          Exams & quizzes
+        </button>
+        <button
+          onClick={() => setFilterType('assignments')}
+          className={`px-3 py-1 rounded font-medium transition-colors ${
+            filterType === 'assignments' ? 'bg-accent text-on-accent' : 'text-muted hover:text-text'
+          }`}
+        >
+          Assignments
+        </button>
       </div>
 
-      {/* Events Grid */}
-      {filtered.length === 0 ? (
-        <div className="text-center py-16 glass-card rounded-2xl border border-white/10">
-          <CalendarCheck className="w-12 h-12 text-slate-600 mx-auto mb-3" />
-          <h3 className="text-base font-semibold text-white">No events match this filter</h3>
-          <p className="text-xs text-slate-400 mt-1">All deadlines are organized and up to date.</p>
+      {/* Structured Temporal Agenda */}
+      {filteredEvents.length === 0 ? (
+        <div className="text-center py-20 rounded-lg border border-border bg-surface p-6">
+          <Calendar className="w-10 h-10 text-muted mx-auto mb-3 opacity-40" />
+          <h3 className="text-base font-semibold text-text">No deadlines found</h3>
+          <p className="text-xs text-muted mt-1 max-w-sm mx-auto">
+            When lecturers mention upcoming assignments, quizzes, or schedule shifts, they are automatically structured here.
+          </p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {filtered.map((ev, idx) => {
-            const rel = formatRelative(ev.date_iso);
-            return (
-              <div
-                key={idx}
-                className={`glass-card rounded-2xl p-5 border transition-all duration-200 flex flex-col justify-between hover-glow ${
-                  ev.needs_review
-                    ? 'border-amber-500/40 bg-amber-950/10'
-                    : ev.resolved
-                    ? 'border-white/10'
-                    : 'border-white/10'
-                }`}
-              >
-                <div>
-                  <div className="flex items-center justify-between gap-2 mb-3">
-                    <span
-                      className={`px-2.5 py-0.5 rounded-full text-[11px] font-semibold uppercase tracking-wider border ${getTypeStyle(
-                        ev.type
-                      )}`}
-                    >
-                      {ev.type.replace('_', ' ')}
-                    </span>
-
-                    {rel && (
-                      <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-white/10 text-white font-mono">
-                        {rel}
-                      </span>
-                    )}
-                  </div>
-
-                  <h4 className="text-sm font-bold text-white mb-2 leading-snug">{ev.title}</h4>
-
-                  <div className="space-y-1.5 text-xs text-slate-300 mb-3">
-                    <div className="flex items-center gap-2">
-                      <Clock className="w-3.5 h-3.5 text-slate-500 shrink-0" />
-                      <span className="font-medium text-slate-200">{formatDate(ev.date_iso)}</span>
-                    </div>
-
-                    <div className="flex items-center gap-2 text-[11px] text-slate-400">
-                      <Tag className="w-3 h-3 text-slate-500 shrink-0" />
-                      <span>Confidence: {Math.round(ev.confidence * 100)}%</span>
-                    </div>
-                  </div>
-
-                  {ev.source_quote && (
-                    <div className="p-2.5 bg-surface-950/80 rounded-xl border border-white/5 mb-4 text-[11px] text-slate-400 italic">
-                      <Quote className="w-3 h-3 text-brand-400 inline mr-1" />
-                      <span>"{ev.source_quote}"</span>
-                      {ev.start_s > 0 && onSeekAudio && (
-                        <button
-                          onClick={() => onSeekAudio(ev.start_s)}
-                          className="ml-2 text-brand-400 hover:text-brand-300 not-italic font-mono text-[10px] underline"
-                        >
-                          jump ({formatTime(ev.start_s)})
-                        </button>
-                      )}
-                    </div>
-                  )}
-                </div>
-
-                <div className="flex items-center gap-2 pt-3 border-t border-white/5">
-                  {!ev.resolved && (
-                    <button
-                      onClick={() => onConfirmEvent(idx)}
-                      className="flex-1 py-1.5 px-3 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5 transition-colors"
-                    >
-                      <Check className="w-3.5 h-3.5" />
-                      <span>Confirm</span>
-                    </button>
-                  )}
-
-                  <button
-                    onClick={() => downloadICS(ev)}
-                    className="flex-1 py-1.5 px-3 bg-surface-950 hover:bg-surface-850 text-slate-200 hover:text-white rounded-lg border border-white/10 text-xs font-semibold flex items-center justify-center gap-1.5 transition-colors"
-                    title="Export .ics to Apple Calendar or Google Calendar"
-                  >
-                    <Download className="w-3.5 h-3.5" />
-                    <span>.ics</span>
-                  </button>
-
-                  <button
-                    onClick={() => onDismissEvent(idx)}
-                    className="p-1.5 text-slate-500 hover:text-rose-400 hover:bg-rose-500/10 rounded-lg transition-colors"
-                    title="Dismiss event"
-                  >
-                    <X className="w-4 h-4" />
-                  </button>
-                </div>
+        <div className="space-y-8">
+          {/* This Week */}
+          {groups.thisWeek.length > 0 && (
+            <div className="space-y-3">
+              <div className="flex items-center gap-2 border-b border-border pb-2">
+                <Clock className="w-4 h-4 text-alert" />
+                <h3 className="text-xs font-semibold uppercase tracking-wider text-text">This week</h3>
+                <span className="text-xs font-mono tabular-nums text-muted">({groups.thisWeek.length})</span>
               </div>
-            );
-          })}
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {groups.thisWeek.map(renderEventCard)}
+              </div>
+            </div>
+          )}
+
+          {/* Next Week */}
+          {groups.nextWeek.length > 0 && (
+            <div className="space-y-3">
+              <div className="flex items-center gap-2 border-b border-border pb-2">
+                <CalendarCheck className="w-4 h-4 text-accent" />
+                <h3 className="text-xs font-semibold uppercase tracking-wider text-text">Next week</h3>
+                <span className="text-xs font-mono tabular-nums text-muted">({groups.nextWeek.length})</span>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {groups.nextWeek.map(renderEventCard)}
+              </div>
+            </div>
+          )}
+
+          {/* Later This Term */}
+          {groups.later.length > 0 && (
+            <div className="space-y-3">
+              <div className="flex items-center gap-2 border-b border-border pb-2">
+                <Calendar className="w-4 h-4 text-muted" />
+                <h3 className="text-xs font-semibold uppercase tracking-wider text-text">Later this term</h3>
+                <span className="text-xs font-mono tabular-nums text-muted">({groups.later.length})</span>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {groups.later.map(renderEventCard)}
+              </div>
+            </div>
+          )}
+
+          {/* Past / Resolved */}
+          {groups.past.length > 0 && (
+            <div className="space-y-3 opacity-75">
+              <div className="flex items-center gap-2 border-b border-border pb-2">
+                <CheckCircle2 className="w-4 h-4 text-muted" />
+                <h3 className="text-xs font-semibold uppercase tracking-wider text-muted">Past / archived</h3>
+                <span className="text-xs font-mono tabular-nums text-muted">({groups.past.length})</span>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {groups.past.map(renderEventCard)}
+              </div>
+            </div>
+          )}
         </div>
       )}
 
-      {/* Add Custom Event Modal */}
+      {/* Add Deadline Modal */}
       {showAddModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm animate-in fade-in">
-          <div className="w-full max-w-md glass-card rounded-2xl border border-white/10 shadow-2xl p-6 relative">
-            <div className="flex items-center justify-between pb-3 border-b border-white/10 mb-4">
-              <h4 className="text-sm font-bold text-white">Add Academic Deadline</h4>
+        <div className="fixed inset-0 z-50 bg-bg/80 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-surface border border-border rounded-lg max-w-md w-full p-5 shadow-2xl space-y-4">
+            <div className="flex items-center justify-between border-b border-border pb-3">
+              <h3 className="text-sm font-semibold text-text">Add custom deadline</h3>
               <button
                 onClick={() => setShowAddModal(false)}
-                className="text-slate-400 hover:text-white"
+                className="text-muted hover:text-text p-1"
+                aria-label="Close dialog"
               >
                 <X className="w-4 h-4" />
               </button>
             </div>
 
-            <form onSubmit={handleCreateEvent} className="space-y-4">
+            <form onSubmit={handleCreateEvent} className="space-y-3 text-xs">
               <div>
-                <label className="block text-xs font-medium text-slate-300 mb-1">Title</label>
+                <label className="block font-medium text-text mb-1">Title</label>
                 <input
                   type="text"
-                  placeholder="e.g. Midterm Exam or Problem Set 3"
+                  placeholder="e.g. CS 106B Midterm Examination"
                   value={newEventTitle}
                   onChange={(e) => setNewEventTitle(e.target.value)}
-                  className="w-full bg-surface-950 border border-white/10 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-brand-500"
+                  className="w-full bg-bg border border-border rounded-md px-3 py-1.5 text-xs text-text focus:outline-none focus:border-accent"
                   required
                 />
               </div>
 
-              <div>
-                <label className="block text-xs font-medium text-slate-300 mb-1">Type</label>
-                <select
-                  value={newEventType}
-                  onChange={(e) => setNewEventType(e.target.value as EventType)}
-                  className="w-full bg-surface-950 border border-white/10 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-brand-500"
-                >
-                  <option value="exam">Midterm / Final Exam</option>
-                  <option value="quiz">Pop Quiz</option>
-                  <option value="assignment_deadline">Assignment Deadline</option>
-                  <option value="seminar">Seminar / Office Hours</option>
-                  <option value="other">Other Event</option>
-                </select>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block font-medium text-text mb-1">Event type</label>
+                  <select
+                    value={newEventType}
+                    onChange={(e) => setNewEventType(e.target.value as EventType)}
+                    className="w-full bg-bg border border-border rounded-md px-2 py-1.5 text-xs text-text focus:outline-none focus:border-accent"
+                  >
+                    <option value="assignment_deadline">Assignment</option>
+                    <option value="exam">Exam</option>
+                    <option value="quiz">Quiz</option>
+                    <option value="seminar">Seminar</option>
+                    <option value="project">Project</option>
+                    <option value="other">Other</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block font-medium text-text mb-1">Due date</label>
+                  <input
+                    type="date"
+                    value={newEventDate}
+                    onChange={(e) => setNewEventDate(e.target.value)}
+                    className="w-full bg-bg border border-border rounded-md px-2 py-1.5 text-xs text-text focus:outline-none focus:border-accent"
+                  />
+                </div>
               </div>
 
-              <div>
-                <label className="block text-xs font-medium text-slate-300 mb-1">Date & Time</label>
-                <input
-                  type="datetime-local"
-                  value={newEventDate}
-                  onChange={(e) => setNewEventDate(e.target.value)}
-                  className="w-full bg-surface-950 border border-white/10 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-brand-500"
-                  required
-                />
-              </div>
-
-              <div className="flex justify-end gap-2 pt-2">
+              <div className="flex justify-end gap-2 pt-2 border-t border-border">
                 <button
                   type="button"
                   onClick={() => setShowAddModal(false)}
-                  className="px-3 py-1.5 text-xs text-slate-400 hover:text-white"
+                  className="px-3 py-1.5 rounded border border-border text-muted hover:text-text"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-1.5 bg-brand-600 hover:bg-brand-500 text-white rounded-lg text-xs font-semibold"
+                  className="px-3 py-1.5 rounded bg-accent text-on-accent font-medium hover:opacity-90"
                 >
-                  Save Deadline
+                  Save deadline
                 </button>
               </div>
             </form>

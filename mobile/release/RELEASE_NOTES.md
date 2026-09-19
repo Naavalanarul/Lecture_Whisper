@@ -1,24 +1,24 @@
-# Lecture Whisper v1.0.0 — Production Release
+# Lecture Whisper v1.0.0 — Beta Release
 
-A personal, fully local lecture-notes and academic intelligence system engineered specifically for:
-- **Server / Host**: Apple Silicon MacBook Pro (M4 Max, 36 GB unified memory, macOS)
+A personal, fully local lecture-notes and academic intelligence system engineered for:
+- **Server / Host**: Apple Silicon Mac (macOS, local MLX inference)
 - **Client / Mobile**: Google Pixel 8a (Android 17, API 35+)
 
 ---
 
 ## 📱 Android Application Release (`LectureWhisper-v1.0.0-release.apk`)
 
-This release includes the signed production Android APK for **Google Pixel 8a** running **Android 17**.
+This release includes the signed v1.0.0 (Beta) Android APK for **Google Pixel 8a** running **Android 17**.
 
 ### Key Mobile Features:
-- **Production Material 3 Dark Frontend**: Complete redesign with 4 dedicated views: Live Recorder, Weekly Timetable, Device Audio Library, and MacBook Connection & Diagnostics.
+- **Material 3 Dark Client**: Dedicated views for Live Recorder, Weekly Timetable, Device Audio Library, and MacBook Connection & Diagnostics.
 - **Dynamic Schedule-Aware Recording**: Detects current active lecture from timetable, auto-tagging recording sessions and folders with the subject, room, and lecturer.
-- **Host-Accelerated Timetable Photo OCR**: Capture or upload schedule photos, extract weekly class grids using Tesseract OCR / ML vision on the MacBook Pro, and instantly populate device schedule.
+- **Host-Accelerated Timetable Photo OCR**: Capture or upload schedule photos, extract weekly class grids using OCR / ML vision on the Mac, and instantly populate device schedule.
 - **Sliding Navigation Sidebar**: Real-time internal storage stats via Android `StatFs` (device free space, app cache footprint in MB, pending uploads) with a one-tap clean-up tool for synced chunks.
-- **Connection Monitor & 3-Mode Guide**: Live ping latency chip (`🟢 Connected (14ms)` / `🟠 Offline`) and troubleshooting guide for Wi-Fi LAN, Personal Hotspot, and zero-latency USB tethering (`adb reverse tcp:8000 tcp:8000`).
-- **Automatic Two-Way Synchronization**: Automatically pushes timetable slots and unsynced audio chunks as soon as MacBook connection is detected.
-- **Foreground Microphone Service**: Uses `foregroundServiceType="microphone"` with `VOICE_RECOGNITION` audio source to capture crystal clear lecture audio with hardware beamforming.
-- **Rotating 10-Minute AAC Chunks**: Audio is captured in 16 kHz mono AAC `.m4a` files with partial wake lock (`PARTIAL_WAKE_LOCK`). Crash resilient against device battery exhaustion or OS reboots.
+- **Connection Monitor & 3-Mode Guide**: Live ping latency chip (`🟢 Connected (14ms)` / `🟠 Offline`) and troubleshooting guide for Wi-Fi LAN, Personal Hotspot, and zero-latency USB tethering (`adb reverse tcp:8420 tcp:8420`).
+- **Automatic Two-Way Synchronization**: Automatically pushes timetable slots and unsynced audio chunks as soon as Mac connection is detected.
+- **Foreground Microphone Service**: Uses `foregroundServiceType="microphone"` with ongoing notification to keep recording resilient against OS background limits; battery optimization should be set to "Unrestricted".
+- **Rotating 10-Minute AAC Chunks**: Audio is captured in 16 kHz mono AAC `.m4a` files with `PARTIAL_WAKE_LOCK`. Crash-resilient chunk preservation.
 - **Exact Class Alarms**: Uses `SCHEDULE_EXACT_ALARM` to notify you 2 minutes before lecture start with a one-tap record action.
 - **Zero Cloud Footprint**: Nothing leaves your local LAN. No accounts, no telemetry, no third-party cloud SDKs.
 

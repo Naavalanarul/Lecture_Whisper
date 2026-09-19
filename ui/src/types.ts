@@ -31,7 +31,15 @@ export interface SpeakerInfo {
 }
 
 export interface SpeakerStats {
-  speakers: SpeakerInfo[];
+  speakers?: SpeakerInfo[];
+  lecturer_speaker_id?: string;
+  speaker_distribution?: Record<string, number>;
+  talk_times?: Record<string, number>;
+  total_speech_time_s?: number;
+  total_duration_s?: number;
+  silence_time_s?: number;
+  discrepancy_detected?: boolean;
+  wpm?: Record<string, number>;
 }
 
 export interface ChapterNotes {
@@ -48,6 +56,12 @@ export interface ChapterNotes {
 export interface Notes {
   chapters: ChapterNotes[];
   overall_summary: string;
+  summary?: string;
+  key_concepts?: string[];
+  important_questions?: ImportantQuestion[];
+  speaker_stats?: SpeakerStats;
+  repeated_phrases?: HabitPhrase[];
+  action_items?: string[];
 }
 
 export type EventType =
@@ -70,23 +84,40 @@ export interface LectureEvent {
   source_quote: string;
   start_s: number;
   needs_review: boolean;
+  candidate_dates?: string[];
 }
 
 export interface ImportantQuestion {
   text: string;
   start_s: number;
+  end_s?: number;
   reason: 'teacher_flagged' | 'posed_to_class' | 'repeated';
+  answer_text?: string | null;
+  answer_start_s?: number | null;
+  transcript_snippet?: string | null;
+  lecturer_self_answered?: boolean;
+  student_asked?: boolean;
 }
 
 export interface EmphasisPhrase {
   phrase: string;
   count: number;
   spans: [number, number][];
+  context_snippet?: string;
+  first_occurrence_s?: number;
+  last_occurrence_s?: number;
+  mean_inter_arrival_s?: number;
+  description?: string;
 }
 
 export interface HabitPhrase {
   phrase: string;
   count: number;
+  first_occurrence_s?: number;
+  last_occurrence_s?: number;
+  mean_inter_arrival_s?: number;
+  context_snippet?: string;
+  description?: string;
 }
 
 export interface Phrases {

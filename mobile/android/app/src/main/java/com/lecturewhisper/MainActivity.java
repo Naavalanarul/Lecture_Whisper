@@ -767,7 +767,7 @@ public class MainActivity extends Activity {
         try {
             port = Integer.parseInt(editServerPort.getText().toString().trim());
         } catch (Exception e) {
-            port = 8000;
+            port = 8420;
         }
 
         final int finalPort = port;
@@ -805,7 +805,7 @@ public class MainActivity extends Activity {
 
     private void saveHostConfig() {
         String host = editServerHost.getText().toString().trim();
-        int port = 8000;
+        int port = 8420;
         try {
             port = Integer.parseInt(editServerPort.getText().toString().trim());
         } catch (Exception ignored) {}
@@ -832,7 +832,7 @@ public class MainActivity extends Activity {
         textOcrProgressStatus.setText("Extracting timetable schedule photo via host OCR...");
 
         String host = editServerHost.getText().toString().trim();
-        int port = 8000;
+        int port = 8420;
         try { port = Integer.parseInt(editServerPort.getText().toString().trim()); } catch (Exception ignored) {}
         final String finalHost = host;
         final int finalPort = port;
@@ -934,7 +934,7 @@ public class MainActivity extends Activity {
 
     private void syncTimetableWithLaptop() {
         String host = editServerHost.getText().toString().trim();
-        int port = 8000;
+        int port = 8420;
         try { port = Integer.parseInt(editServerPort.getText().toString().trim()); } catch (Exception ignored) {}
         final String finalHost = host;
         final int finalPort = port;
@@ -965,7 +965,7 @@ public class MainActivity extends Activity {
 
     private void syncSessionAudio(RecordingSession session) {
         String host = editServerHost.getText().toString().trim();
-        int port = 8000;
+        int port = 8420;
         try { port = Integer.parseInt(editServerPort.getText().toString().trim()); } catch (Exception ignored) {}
         final String finalHost = host;
         final int finalPort = port;
