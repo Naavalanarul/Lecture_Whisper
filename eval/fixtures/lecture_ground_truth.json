@@ -1,0 +1,33 @@
+{
+  "events": [
+    {
+      "type": "quiz",
+      "keyword": "pop quiz",
+      "date_text": "on Wednesday"
+    },
+    {
+      "type": "assignment_deadline",
+      "keyword": "assignment 3",
+      "date_text": "next Friday"
+    },
+    {
+      "type": "exam",
+      "keyword": "midterm exam",
+      "date_text": "on November 12th"
+    }
+  ],
+  "questions": [
+    {
+      "reason": "teacher_flagged",
+      "keyword": "optimal substructure"
+    },
+    {
+      "reason": "teacher_flagged",
+      "keyword": "Bellman-Ford"
+    },
+    {
+      "reason": "posed_to_class",
+      "keyword": "time complexity"
+    }
+  ]
+}

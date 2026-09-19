@@ -67,12 +67,14 @@ def create_app() -> FastAPI:
     from lecturewhisper.api.routes.job_routes import router as jobs_router
     from lecturewhisper.api.routes.timetable import router as timetable_router
     from lecturewhisper.api.routes.pairing import router as pairing_router
+    from lecturewhisper.api.routes.upload import router as upload_router
 
     app.include_router(health_router, prefix="/api")
     app.include_router(recordings_router, prefix="/api")
     app.include_router(jobs_router, prefix="/api")
     app.include_router(timetable_router, prefix="/api")
     app.include_router(pairing_router, prefix="/api")
+    app.include_router(upload_router, prefix="/api")
 
     # Serve built UI if available
     if STATIC_DIR.exists():

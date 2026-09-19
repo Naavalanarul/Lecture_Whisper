@@ -20,7 +20,7 @@ storage/
 *.db-journal
 *.db-wal
 
-# Audio files — NEVER commit
+# Audio files — NEVER commit real audio
 samples/*.m4a
 samples/*.mp3
 samples/*.wav
@@ -33,6 +33,8 @@ samples/*.flac
 *.ogg
 *.aac
 *.flac
+# Allow tiny synthetic fixtures
+!samples/synthetic_*.wav
 
 # Logs
 app.log
@@ -55,7 +57,6 @@ Thumbs.db
 ~/.lecturewhisper/
 
 # Build artifacts
-server/static/
 mobile/android/app/build/
 mobile/android/.gradle/
 

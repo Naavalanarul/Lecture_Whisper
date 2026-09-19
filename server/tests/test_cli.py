@@ -35,19 +35,29 @@ def test_pair_command():
     """Pair command should attempt to show QR."""
     runner = CliRunner()
     result = runner.invoke(cli, ["pair"])
-    # Should attempt QR generation (may succeed or show warning)
     assert result.exit_code == 0
 
 
-def test_eval_stub():
-    """Eval command stub should print placeholder."""
+def test_eval_command():
+    """Eval command should run evaluation on golden fixtures."""
     runner = CliRunner()
     result = runner.invoke(cli, ["eval"])
-    assert "Phase 3" in result.output
+    assert result.exit_code == 0
+    assert "Evaluation Results" in result.output
 
 
-def test_train_stub():
-    """Train command stub should print placeholder."""
+def test_train_command():
+    """Train command should run fine-tuning and promotion evaluation."""
     runner = CliRunner()
-    result = runner.invoke(cli, ["train"])
-    assert "Phase 8" in result.output
+    result = runner.invoke(cli, ["train", "--iters", "5"])
+    assert result.exit_code == 0
+    assert "LoRA Fine-Tuning Pipeline" in result.output
+
+
+def test_backup_command(tmp_path):
+    """Backup command should create archive."""
+    runner = CliRunner()
+    archive = str(tmp_path / "test_backup.tar.gz")
+    result = runner.invoke(cli, ["backup", "--out", archive])
+    assert result.exit_code == 0
+    assert "Backup successfully created" in result.output

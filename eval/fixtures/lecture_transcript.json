@@ -1,0 +1,69 @@
+{
+  "asr_model": "mlx-community/whisper-large-v3-turbo",
+  "language": "en",
+  "segments": [
+    {
+      "start": 0.0,
+      "end": 8.5,
+      "speaker": "PROF_TURING",
+      "text": "Good morning everyone. Before we begin today's lecture on dynamic programming, I have a few quick administrative announcements.",
+      "words": []
+    },
+    {
+      "start": 8.6,
+      "end": 18.2,
+      "speaker": "PROF_TURING",
+      "text": "First, pop quiz on Wednesday covering graph algorithms and breadth-first search.",
+      "words": []
+    },
+    {
+      "start": 18.5,
+      "end": 28.0,
+      "speaker": "PROF_TURING",
+      "text": "Second, assignment 3 deadline is next Friday at 11:59 PM. Please submit your solutions on the course portal.",
+      "words": []
+    },
+    {
+      "start": 28.5,
+      "end": 37.0,
+      "speaker": "PROF_TURING",
+      "text": "Also remember, the midterm exam will be held on November 12th in the main auditorium.",
+      "words": []
+    },
+    {
+      "start": 38.0,
+      "end": 49.0,
+      "speaker": "PROF_TURING",
+      "text": "Now, pay attention to this very important question: what is the difference between optimal substructure and overlapping subproblems?",
+      "words": []
+    },
+    {
+      "start": 50.0,
+      "end": 58.0,
+      "speaker": "PROF_TURING",
+      "text": "This will come in the exam, so make sure you understand the Bellman-Ford recurrence relation thoroughly.",
+      "words": []
+    },
+    {
+      "start": 59.0,
+      "end": 66.0,
+      "speaker": "PROF_TURING",
+      "text": "Does anyone know what the time complexity of the standard memoized Fibonacci sequence is?",
+      "words": []
+    },
+    {
+      "start": 67.0,
+      "end": 74.0,
+      "speaker": "PROF_TURING",
+      "text": "Okay so, you know, as I said basically, dynamic programming allows us to avoid recomputing solved subproblems.",
+      "words": []
+    },
+    {
+      "start": 75.0,
+      "end": 82.0,
+      "speaker": "PROF_TURING",
+      "text": "Okay so, dynamic programming basically builds solutions from the bottom up.",
+      "words": []
+    }
+  ]
+}
