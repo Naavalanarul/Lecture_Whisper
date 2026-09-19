@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="../docs/assets/logo.png" width="120" height="120" alt="Lecture Whisper Mobile Logo" />
+</p>
+
 # 📱 Lecture Whisper — Android Application (Pixel 8a, Android 17)
 
 The mobile companion application for Lecture Whisper, engineered specifically for the **Google Pixel 8a** running **Android 17 (API 35+)**.

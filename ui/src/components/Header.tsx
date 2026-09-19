@@ -59,9 +59,9 @@ export const Header: React.FC<HeaderProps> = ({
       <div className="max-w-7xl mx-auto flex items-center justify-between h-16 gap-4">
         {/* Brand & Local Specs */}
         <div className="flex items-center gap-3 shrink-0">
-          <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-brand-600 to-cyan-500 p-0.5 shadow-lg shadow-brand-500/20">
-            <div className="w-full h-full bg-surface-950 rounded-[10px] flex items-center justify-center">
-              <Sparkles className="w-5 h-5 text-brand-400" />
+          <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-brand-600 to-cyan-500 p-0.5 shadow-lg shadow-brand-500/20 shrink-0">
+            <div className="w-full h-full bg-surface-950 rounded-[10px] flex items-center justify-center overflow-hidden p-0.5">
+              <img src="/logo.png" alt="Lecture Whisper Logo" className="w-full h-full object-contain" />
             </div>
           </div>
           <div>

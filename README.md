@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="docs/assets/logo.png" width="140" height="140" alt="Lecture Whisper Logo" />
+</p>
+
 # 🎙️ Lecture Whisper
 
 [![Tests Passing](https://img.shields.io/badge/Tests-73%20Passing-emerald?style=flat-square)](server/tests)

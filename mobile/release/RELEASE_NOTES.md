@@ -33,7 +33,7 @@ adb install -r LectureWhisper-v1.0.0-release.apk
 - **Min SDK**: 26 (Android 8.0+)
 - **Target SDK**: 35 (Android 15 / 17 compatible)
 - **Signature Schemes**: APK Signature Scheme v2 & v3 (Verified)
-- **SHA-256 Checksum**: `7d8f25288b3c271e8d8ad01691edbb3eca6bf8f74a7dc6a9fa8a4fad8e4f1ce6`
+- **SHA-256 Checksum**: `e3b7c794a1b3201cf352ebf61355d292ac724543ef861311586c58727a28d090`
 
 ---
 
