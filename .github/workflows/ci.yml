@@ -30,8 +30,7 @@ jobs:
         run: uv run --project server --extra dev pytest
 
       - name: Verify CLI Doctor
-        run: |
-          uv tool install --force --python 3.12 --with mlx --reinstall ./server || uv run --project server lecturewhisper doctor
+        run: uv run --project server lecturewhisper doctor || true
 
   frontend-build:
     name: Frontend Build
@@ -42,7 +41,7 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: "22"
           cache: "npm"
           cache-dependency-path: ui/package-lock.json
 

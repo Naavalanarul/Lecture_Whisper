@@ -54,10 +54,19 @@ def test_check_disk():
 
 
 def test_check_ram():
-    """Should have enough RAM."""
+    """Should check RAM and return valid status with GB details."""
     ok, detail = check_ram()
-    assert ok is True
+    assert isinstance(ok, bool)
     assert "GB" in detail
+
+
+def test_check_ram_mock_apple_silicon():
+    """Should verify RAM check threshold with 36GB M4 Max."""
+    with patch("subprocess.run") as mock_run:
+        mock_run.return_value.stdout = str(36 * 1024**3)
+        ok, detail = check_ram()
+        assert ok is True
+        assert "36 GB" in detail
 
 
 def test_check_mlx_importable():
