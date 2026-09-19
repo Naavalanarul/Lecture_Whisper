@@ -1,6 +1,6 @@
 # 🎙️ Lecture Whisper
 
-[![Tests Passing](https://img.shields.io/badge/Tests-69%20Passing-emerald?style=flat-square)](server/tests)
+[![Tests Passing](https://img.shields.io/badge/Tests-73%20Passing-emerald?style=flat-square)](server/tests)
 [![Python 3.12](https://img.shields.io/badge/Python-3.12%2B-blue?style=flat-square)](server/pyproject.toml)
 [![Apple Silicon](https://img.shields.io/badge/Hardware-M4%20Max%20%7C%2036GB%20Unified-indigo?style=flat-square)](docs/architecture.md)
 [![Android 17](https://img.shields.io/badge/Mobile-Google%20Pixel%208a%20(Android%2017)-cyan?style=flat-square)](mobile/README.md)

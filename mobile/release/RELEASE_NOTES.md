@@ -11,9 +11,14 @@ A personal, fully local lecture-notes and academic intelligence system engineere
 This release includes the signed production Android APK for **Google Pixel 8a** running **Android 17**.
 
 ### Key Mobile Features:
+- **Production Material 3 Dark Frontend**: Complete redesign with 4 dedicated views: Live Recorder, Weekly Timetable, Device Audio Library, and MacBook Connection & Diagnostics.
+- **Dynamic Schedule-Aware Recording**: Detects current active lecture from timetable, auto-tagging recording sessions and folders with the subject, room, and lecturer.
+- **Host-Accelerated Timetable Photo OCR**: Capture or upload schedule photos, extract weekly class grids using Tesseract OCR / ML vision on the MacBook Pro, and instantly populate device schedule.
+- **Sliding Navigation Sidebar**: Real-time internal storage stats via Android `StatFs` (device free space, app cache footprint in MB, pending uploads) with a one-tap clean-up tool for synced chunks.
+- **Connection Monitor & 3-Mode Guide**: Live ping latency chip (`🟢 Connected (14ms)` / `🟠 Offline`) and troubleshooting guide for Wi-Fi LAN, Personal Hotspot, and zero-latency USB tethering (`adb reverse tcp:8000 tcp:8000`).
+- **Automatic Two-Way Synchronization**: Automatically pushes timetable slots and unsynced audio chunks as soon as MacBook connection is detected.
 - **Foreground Microphone Service**: Uses `foregroundServiceType="microphone"` with `VOICE_RECOGNITION` audio source to capture crystal clear lecture audio with hardware beamforming.
 - **Rotating 10-Minute AAC Chunks**: Audio is captured in 16 kHz mono AAC `.m4a` files with partial wake lock (`PARTIAL_WAKE_LOCK`). Crash resilient against device battery exhaustion or OS reboots.
-- **Resumable Upload Queue (tus v1.0.0)**: Automatically discovers your MacBook Pro on local Wi-Fi and pushes completed audio chunks with SHA-256 validation.
 - **Exact Class Alarms**: Uses `SCHEDULE_EXACT_ALARM` to notify you 2 minutes before lecture start with a one-tap record action.
 - **Zero Cloud Footprint**: Nothing leaves your local LAN. No accounts, no telemetry, no third-party cloud SDKs.
 
@@ -28,7 +33,7 @@ adb install -r LectureWhisper-v1.0.0-release.apk
 - **Min SDK**: 26 (Android 8.0+)
 - **Target SDK**: 35 (Android 15 / 17 compatible)
 - **Signature Schemes**: APK Signature Scheme v2 & v3 (Verified)
-- **SHA-256 Checksum**: `b7f3bc042d7082503e2438ebe70f60052f0110016bbc9c2f8c0f6ace4268b267`
+- **SHA-256 Checksum**: `7d8f25288b3c271e8d8ad01691edbb3eca6bf8f74a7dc6a9fa8a4fad8e4f1ce6`
 
 ---
 

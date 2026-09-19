@@ -2,11 +2,12 @@
 
 from __future__ import annotations
 
+import hashlib
 import json
 from datetime import UTC, datetime
 from uuid import UUID, uuid4
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile
 from fastapi.responses import FileResponse
 from pydantic import BaseModel
 from sqlmodel import Session, select
@@ -222,3 +223,69 @@ async def add_correction(
     db.commit()
     db.refresh(corr)
     return corr.model_dump(mode="json")
+
+
+@router.post("/upload")
+async def upload_recording(
+    file: UploadFile = File(...),
+    subject: str = Form(default="Lecture Session"),
+    timetable_slot_id: str | None = Form(default=None),
+    device_id: str = Form(default="mobile-pixel8a"),
+    chunk_index: int = Form(default=0),
+    db: Session = Depends(get_db),
+) -> dict:
+    """Direct multipart audio upload endpoint for mobile client."""
+    rec_id = uuid4()
+    file_bytes = await file.read()
+    sha256 = hashlib.sha256(file_bytes).hexdigest()
+
+    # Save audio file
+    store = FileStore()
+    audio_path = store.save_recording(rec_id, file_bytes)
+
+    # Parse slot ID if provided
+    parsed_slot_id: UUID | None = None
+    if timetable_slot_id and timetable_slot_id.strip():
+        try:
+            parsed_slot_id = UUID(timetable_slot_id.strip())
+        except Exception:
+            parsed_slot_id = None
+
+    rec = RecordingRow(
+        id=rec_id,
+        device_id=device_id,
+        started_at=datetime.now(UTC),
+        duration_s=0.0,
+        timetable_slot_id=parsed_slot_id,
+        subject=subject or "Lecture Session",
+        sha256=sha256,
+        chunk_count=1,
+        status="uploaded",
+    )
+    db.add(rec)
+    db.commit()
+    db.refresh(rec)
+
+    # Submit job for processing
+    job = await job_queue.submit(rec_id)
+    job_row = JobRow(
+        id=job.id,
+        recording_id=rec_id,
+        status=job.status.value,
+        stage="queued",
+        progress=0.0,
+        created_at=datetime.now(UTC),
+        updated_at=datetime.now(UTC),
+    )
+    db.add(job_row)
+    db.commit()
+
+    return {
+        "status": "uploaded",
+        "recording_id": str(rec_id),
+        "job_id": str(job.id),
+        "sha256": sha256,
+        "subject": rec.subject,
+        "timetable_slot_id": str(rec.timetable_slot_id) if rec.timetable_slot_id else None,
+    }
+

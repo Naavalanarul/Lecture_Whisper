@@ -32,6 +32,7 @@ public class RecorderService extends Service {
     public static final String ACTION_START = "com.lecturewhisper.START_RECORDING";
     public static final String ACTION_STOP = "com.lecturewhisper.STOP_RECORDING";
     public static final String EXTRA_SUBJECT = "extra_subject";
+    public static final String EXTRA_SLOT_ID = "extra_slot_id";
 
     // 10-minute chunk rotation
     public static final long CHUNK_DURATION_MS = 10 * 60 * 1000L;
@@ -42,6 +43,7 @@ public class RecorderService extends Service {
     private String sessionId = UUID.randomUUID().toString();
     private int chunkIndex = 0;
     private String currentSubject = "Uncategorized";
+    private String currentSlotId = null;
 
     private final Handler handler = new Handler(Looper.getMainLooper());
     private final Runnable chunkRotationRunnable = new Runnable() {
@@ -66,6 +68,7 @@ public class RecorderService extends Service {
             if (ACTION_START.equals(action)) {
                 String sub = intent.getStringExtra(EXTRA_SUBJECT);
                 if (sub != null) currentSubject = sub;
+                currentSlotId = intent.getStringExtra(EXTRA_SLOT_ID);
                 startForegroundRecording();
             } else if (ACTION_STOP.equals(action)) {
                 stopForegroundRecording();
@@ -127,6 +130,19 @@ public class RecorderService extends Service {
         if (dir == null) dir = getFilesDir();
         File sessionDir = new File(dir, "recordings/" + sessionId);
         sessionDir.mkdirs();
+
+        if (chunkIndex == 0) {
+            try {
+                org.json.JSONObject meta = new org.json.JSONObject();
+                meta.put("session_id", sessionId);
+                meta.put("subject", currentSubject);
+                if (currentSlotId != null) meta.put("timetable_slot_id", currentSlotId);
+                meta.put("started_at_ms", System.currentTimeMillis());
+                meta.put("synced", false);
+                File metaFile = new File(sessionDir, "metadata.json");
+                java.nio.file.Files.write(metaFile.toPath(), meta.toString(2).getBytes());
+            } catch (Exception ignored) {}
+        }
 
         String filename = String.format(Locale.US, "chunk_%04d.m4a", chunkIndex);
         File outputFile = new File(sessionDir, filename);

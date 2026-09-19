@@ -2,9 +2,32 @@
 <resources>
     <color name="primary">#6366F1</color>
     <color name="primary_dark">#4F46E5</color>
+    <color name="primary_light">#818CF8</color>
     <color name="accent">#06B6D4</color>
-    <color name="background">#070A12</color>
-    <color name="surface">#0D1322</color>
+    <color name="background">#090D16</color>
+    <color name="surface">#111726</color>
+    <color name="surface_elevated">#172033</color>
+    <color name="card_bg">#131B2B</color>
+    <color name="card_border">#222F47</color>
+    <color name="drawer_bg">#0C111C</color>
+    <color name="drawer_scrim">#B3000000</color>
+
     <color name="text_primary">#F8FAFC</color>
     <color name="text_secondary">#94A3B8</color>
+    <color name="text_muted">#64748B</color>
+
+    <color name="status_connected_bg">#064E3B</color>
+    <color name="status_connected_text">#34D399</color>
+    <color name="status_disconnected_bg">#451A03</color>
+    <color name="status_disconnected_text">#FBBF24</color>
+
+    <color name="recording_active">#E11D48</color>
+    <color name="recording_active_dark">#BE123C</color>
+    <color name="success">#10B981</color>
+    <color name="warning">#F59E0B</color>
+
+    <color name="tab_bar_bg">#0B0F19</color>
+    <color name="tab_active_indicator">#6366F1</color>
+    <color name="tab_text_active">#FFFFFF</color>
+    <color name="tab_text_inactive">#64748B</color>
 </resources>
