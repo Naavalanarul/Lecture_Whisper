@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Lecture Whisper</string>
+    <string name="title_connected">MacBook Pro M4 Max (LAN)</string>
+    <string name="status_ready">Ready to record lecture</string>
+    <string name="btn_start_recording">Start Recording</string>
+    <string name="btn_stop_recording">Stop Recording</string>
+    <string name="channel_recording_name">Lecture Recording</string>
+    <string name="channel_recording_desc">Foreground microphone recording service</string>
+    <string name="channel_alarm_name">Class Schedule Reminders</string>
+    <string name="channel_alarm_desc">Exact alarm notifications for scheduled lectures</string>
+</resources>

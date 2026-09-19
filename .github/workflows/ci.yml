@@ -1,0 +1,53 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  backend-tests:
+    name: Backend Tests & Doctor Checks
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          version: "latest"
+
+      - name: Install ffmpeg
+        run: brew install ffmpeg
+
+      - name: Run Pytest Suite
+        run: uv run --project server pytest
+
+      - name: Verify CLI Doctor
+        run: |
+          uv tool install --force --python 3.12 --with mlx --reinstall ./server || uv run --project server lecturewhisper doctor
+
+  frontend-build:
+    name: Frontend Build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: "npm"
+          cache-dependency-path: ui/package-lock.json
+
+      - name: Install dependencies
+        run: cd ui && npm ci
+
+      - name: Build production bundle
+        run: cd ui && npm run build

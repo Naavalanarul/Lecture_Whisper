@@ -45,9 +45,11 @@ app.log
 .DS_Store
 Thumbs.db
 
-# IDE
+# IDE & Agents
 .vscode/
 .idea/
+.agents/
+.agent/
 
 # Secrets — NEVER commit
 .env
@@ -58,8 +60,11 @@ Thumbs.db
 ~/.lecturewhisper/
 
 # Build artifacts
+mobile/build/
 mobile/android/app/build/
 mobile/android/.gradle/
+*.keystore
+*.jks
 
 # Hugging Face cache (too large)
 .cache/
