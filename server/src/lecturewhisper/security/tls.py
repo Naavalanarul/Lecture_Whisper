@@ -34,6 +34,15 @@ def get_address_candidates() -> List[str]:
     except Exception:
         pass
 
+    try:
+        import re
+        out = subprocess.check_output(["ifconfig"], text=True)
+        for ip in re.findall(r"inet\s+(\d+\.\d+\.\d+\.\d+)", out):
+            if not ip.startswith("127.") and not ip.startswith("169.254."):
+                addresses.add(ip)
+    except Exception:
+        pass
+
     result = sorted(list(addresses))
     if "127.0.0.1" not in result:
         result.append("127.0.0.1")

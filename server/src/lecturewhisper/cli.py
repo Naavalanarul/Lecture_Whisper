@@ -79,19 +79,29 @@ def serve(host: str | None, port: int | None, no_browser: bool, demo: bool = Fal
     )
 
 
+_zeroconf_instance = None
+_zeroconf_service_info = None
+
+
 def _advertise_bonjour(host: str, port: int) -> None:
     """Try to advertise via mDNS/Bonjour with server_id in TXT records."""
+    global _zeroconf_instance, _zeroconf_service_info
     try:
+        import atexit
         import socket
         from zeroconf import ServiceInfo, Zeroconf
+        from lecturewhisper.security.tls import get_address_candidates
 
         hostname = socket.gethostname()
-        local_ip = socket.gethostbyname(hostname)
+        candidates = get_address_candidates()
+        ip_addrs = [socket.inet_aton(ip) for ip in candidates if not ip.startswith("127.")]
+        if not ip_addrs:
+            ip_addrs = [socket.inet_aton("127.0.0.1")]
 
         info = ServiceInfo(
             "_lecturewhisper._tcp.local.",
             f"LectureWhisper ({hostname})._lecturewhisper._tcp.local.",
-            addresses=[socket.inet_aton(local_ip)],
+            addresses=ip_addrs,
             port=port,
             properties={
                 "server_id": hostname,
@@ -102,7 +112,19 @@ def _advertise_bonjour(host: str, port: int) -> None:
         )
         zc = Zeroconf()
         zc.register_service(info)
-        console.print(f"   [green]Bonjour:[/green] advertising _lecturewhisper._tcp (server_id: {hostname})")
+        _zeroconf_instance = zc
+        _zeroconf_service_info = info
+
+        def _cleanup():
+            try:
+                if _zeroconf_instance and _zeroconf_service_info:
+                    _zeroconf_instance.unregister_service(_zeroconf_service_info)
+                    _zeroconf_instance.close()
+            except Exception:
+                pass
+
+        atexit.register(_cleanup)
+        console.print(f"   [green]Bonjour:[/green] advertising _lecturewhisper._tcp on {', '.join(candidates)} (server_id: {hostname})")
     except Exception as e:
         console.print(f"   [yellow]Bonjour:[/yellow] not available ({e})")
 

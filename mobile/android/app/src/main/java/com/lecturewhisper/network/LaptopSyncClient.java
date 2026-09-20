@@ -202,8 +202,8 @@ public class LaptopSyncClient {
         try {
             URL url = new URL("http://" + host + ":" + port + "/api/v1/pair/complete");
             conn = (HttpURLConnection) url.openConnection();
-            conn.setConnectTimeout(5000);
-            conn.setReadTimeout(5000);
+            conn.setConnectTimeout(2500);
+            conn.setReadTimeout(3000);
             conn.setRequestMethod("POST");
             conn.setRequestProperty("Content-Type", "application/json");
             conn.setRequestProperty("Accept", "application/json");

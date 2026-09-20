@@ -46,6 +46,11 @@ import android.widget.ScrollView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicReference;
+
 import com.google.zxing.BarcodeFormat;
 import com.google.zxing.BinaryBitmap;
 import com.google.zxing.DecodeHintType;
@@ -174,6 +179,7 @@ public class MainActivity extends Activity {
 
     // Layer 2: QR Scanner / Pairing Overlay Sheet
     private View overlayQrScanner;
+    private View layoutCameraViewfinder;
     private TextureView cameraTextureView;
     private View viewQrScanLine;
     private ImageButton btnQrTorch;
@@ -194,6 +200,13 @@ public class MainActivity extends Activity {
     private boolean isTorchOn = false;
     private ObjectAnimator scanLineAnimator;
     private final ExecutorService cameraExecutor = Executors.newSingleThreadExecutor();
+    private final ExecutorService pairingExecutor = Executors.newCachedThreadPool();
+    private int previewWidth = 0;
+    private int previewHeight = 0;
+    private byte[] rotatedCropBuffer = null;
+    private int cropSquareSize = 0;
+    private byte[] callbackBuffer1 = null;
+    private byte[] callbackBuffer2 = null;
 
     // Swipe Gesture Navigation
     private GestureDetector gestureDetector;
@@ -314,6 +327,7 @@ public class MainActivity extends Activity {
         stopCameraPreview();
         try {
             cameraExecutor.shutdown();
+            pairingExecutor.shutdown();
         } catch (Exception ignored) {}
     }
 
@@ -561,6 +575,7 @@ public class MainActivity extends Activity {
 
         // Overlay Views
         overlayQrScanner = findViewById(R.id.overlay_qr_scanner);
+        layoutCameraViewfinder = findViewById(R.id.layout_camera_viewfinder);
         cameraTextureView = findViewById(R.id.camera_texture_view);
         viewQrScanLine = findViewById(R.id.view_qr_scan_line);
         btnQrTorch = findViewById(R.id.btn_qr_torch);
@@ -969,8 +984,12 @@ public class MainActivity extends Activity {
             Camera.Parameters params = mCamera.getParameters();
 
             List<String> focusModes = params.getSupportedFocusModes();
-            if (focusModes != null && focusModes.contains(Camera.Parameters.FOCUS_MODE_CONTINUOUS_PICTURE)) {
-                params.setFocusMode(Camera.Parameters.FOCUS_MODE_CONTINUOUS_PICTURE);
+            if (focusModes != null) {
+                if (focusModes.contains(Camera.Parameters.FOCUS_MODE_CONTINUOUS_PICTURE)) {
+                    params.setFocusMode(Camera.Parameters.FOCUS_MODE_CONTINUOUS_PICTURE);
+                } else if (focusModes.contains(Camera.Parameters.FOCUS_MODE_AUTO)) {
+                    params.setFocusMode(Camera.Parameters.FOCUS_MODE_AUTO);
+                }
             }
 
             List<Camera.Size> sizes = params.getSupportedPreviewSizes();
@@ -982,46 +1001,104 @@ public class MainActivity extends Activity {
                     }
                 }
                 params.setPreviewSize(best.width, best.height);
+                this.previewWidth = best.width;
+                this.previewHeight = best.height;
+            } else {
+                this.previewWidth = 1280;
+                this.previewHeight = 720;
             }
+
+            // Central ROI crop matching the viewfinder square
+            this.cropSquareSize = Math.min(previewHeight, 480);
+            this.rotatedCropBuffer = new byte[cropSquareSize * cropSquareSize];
 
             mCamera.setParameters(params);
             mCamera.setPreviewTexture(surface);
+
+            // Tap to focus on camera viewfinder
+            if (cameraTextureView != null) {
+                cameraTextureView.setOnTouchListener((v, event) -> {
+                    if (event.getAction() == MotionEvent.ACTION_UP && mCamera != null) {
+                        try {
+                            mCamera.autoFocus(null);
+                        } catch (Exception ignored) {}
+                    }
+                    return true;
+                });
+            }
+
+            // Zero-allocation preview buffers for 30+ FPS scanning
+            int bufferSize = previewWidth * previewHeight * 3 / 2;
+            callbackBuffer1 = new byte[bufferSize];
+            callbackBuffer2 = new byte[bufferSize];
+            mCamera.addCallbackBuffer(callbackBuffer1);
+            mCamera.addCallbackBuffer(callbackBuffer2);
 
             isScanning = true;
             final MultiFormatReader qrReader = new MultiFormatReader();
             Map<DecodeHintType, Object> hints = new EnumMap<>(DecodeHintType.class);
             hints.put(DecodeHintType.POSSIBLE_FORMATS, Collections.singletonList(BarcodeFormat.QR_CODE));
-            hints.put(DecodeHintType.TRY_HARDER, Boolean.TRUE);
+            hints.put(DecodeHintType.CHARACTER_SET, "UTF-8");
             qrReader.setHints(hints);
 
             final AtomicBoolean isProcessingFrame = new AtomicBoolean(false);
+            final int w = previewWidth;
+            final int h = previewHeight;
+            final int sSize = cropSquareSize;
+            final int x0 = (w - sSize) / 2;
+            final int y0 = (h - sSize) / 2;
 
-            mCamera.setPreviewCallback((data, camera) -> {
-                if (!isScanning || isProcessingFrame.get()) return;
+            mCamera.setPreviewCallbackWithBuffer((data, camera) -> {
+                if (!isScanning || data == null || isProcessingFrame.get()) {
+                    if (mCamera != null && data != null) {
+                        try { mCamera.addCallbackBuffer(data); } catch (Exception ignored) {}
+                    }
+                    return;
+                }
                 isProcessingFrame.set(true);
 
                 cameraExecutor.execute(() -> {
                     try {
                         if (!isScanning) return;
-                        Camera.Size size = camera.getParameters().getPreviewSize();
-                        int width = size.width;
-                        int height = size.height;
+
+                        // 1. Fast rotate central square 90 degrees clockwise (matches portrait screen orientation)
+                        byte[] crop = rotatedCropBuffer;
+                        for (int y = 0; y < sSize; y++) {
+                            int srcY = y0 + y;
+                            int srcRowOffset = srcY * w + x0;
+                            for (int x = 0; x < sSize; x++) {
+                                crop[x * sSize + (sSize - 1 - y)] = data[srcRowOffset + x];
+                            }
+                        }
 
                         PlanarYUVLuminanceSource source = new PlanarYUVLuminanceSource(
-                                data, width, height, 0, 0, width, height, false
+                                crop, sSize, sSize, 0, 0, sSize, sSize, false
                         );
                         BinaryBitmap bitmap = new BinaryBitmap(new HybridBinarizer(source));
 
                         Result result = null;
                         try {
                             result = qrReader.decodeWithState(bitmap);
-                        } catch (Exception notFound) {
+                        } catch (Exception ignored) {
                             qrReader.reset();
+                        }
+
+                        // 2. Fallback to unrotated central crop (if phone held in landscape)
+                        if (result == null) {
+                            PlanarYUVLuminanceSource unrotatedSource = new PlanarYUVLuminanceSource(
+                                    data, w, h, x0, y0, sSize, sSize, false
+                            );
+                            BinaryBitmap unrotatedBitmap = new BinaryBitmap(new HybridBinarizer(unrotatedSource));
+                            try {
+                                result = qrReader.decodeWithState(unrotatedBitmap);
+                            } catch (Exception ignored) {
+                                qrReader.reset();
+                            }
                         }
 
                         if (result != null && result.getText() != null && !result.getText().isEmpty()) {
                             final String qrText = result.getText();
-                            Log.i(TAG, "Scanned QR code content: " + qrText);
+                            Log.i(TAG, "Instant QR Detected: " + qrText);
                             isScanning = false;
                             runOnUiThread(() -> onQrCodeScanned(qrText));
                         }
@@ -1030,6 +1107,11 @@ public class MainActivity extends Activity {
                     } finally {
                         qrReader.reset();
                         isProcessingFrame.set(false);
+                        if (mCamera != null && data != null) {
+                            try {
+                                mCamera.addCallbackBuffer(data);
+                            } catch (Exception ignored) {}
+                        }
                     }
                 });
             });
@@ -1052,11 +1134,17 @@ public class MainActivity extends Activity {
         stopScanAnimation();
         if (mCamera != null) {
             try {
-                mCamera.setPreviewCallback(null);
+                mCamera.setPreviewCallbackWithBuffer(null);
                 mCamera.stopPreview();
                 mCamera.release();
             } catch (Exception ignored) {}
             mCamera = null;
+        }
+        if (layoutCameraViewfinder != null) {
+            layoutCameraViewfinder.setBackgroundResource(R.drawable.bg_qr_viewfinder);
+        }
+        if (viewQrScanLine != null) {
+            viewQrScanLine.setBackgroundResource(R.drawable.bg_qr_scan_line);
         }
     }
 
@@ -1106,23 +1194,41 @@ public class MainActivity extends Activity {
             Vibrator v = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
             if (v != null) {
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                    v.vibrate(VibrationEffect.createOneShot(100, VibrationEffect.DEFAULT_AMPLITUDE));
+                    v.vibrate(VibrationEffect.createOneShot(120, VibrationEffect.DEFAULT_AMPLITUDE));
                 } else {
-                    v.vibrate(100);
+                    v.vibrate(120);
                 }
             }
         } catch (Exception ignored) {}
 
-        if (textQrScannerStatus != null) {
-            textQrScannerStatus.setText("QR detected! Connecting to Mac...");
+        // Google Lens-style visual reticle: Green glowing corners and green scan beam
+        if (layoutCameraViewfinder != null) {
+            layoutCameraViewfinder.setBackgroundResource(R.drawable.bg_qr_viewfinder_success);
+        }
+        if (viewQrScanLine != null) {
+            viewQrScanLine.setBackgroundResource(R.drawable.bg_qr_scan_line_success);
         }
 
         PairingPayload payload = PairingPayload.parse(qrText);
         if (payload != null) {
+            if (textQrScannerStatus != null) {
+                textQrScannerStatus.setText("QR detected! Connecting to " + payload.macName + "...");
+            }
             completePairingWithPayload(payload);
         } else {
+            if (textQrScannerStatus != null) {
+                textQrScannerStatus.setText("Unrecognized QR code. Point at Lecture Whisper QR.");
+            }
             Toast.makeText(this, "Unrecognized QR code. Point at Lecture Whisper QR.", Toast.LENGTH_SHORT).show();
-            isScanning = true;
+            mainHandler.postDelayed(() -> {
+                if (layoutCameraViewfinder != null) {
+                    layoutCameraViewfinder.setBackgroundResource(R.drawable.bg_qr_viewfinder);
+                }
+                if (viewQrScanLine != null) {
+                    viewQrScanLine.setBackgroundResource(R.drawable.bg_qr_scan_line);
+                }
+                isScanning = true;
+            }, 1200);
         }
     }
 
@@ -1149,13 +1255,17 @@ public class MainActivity extends Activity {
     }
 
     private void completePairingWithPayload(PairingPayload payload) {
-        runOnUiThread(() -> Toast.makeText(this, "Pairing with " + payload.macName + "...", Toast.LENGTH_SHORT).show());
+        runOnUiThread(() -> {
+            if (textQrScannerStatus != null) {
+                textQrScannerStatus.setText("Connecting to " + payload.macName + "...");
+            }
+        });
 
         new Thread(() -> {
             // Build candidates in priority order
             List<String> candidatesToTry = new ArrayList<>();
 
-            // 1. Hosts from QR payload
+            // 1. Hosts from QR payload (e.g. 172.17.180.61)
             for (String h : payload.addressCandidates) {
                 if (h != null && !h.trim().isEmpty() && !candidatesToTry.contains(h.trim())) {
                     candidatesToTry.add(h.trim());
@@ -1203,26 +1313,49 @@ public class MainActivity extends Activity {
                 candidatesToTry.add("127.0.0.1");
             }
 
-            LaptopSyncClient.PairResult res = null;
-            String connectedHost = null;
+            // PARALLEL PAIRING EXECUTION:
+            // Test all candidate hosts simultaneously with 2500ms timeout for instant sub-second connection!
+            final String deviceId = Settings.Secure.getString(getContentResolver(), Settings.Secure.ANDROID_ID);
+            final String deviceName = Build.MODEL;
+            final CountDownLatch latch = new CountDownLatch(candidatesToTry.size());
+            final AtomicReference<LaptopSyncClient.PairResult> successRes = new AtomicReference<>(null);
+            final AtomicReference<String> successHost = new AtomicReference<>(null);
+            final AtomicReference<String> lastError = new AtomicReference<>("No candidate responded");
 
             for (String candidate : candidatesToTry) {
-                Log.i(TAG, "Attempting pairing with: " + candidate + ":" + payload.port);
-                res = LaptopSyncClient.completePairing(
-                        candidate,
-                        payload.port,
-                        payload.oneTimeToken,
-                        Settings.Secure.getString(getContentResolver(), Settings.Secure.ANDROID_ID),
-                        Build.MODEL
-                );
-                if (res != null && res.ok) {
-                    connectedHost = candidate;
-                    break;
-                }
+                pairingExecutor.execute(() -> {
+                    try {
+                        if (successRes.get() == null) {
+                            Log.i(TAG, "Attempting parallel pairing with: " + candidate + ":" + payload.port);
+                            LaptopSyncClient.PairResult res = LaptopSyncClient.completePairing(
+                                    candidate,
+                                    payload.port,
+                                    payload.oneTimeToken,
+                                    deviceId,
+                                    deviceName
+                            );
+                            if (res != null && res.ok) {
+                                if (successRes.compareAndSet(null, res)) {
+                                    successHost.set(candidate);
+                                }
+                            } else if (res != null && res.error != null) {
+                                lastError.set(res.error);
+                            }
+                        }
+                    } catch (Exception e) {
+                        lastError.set(e.getMessage());
+                    } finally {
+                        latch.countDown();
+                    }
+                });
             }
 
-            final LaptopSyncClient.PairResult finalRes = res;
-            final String finalHost = connectedHost;
+            try {
+                latch.await(3500, TimeUnit.MILLISECONDS);
+            } catch (InterruptedException ignored) {}
+
+            final LaptopSyncClient.PairResult finalRes = successRes.get();
+            final String finalHost = successHost.get();
 
             runOnUiThread(() -> {
                 if (finalRes != null && finalRes.ok) {
@@ -1242,13 +1375,26 @@ public class MainActivity extends Activity {
                             payload.port
                     );
                     hideQrScannerOverlay();
-                    Toast.makeText(this, "Paired successfully with " + finalRes.macName + " (" + finalHost + ")!", Toast.LENGTH_LONG).show();
+                    Toast.makeText(this, "✓ Paired successfully with " + finalRes.macName + " (" + finalHost + ")!", Toast.LENGTH_LONG).show();
                     updateSettingsView();
                     syncAllUnsyncedAudio();
                 } else {
-                    String err = (finalRes != null && finalRes.error != null) ? finalRes.error : "Failed to connect to host";
+                    String err = lastError.get();
+                    if (textQrScannerStatus != null) {
+                        textQrScannerStatus.setText("Pairing failed: " + err + ". Tap or scan fresh QR.");
+                    }
                     Toast.makeText(this, "Pairing failed: " + err, Toast.LENGTH_LONG).show();
-                    isScanning = true;
+
+                    // Revert reticle and resume scanning after 1.5s
+                    mainHandler.postDelayed(() -> {
+                        if (layoutCameraViewfinder != null) {
+                            layoutCameraViewfinder.setBackgroundResource(R.drawable.bg_qr_viewfinder);
+                        }
+                        if (viewQrScanLine != null) {
+                            viewQrScanLine.setBackgroundResource(R.drawable.bg_qr_scan_line);
+                        }
+                        isScanning = true;
+                    }, 1500);
                 }
             });
         }).start();
