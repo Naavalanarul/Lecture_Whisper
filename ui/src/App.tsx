@@ -1,8 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Header, NavTab, ThemeMode } from './components/Header';
-import { Sidebar } from './components/Sidebar';
-import { TopBar } from './components/TopBar';
-import { MobileNav } from './components/MobileNav';
+import { FloatingNav, NavTab, ThemeMode } from './components/FloatingNav';
 import { CommandMenu } from './components/CommandMenu';
 import { AudioPlayer } from './components/AudioPlayer';
 import { JobStatusBar } from './components/JobStatusBar';
@@ -105,7 +102,7 @@ export default function App() {
   }, [theme]);
 
   const handleToggleTheme = () => {
-    setTheme((prev) => {
+    setTheme((prev: ThemeMode) => {
       if (prev === 'system') return 'light';
       if (prev === 'light') return 'dark';
       return 'system';
@@ -120,17 +117,8 @@ export default function App() {
   const [audioDuration, setAudioDuration] = useState<number>(85.0);
   const [audioUrl, setAudioUrl] = useState<string | undefined>(undefined);
 
-
-  // App Shell & Navigation States
-  const [sidebarCollapsed, setSidebarCollapsed] = useState<boolean>(() => {
-    return localStorage.getItem('lecturewhisper_sidebar_collapsed') === 'true';
-  });
-  const [mobileNavOpen, setMobileNavOpen] = useState<boolean>(false);
+  // Command Menu State
   const [commandMenuOpen, setCommandMenuOpen] = useState<boolean>(false);
-
-  useEffect(() => {
-    localStorage.setItem('lecturewhisper_sidebar_collapsed', String(sidebarCollapsed));
-  }, [sidebarCollapsed]);
 
   // Global Keyboard Shortcuts (⌘K, /, ⌘[, ?, 1-8)
   useEffect(() => {
@@ -144,7 +132,6 @@ export default function App() {
           setCommandMenuOpen(false);
           setShowPairModal(false);
           setShowShortcutsModal(false);
-          setMobileNavOpen(false);
         }
         return;
       }
@@ -155,9 +142,6 @@ export default function App() {
       } else if (e.key === '/' && !commandMenuOpen) {
         e.preventDefault();
         setCommandMenuOpen(true);
-      } else if ((e.metaKey || e.ctrlKey) && e.key === '[') {
-        e.preventDefault();
-        setSidebarCollapsed((prev) => !prev);
       } else if (e.key === '?') {
         e.preventDefault();
         setShowShortcutsModal((prev) => !prev);
@@ -165,7 +149,6 @@ export default function App() {
         setCommandMenuOpen(false);
         setShowPairModal(false);
         setShowShortcutsModal(false);
-        setMobileNavOpen(false);
       } else if (!e.metaKey && !e.ctrlKey && !e.altKey) {
         if (e.key === '1') setActiveTab('inbox');
         else if (e.key === '2') setActiveTab('lecture');
@@ -408,6 +391,12 @@ export default function App() {
   const activeChapter = notes?.chapters?.find((ch) => currentTime >= ch.start && currentTime <= ch.end);
   const selectedRecording = recordings.find((r) => r.id === selectedRecId);
   const isDesignRoute = window.location.pathname === '/design' || window.location.hash === '#design';
+  const isLectureDetail = activeTab === 'lecture' && !!selectedRecId;
+  const lectureTitle = selectedRecording?.subject ?? undefined;
+
+  // Calculate nav height for content padding
+  const navHeight = 56 + 16; // nav height + top offset
+  const navHeightCondensed = 48 + 16;
 
   return (
     <div className="min-h-screen bg-bg text-text flex flex-col selection:bg-accent selection:text-on-accent">
@@ -419,144 +408,142 @@ export default function App() {
         }}
       />
 
-      {/* Modern Responsive Desktop Shell */}
-      <div className="flex-1 flex overflow-hidden">
-        {/* Collapsible Left Sidebar (Desktop) */}
-        <Sidebar
-          activeTab={activeTab}
-          onSelectTab={setActiveTab}
-          collapsed={sidebarCollapsed}
-          onToggleCollapse={() => setSidebarCollapsed(!sidebarCollapsed)}
-          recordingCount={recordings.length}
-          upcomingEventsCount={events.filter((e) => !e.resolved || e.needs_review).length}
-          pairedDeviceCount={pairedDevices.length}
-          onOpenPairing={() => setShowPairModal(true)}
-        />
+      {/* Floating Navigation */}
+      <FloatingNav
+        activeTab={activeTab}
+        onSelectTab={setActiveTab}
+        onOpenSearch={() => setCommandMenuOpen(true)}
+        onOpenSettings={() => setShowShortcutsModal(true)} // Using shortcuts modal for settings for now
+        onOpenPairing={() => setShowPairModal(true)}
+        pairedDeviceCount={pairedDevices.length}
+        upcomingEventsCount={events.filter((e) => !e.resolved || e.needs_review).length}
+        isLectureDetail={isLectureDetail}
+        lectureTitle={lectureTitle}
+        theme={theme}
+        onToggleTheme={handleToggleTheme}
+      />
 
-        {/* Right Main Column */}
-        <div className="flex-1 flex flex-col min-w-0 h-screen overflow-y-auto pb-28 md:pb-24">
-          <TopBar
-            activeTab={activeTab}
-            currentLectureTitle={selectedRecording?.subject || (selectedRecId ? `Lecture ${selectedRecId.slice(0, 8)}` : undefined)}
-            onOpenCommandMenu={() => setCommandMenuOpen(true)}
-            theme={theme}
-            onToggleTheme={handleToggleTheme}
-            onToggleMobileMenu={() => setMobileNavOpen(true)}
-          />
+      {/* Main Content Area */}
+      <main
+        id="main-content"
+        className="flex-1 flex flex-col min-w-0"
+        style={{
+          paddingTop: `calc(var(--nav-pill-height, 52px) + var(--nav-offset, 16px) + 1.25rem)`,
+          scrollPaddingTop: `calc(var(--nav-pill-height, 52px) + var(--nav-offset, 16px) + 1.25rem)`,
+        } as React.CSSProperties}
+      >
+        <div className="max-w-7xl w-full mx-auto px-4 lg:px-6 flex-1">
+          {isDesignRoute ? (
+            <DesignTestbed />
+          ) : (
+            <>
+              {activeTab === 'inbox' && (
+                <InboxView
+                  recordings={recordings}
+                  selectedRecId={selectedRecId}
+                  onSelectRecording={(id) => {
+                    setSelectedRecId(id);
+                    setActiveTab('lecture');
+                  }}
+                  onQueueProcessing={handleQueueProcessing}
+                  timetable={timetable}
+                  events={events}
+                  onNavigateToTab={setActiveTab}
+                  onUploadFile={(file) => {
+                    addToast('info', 'Audio Uploaded', `${file.name} registered for offline Whisper transcription.`);
+                  }}
+                />
+              )}
 
-          <main className="flex-1 max-w-7xl w-full mx-auto px-4 lg:px-6 py-6 animate-in fade-in duration-150">
-            {isDesignRoute ? (
-              <DesignTestbed />
-            ) : (
-              <>
-                {activeTab === 'inbox' && (
-                  <InboxView
-                    recordings={recordings}
-                    selectedRecId={selectedRecId}
-                    onSelectRecording={(id) => {
-                      setSelectedRecId(id);
-                      setActiveTab('lecture');
-                    }}
-                    onQueueProcessing={handleQueueProcessing}
-                    timetable={timetable}
-                    events={events}
-                    onNavigateToTab={setActiveTab}
-                    onUploadFile={(file) => {
-                      addToast('info', 'Audio Uploaded', `${file.name} registered for offline Whisper transcription.`);
-                    }}
-                  />
-                )}
+              {activeTab === 'lecture' && (
+                <LectureView
+                  transcript={transcript as any}
+                  notes={notes as any}
+                  currentTime={currentTime}
+                  onSeek={(t) => setCurrentTime(t)}
+                  followTranscript={followTranscript}
+                  onAddCorrection={handleAddCorrection}
+                />
+              )}
 
-                {activeTab === 'lecture' && (
-                  <LectureView
-                    transcript={transcript as any}
-                    notes={notes as any}
-                    currentTime={currentTime}
-                    onSeek={(t) => setCurrentTime(t)}
-                    followTranscript={followTranscript}
-                    onAddCorrection={handleAddCorrection}
-                  />
-                )}
+              {activeTab === 'events' && (
+                <EventsView
+                  events={events}
+                  onConfirmEvent={handleConfirmEvent}
+                  onDismissEvent={handleDismissEvent}
+                  onEditEvent={(idx, upd) =>
+                    setEvents((prev) => prev.map((e, i) => (i === idx ? { ...e, ...upd } : e)))
+                  }
+                  onAddEvent={(newEv) => {
+                    setEvents((prev) => [newEv, ...prev]);
+                    addToast('success', 'Deadline Added', newEv.title);
+                  }}
+                  onSeekAudio={(t) => {
+                    setCurrentTime(t);
+                    setActiveTab('lecture');
+                  }}
+                />
+              )}
 
-                {activeTab === 'events' && (
-                  <EventsView
-                    events={events}
-                    onConfirmEvent={handleConfirmEvent}
-                    onDismissEvent={handleDismissEvent}
-                    onEditEvent={(idx, upd) =>
-                      setEvents((prev) => prev.map((e, i) => (i === idx ? { ...e, ...upd } : e)))
-                    }
-                    onAddEvent={(newEv) => {
-                      setEvents((prev) => [newEv, ...prev]);
-                      addToast('success', 'Deadline Added', newEv.title);
-                    }}
-                    onSeekAudio={(t) => {
-                      setCurrentTime(t);
-                      setActiveTab('lecture');
-                    }}
-                  />
-                )}
+              {activeTab === 'questions' && (
+                <QuestionsView
+                  questions={questions}
+                  onSeekAudio={(t) => {
+                    setCurrentTime(t);
+                    setActiveTab('lecture');
+                  }}
+                />
+              )}
 
-                {activeTab === 'questions' && (
-                  <QuestionsView
-                    questions={questions}
-                    onSeekAudio={(t) => {
-                      setCurrentTime(t);
-                      setActiveTab('lecture');
-                    }}
-                  />
-                )}
+              {activeTab === 'speakers' && (
+                <SpeakersView
+                  speakerStats={notes?.speaker_stats}
+                  onEnrolVoiceprint={(spk) => {
+                    addToast('success', 'Voiceprint Saved', `Profile for ${spk} updated.`);
+                  }}
+                  onSeekAudio={(t) => {
+                    setCurrentTime(t);
+                    setActiveTab('lecture');
+                  }}
+                />
+              )}
 
-                {activeTab === 'speakers' && (
-                  <SpeakersView
-                    speakerStats={notes?.speaker_stats}
-                    onEnrolVoiceprint={(spk) => {
-                      addToast('success', 'Voiceprint Saved', `Profile for ${spk} updated.`);
-                    }}
-                    onSeekAudio={(t) => {
-                      setCurrentTime(t);
-                      setActiveTab('lecture');
-                    }}
-                  />
-                )}
+              {activeTab === 'phrases' && (
+                <PhrasesView
+                  phrases={notes?.repeated_phrases ? {
+                    emphasis: notes.repeated_phrases.map((p: any) => ({
+                      phrase: p.phrase,
+                      count: p.count,
+                      spans: [[p.first_occurrence_s || 0, (p.first_occurrence_s || 0) + 5]],
+                      context_snippet: p.context_snippet,
+                    })),
+                    habits: [],
+                  } : undefined}
+                  onSeekAudio={(t) => {
+                    setCurrentTime(t);
+                    setActiveTab('lecture');
+                  }}
+                />
+              )}
 
-                {activeTab === 'phrases' && (
-                  <PhrasesView
-                    phrases={notes?.repeated_phrases ? {
-                      emphasis: notes.repeated_phrases.map((p: any) => ({
-                        phrase: p.phrase,
-                        count: p.count,
-                        spans: [[p.first_occurrence_s || 0, (p.first_occurrence_s || 0) + 5]],
-                        context_snippet: p.context_snippet,
-                      })),
-                      habits: [],
-                    } : undefined}
-                    onSeekAudio={(t) => {
-                      setCurrentTime(t);
-                      setActiveTab('lecture');
-                    }}
-                  />
-                )}
+              {activeTab === 'timetable' && (
+                <TimetableView
+                  slots={timetable}
+                  onAddSlot={handleAddSlot}
+                  onDeleteSlot={handleDeleteSlot}
+                  onUploadTimetablePhoto={handleUploadPhoto}
+                />
+              )}
 
-                {activeTab === 'timetable' && (
-                  <TimetableView
-                    slots={timetable}
-                    onAddSlot={handleAddSlot}
-                    onDeleteSlot={handleDeleteSlot}
-                    onUploadTimetablePhoto={handleUploadPhoto}
-                  />
-                )}
-
-                {activeTab === 'corrections' && <CorrectionsView />}
-              </>
-            )}
-          </main>
+              {activeTab === 'corrections' && <CorrectionsView />}
+            </>
+          )}
         </div>
-      </div>
+      </main>
 
       {/* Docked Universal Audio Player */}
       {selectedRecId && (audioUrl || transcript) && (
-        <footer className="fixed bottom-0 left-0 right-0 z-40 p-4 pointer-events-none md:pl-64">
+        <footer className="fixed bottom-0 left-0 right-0 z-40 p-4 pointer-events-none">
           <div className="max-w-4xl mx-auto pointer-events-auto">
             <AudioPlayer
               audioSrc={audioUrl}
@@ -575,18 +562,6 @@ export default function App() {
           </div>
         </footer>
       )}
-
-      {/* Mobile Navigation Drawer and Bottom Bar */}
-      <MobileNav
-        activeTab={activeTab}
-        onSelectTab={setActiveTab}
-        isOpen={mobileNavOpen}
-        onClose={() => setMobileNavOpen(false)}
-        recordingCount={recordings.length}
-        upcomingEventsCount={events.filter((e) => !e.resolved || e.needs_review).length}
-        pairedDeviceCount={pairedDevices.length}
-        onOpenPairing={() => setShowPairModal(true)}
-      />
 
       {/* Command Palette Modal (⌘K / /) */}
       <CommandMenu

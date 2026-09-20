@@ -7,35 +7,40 @@ export default {
   darkMode: 'class',
   theme: {
     extend: {
+      fontFamily: {
+        sans: ['var(--font-sans)', 'sans-serif'],
+        serif: ['var(--font-serif)', 'Georgia', 'serif'],
+        mono: ['var(--font-mono)', 'monospace'],
+      },
+      borderRadius: {
+        hero: 'var(--radius-hero)',
+        card: 'var(--radius-card)',
+        subcard: 'var(--radius-subcard)',
+        control: 'var(--radius-control)',
+        pill: 'var(--radius-pill)',
+      },
       colors: {
         bg: 'var(--bg)',
         border: 'var(--border)',
+        'border-subtle': 'var(--border-subtle)',
+        text: 'var(--text)',
+        muted: 'var(--muted)',
+        'text-subtle': 'var(--text-subtle)',
         surface: {
           DEFAULT: 'var(--surface)',
-          950: 'var(--bg)',
-          900: 'var(--surface)',
-          850: 'var(--surface-elevated)',
-          800: 'var(--surface-muted)',
-          700: 'var(--border)',
-          600: 'var(--muted)',
-        },
-        brand: {
-          50: 'var(--accent-tint)',
-          100: 'var(--accent-tint)',
-          200: 'var(--accent)',
-          300: 'var(--accent)',
-          400: 'var(--accent)',
-          500: 'var(--accent)',
-          600: 'var(--accent)',
-          700: 'var(--accent)',
+          subtle: 'var(--surface-subtle)',
+          elevated: 'var(--surface-elevated)',
+          muted: 'var(--surface-muted)',
         },
         accent: {
           DEFAULT: 'var(--accent)',
           tint: 'var(--accent-tint)',
+          subtle: 'var(--accent-subtle)',
           foreground: 'var(--on-accent)',
         },
         alert: {
           DEFAULT: 'var(--alert)',
+          tint: 'var(--alert-tint)',
         },
       },
       animation: {

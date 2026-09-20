@@ -1,0 +1,450 @@
+{
+  "wispr": {
+    "name": "wisprflow",
+    "url": "https://wisprflow.ai/",
+    "scripts": [
+      "https://cdn.jsdelivr.net/npm/@tanay-wispr/webflow-package@6.6.30/dist/global.js",
+      "https://cdn.jsdelivr.net/gh/aquaNeon/wispr@beb8130cca3dd9d229bad1c7d66b11413b187232/flow-stack.js",
+      "https://cdn.jsdelivr.net/gh/aquaNeon/wispr@c35d10c0162737be7c60d8c6271c7b63687958ca/languages.js",
+      "https://cdn.prod.website-files.com/682f84b3838c89f8ff7667db%2F6544eda5f000985a163a8687%2F68c93c62c7911406d96f138f%2Ffinsweetcomponentsconfig-1.0.0.js",
+      "https://d3e54v103j8qbb.cloudfront.net/js/jquery-3.5.1.min.dc5e7f18c8.js?site=682f84b3838c89f8ff7667db",
+      "https://cdn.prod.website-files.com/682f84b3838c89f8ff7667db/js/webflow.schunk.f2efb3c5440a81cf.js",
+      "https://cdn.prod.website-files.com/682f84b3838c89f8ff7667db/js/webflow.schunk.b7b72544d8957638.js",
+      "https://cdn.prod.website-files.com/682f84b3838c89f8ff7667db/js/webflow.schunk.8bd9aeddea67e46e.js",
+      "https://cdn.prod.website-files.com/682f84b3838c89f8ff7667db/js/webflow.d1c07ad9.902352fa1072894f.js",
+      "https://cdn.prod.website-files.com/gsap/3.15.0/gsap.min.js",
+      "https://cdn.prod.website-files.com/gsap/3.15.0/MotionPathPlugin.min.js",
+      "https://cdn.prod.website-files.com/gsap/3.15.0/SplitText.min.js",
+      "https://cdn.prod.website-files.com/gsap/3.15.0/DrawSVGPlugin.min.js",
+      "https://cdn.prod.website-files.com/gsap/3.15.0/ScrollTrigger.min.js",
+      "https://cdn.prod.website-files.com/gsap/3.15.0/MotionPathHelper.min.js",
+      "https://cdn.prod.website-files.com/gsap/3.15.0/ScrollToPlugin.min.js",
+      "https://www.googletagmanager.com/gtm.js?id=GTM-N8JTW8TQ",
+      "https://ph.wisprflow.ai/static/array.js",
+      "https://cdn.jsdelivr.net/npm/@finsweet/fs-components@2/fs-components.js?v=1789839853203",
+      "https://cdn.jsdelivr.net/npm/@finsweet/fs-components@2/dist/chunk-J7NTLVPZ.js"
+    ],
+    "analysis": {
+      "title": "Wispr Flow | Effortless Voice Dictation",
+      "detectedLibs": {
+        "gsap": true,
+        "ScrollTrigger": false,
+        "lenis": false,
+        "framerMotion": false,
+        "three": false,
+        "lottie": false,
+        "rive": false
+      },
+      "body": {
+        "bg": "rgb(255, 255, 235)",
+        "color": "rgb(26, 26, 26)",
+        "fontFamily": "Figtree, Arial, sans-serif"
+      },
+      "h1": {
+        "fontFamily": "\"Eb garamond\", Arial, sans-serif",
+        "fontSize": "96px",
+        "fontWeight": "400",
+        "letterSpacing": "-2.88px",
+        "lineHeight": "91.2px"
+      },
+      "headings": [
+        {
+          "tag": "H1",
+          "text": "Don’t type, just speak."
+        },
+        {
+          "tag": "H2",
+          "text": "4x faster than typing"
+        },
+        {
+          "tag": "H2",
+          "text": "Speak at the speed you think, in every app, on every device."
+        },
+        {
+          "tag": "H3",
+          "text": "Speak naturally"
+        },
+        {
+          "tag": "H3",
+          "text": "Flow edits as you speak"
+        },
+        {
+          "tag": "H3",
+          "text": "Use it anywhere"
+        },
+        {
+          "tag": "H2",
+          "text": "Built around how  you work,  not how we think you should."
+        },
+        {
+          "tag": "H2",
+          "text": "Your voice stays yours."
+        },
+        {
+          "tag": "H2",
+          "text": "From the first people to use it."
+        },
+        {
+          "tag": "H2",
+          "text": "Good questions."
+        }
+      ],
+      "ems": [
+        {
+          "tag": "EM",
+          "text": "just speak.",
+          "fontFamily": "\"Eb garamond\", Arial, sans-serif",
+          "fontStyle": "italic",
+          "fontWeight": "400",
+          "color": "rgb(26, 26, 26)"
+        },
+        {
+          "tag": "EM",
+          "text": "than typing",
+          "fontFamily": "\"Eb garamond\", Arial, sans-serif",
+          "fontStyle": "italic",
+          "fontWeight": "400",
+          "color": "rgb(255, 255, 235)"
+        },
+        {
+          "tag": "EM",
+          "text": "in every app,\non every device.",
+          "fontFamily": "\"Eb garamond\", Arial, sans-serif",
+          "fontStyle": "italic",
+          "fontWeight": "400",
+          "color": "rgb(26, 26, 26)"
+        },
+        {
+          "tag": "EM",
+          "text": "how",
+          "fontFamily": "\"Eb garamond\", Arial, sans-serif",
+          "fontStyle": "italic",
+          "fontWeight": "400",
+          "color": "rgb(26, 26, 26)"
+        },
+        {
+          "tag": "EM",
+          "text": "you work,",
+          "fontFamily": "\"Eb garamond\", Arial, sans-serif",
+          "fontStyle": "italic",
+          "fontWeight": "400",
+          "color": "rgb(26, 26, 26)"
+        },
+        {
+          "tag": "EM",
+          "text": "stays yours.",
+          "fontFamily": "\"Eb garamond\", Arial, sans-serif",
+          "fontStyle": "italic",
+          "fontWeight": "400",
+          "color": "rgb(26, 26, 26)"
+        },
+        {
+          "tag": "EM",
+          "text": "people to use it.",
+          "fontFamily": "\"Eb garamond\", Arial, sans-serif",
+          "fontStyle": "italic",
+          "fontWeight": "400",
+          "color": "rgb(255, 255, 235)"
+        },
+        {
+          "tag": "EM",
+          "text": "questions.",
+          "fontFamily": "\"Eb garamond\", Arial, sans-serif",
+          "fontStyle": "italic",
+          "fontWeight": "400",
+          "color": "rgb(26, 26, 26)"
+        },
+        {
+          "tag": "EM",
+          "text": "two.",
+          "fontFamily": "\"Eb garamond\", Arial, sans-serif",
+          "fontStyle": "italic",
+          "fontWeight": "400",
+          "color": "rgb(255, 255, 235)"
+        }
+      ],
+      "buttons": [
+        {
+          "text": "Get started on macOS",
+          "radius": "12px",
+          "bg": "rgb(240, 215, 255)",
+          "color": "rgb(26, 26, 26)",
+          "padding": "16px 24px"
+        },
+        {
+          "text": "Get started on macOS",
+          "radius": "8px",
+          "bg": "rgb(240, 215, 255)",
+          "color": "rgb(26, 26, 26)",
+          "padding": "14px"
+        },
+        {
+          "text": "Get started on macOS",
+          "radius": "8px",
+          "bg": "rgb(240, 215, 255)",
+          "color": "rgb(26, 26, 26)",
+          "padding": "16px 24px"
+        },
+        {
+          "text": "Get started on macOS",
+          "radius": "8px",
+          "bg": "rgb(240, 215, 255)",
+          "color": "rgb(26, 26, 26)",
+          "padding": "16px 24px"
+        },
+        {
+          "text": "Try again",
+          "radius": "8px",
+          "bg": "rgb(240, 215, 255)",
+          "color": "rgb(26, 26, 26)",
+          "padding": "16px 24px"
+        }
+      ],
+      "cards": [
+        {
+          "radius": "10px",
+          "bg": "rgb(255, 255, 235)",
+          "border": "2px solid rgb(228, 228, 208)",
+          "boxShadow": "none"
+        }
+      ]
+    }
+  },
+  "lando": {
+    "name": "landonorris",
+    "url": "https://landonorris.com/",
+    "scripts": [
+      "https://lando.itsoffbrand.io/dev-js/lando-by-OFF+BRAND.05.js",
+      "https://d3e54v103j8qbb.cloudfront.net/js/jquery-3.5.1.min.dc5e7f18c8.js?site=67b5a02dc5d338960b17a7e9",
+      "https://cdn.prod.website-files.com/67b5a02dc5d338960b17a7e9/js/lando-offbrand.schunk.7321a5097fb66f41.js",
+      "https://cdn.prod.website-files.com/67b5a02dc5d338960b17a7e9/js/lando-offbrand.751e0867.148dc658e77a3916.js",
+      "https://lando.itsoffbrand.io/gl/draco/draco_wasm_wrapper.js"
+    ],
+    "analysis": {
+      "title": "McLaren Formula 1 Driver — Lando Norris",
+      "detectedLibs": {
+        "gsap": false,
+        "ScrollTrigger": false,
+        "lenis": true,
+        "framerMotion": false,
+        "three": false,
+        "lottie": false,
+        "rive": true
+      },
+      "body": {
+        "bg": "rgb(40, 44, 32)",
+        "color": "rgb(244, 244, 237)",
+        "fontFamily": "\"Mona Sans Variable\", Arial, sans-serif"
+      },
+      "h1": {
+        "fontFamily": "\"Mona Sans Variable\", Arial, sans-serif",
+        "fontSize": "38px",
+        "fontWeight": "700",
+        "letterSpacing": "normal",
+        "lineHeight": "44px"
+      },
+      "headings": [
+        {
+          "tag": "H1",
+          "text": "LANDO NORRIS"
+        },
+        {
+          "tag": "H2",
+          "text": "2025 MCLAREN FORMULA 1 DRIVER"
+        },
+        {
+          "tag": "H2",
+          "text": "ON"
+        },
+        {
+          "tag": "H2",
+          "text": "ON"
+        },
+        {
+          "tag": "H2",
+          "text": "TRACK"
+        },
+        {
+          "tag": "H2",
+          "text": "TRACK"
+        },
+        {
+          "tag": "H2",
+          "text": "OFF"
+        },
+        {
+          "tag": "H2",
+          "text": "OFF"
+        },
+        {
+          "tag": "H2",
+          "text": "TRACK"
+        },
+        {
+          "tag": "H2",
+          "text": "TRACK"
+        }
+      ],
+      "ems": [
+        {
+          "tag": "SPAN",
+          "text": "ON",
+          "fontFamily": "Brier, Arial, sans-serif",
+          "fontStyle": "normal",
+          "fontWeight": "700",
+          "color": "rgb(40, 44, 32)"
+        },
+        {
+          "tag": "SPAN",
+          "text": "TRACK",
+          "fontFamily": "\"Mona Sans Variable\", Arial, sans-serif",
+          "fontStyle": "normal",
+          "fontWeight": "700",
+          "color": "rgb(40, 44, 32)"
+        },
+        {
+          "tag": "SPAN",
+          "text": "Most recent results, career stats",
+          "fontFamily": "\"Mona Sans Variable\", Arial, sans-serif",
+          "fontStyle": "normal",
+          "fontWeight": "400",
+          "color": "rgb(40, 44, 32)"
+        },
+        {
+          "tag": "SPAN",
+          "text": "and photos from trackside.",
+          "fontFamily": "\"Mona Sans Variable\", Arial, sans-serif",
+          "fontStyle": "normal",
+          "fontWeight": "400",
+          "color": "rgb(40, 44, 32)"
+        },
+        {
+          "tag": "SPAN",
+          "text": "OFF",
+          "fontFamily": "Brier, Arial, sans-serif",
+          "fontStyle": "normal",
+          "fontWeight": "700",
+          "color": "rgb(40, 44, 32)"
+        },
+        {
+          "tag": "SPAN",
+          "text": "TRACK",
+          "fontFamily": "\"Mona Sans Variable\", Arial, sans-serif",
+          "fontStyle": "normal",
+          "fontWeight": "700",
+          "color": "rgb(40, 44, 32)"
+        },
+        {
+          "tag": "SPAN",
+          "text": "Campaigns, shoots and other such",
+          "fontFamily": "\"Mona Sans Variable\", Arial, sans-serif",
+          "fontStyle": "normal",
+          "fontWeight": "400",
+          "color": "rgb(40, 44, 32)"
+        },
+        {
+          "tag": "SPAN",
+          "text": "promotional materials for fans",
+          "fontFamily": "\"Mona Sans Variable\", Arial, sans-serif",
+          "fontStyle": "normal",
+          "fontWeight": "400",
+          "color": "rgb(40, 44, 32)"
+        },
+        {
+          "tag": "SPAN",
+          "text": "HELMETS",
+          "fontFamily": "\"Mona Sans Variable\", Arial, sans-serif",
+          "fontStyle": "normal",
+          "fontWeight": "700",
+          "color": "rgb(244, 244, 237)"
+        },
+        {
+          "tag": "SPAN",
+          "text": "HALL OF FAME",
+          "fontFamily": "Brier, Arial, sans-serif",
+          "fontStyle": "normal",
+          "fontWeight": "700",
+          "color": "rgb(178, 199, 58)"
+        },
+        {
+          "tag": "SPAN",
+          "text": "HALL OF FAME",
+          "fontFamily": "\"Mona Sans Variable\", Arial, sans-serif",
+          "fontStyle": "normal",
+          "fontWeight": "700",
+          "color": "rgb(244, 244, 237)"
+        },
+        {
+          "tag": "SPAN",
+          "text": "HALL OF FAME",
+          "fontFamily": "Brier, Arial, sans-serif",
+          "fontStyle": "normal",
+          "fontWeight": "700",
+          "color": "rgb(178, 199, 58)"
+        },
+        {
+          "tag": "SPAN",
+          "text": "From his iconic blobs to innovative one-off",
+          "fontFamily": "\"Mona Sans Variable\", Arial, sans-serif",
+          "fontStyle": "normal",
+          "fontWeight": "400",
+          "color": "rgb(185, 187, 173)"
+        },
+        {
+          "tag": "SPAN",
+          "text": "designs, Lando has always been",
+          "fontFamily": "\"Mona Sans Variable\", Arial, sans-serif",
+          "fontStyle": "normal",
+          "fontWeight": "400",
+          "color": "rgb(185, 187, 173)"
+        },
+        {
+          "tag": "SPAN",
+          "text": "passionate about designing innovative",
+          "fontFamily": "\"Mona Sans Variable\", Arial, sans-serif",
+          "fontStyle": "normal",
+          "fontWeight": "400",
+          "color": "rgb(185, 187, 173)"
+        }
+      ],
+      "buttons": [
+        {
+          "text": "Store\nSTORE",
+          "radius": "7.2px",
+          "bg": "rgb(210, 255, 0)",
+          "color": "rgb(40, 44, 32)",
+          "padding": "0px 13.3333px"
+        },
+        {
+          "text": "",
+          "radius": "9.86667px",
+          "bg": "rgba(0, 0, 0, 0)",
+          "color": "rgb(17, 17, 18)",
+          "padding": "0px"
+        },
+        {
+          "text": "Load NorrisLoad Norris",
+          "radius": "7.2px",
+          "bg": "rgb(210, 255, 0)",
+          "color": "rgb(40, 44, 32)",
+          "padding": "0px 13.3333px"
+        },
+        {
+          "text": "",
+          "radius": "7.2px",
+          "bg": "rgb(210, 255, 0)",
+          "color": "rgb(40, 44, 32)",
+          "padding": "0px 13.3333px"
+        },
+        {
+          "text": "",
+          "radius": "7.2px",
+          "bg": "rgb(210, 255, 0)",
+          "color": "rgb(40, 44, 32)",
+          "padding": "0px 13.3333px"
+        }
+      ],
+      "cards": []
+    }
+  }
+}

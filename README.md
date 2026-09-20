@@ -97,25 +97,44 @@ python3 eval/run_eval.py
 
 ## ⚡ Quick Start (MacBook M4 Max)
 
-### 1. Prerequisites
+### 🚀 One-Line Instant Install (macOS / Apple Silicon)
+
+Run this single command in your Terminal to download and install Lecture Whisper:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/Naavalanarul/Lecture_Whisper/main/install.sh | bash
+```
+
+The automated installer:
+1. Verifies Apple Silicon (M1/M2/M3/M4) macOS environment.
+2. Checks and installs audio engine dependencies (`ffmpeg` via Homebrew).
+3. Installs the high-performance Python package manager (`uv`).
+4. Builds and installs the global `lecturewhisper` CLI and packaged modern web dashboard.
+5. Configures your shell environment PATH.
+
+---
+
+### Manual Developer Installation (from Source)
+
+#### 1. Prerequisites
 ```bash
 brew install ffmpeg python@3.12
 curl -LsSf https://astral.sh/uv/install.sh | sh
 ```
 
-### 2. Install Global Executable
+#### 2. Install Global Executable
 ```bash
 git clone https://github.com/Naavalanarul/Lecture_Whisper.git
 cd Lecture_Whisper/server
 uv tool install --force --python 3.12 --reinstall "./[all]"
 ```
 
-### 3. Start Server and Web Dashboard (Port 8420)
+#### 3. Start Server and Web Dashboard (Port 8420)
 ```bash
 lecturewhisper serve
 ```
 - Launches the local FastAPI server at `http://127.0.0.1:8420`.
-- Opens the React 18 + Tailwind dashboard with light/dark themes.
+- Automatically opens the modern floating pill dashboard with light and dark themes.
 - Displays the terminal QR code with SHA-256 fingerprint for phone pairing.
 
 ---

@@ -253,7 +253,7 @@ export const TodayView: React.FC<TodayViewProps> = ({
                 >
                   <div className="flex items-center justify-between">
                     <span className="font-mono text-[11px] px-1.5 py-0.5 rounded bg-alert/10 text-alert font-medium">
-                      {ev.type.replace('_', ' ')}
+                      {(ev.type || 'assignment_deadline').replace('_', ' ')}
                     </span>
                     <span className="text-muted font-mono tabular-nums">
                       {ev.date_iso ? formatDate(ev.date_iso) : ev.date_text || 'Date TBA'}

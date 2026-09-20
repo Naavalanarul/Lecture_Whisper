@@ -136,7 +136,7 @@ export const EventsView: React.FC<EventsViewProps> = ({
           <div className="flex items-center justify-between gap-2 mb-2">
             <div className="flex items-center gap-2">
               <span className="px-2 py-0.5 rounded text-[11px] font-mono capitalize border border-border bg-bg text-text">
-                {ev.type.replace('_', ' ')}
+                {(ev.type || 'assignment_deadline').replace('_', ' ')}
               </span>
               {ev.needs_review ? (
                 <span className="inline-flex items-center gap-1 text-[11px] font-medium text-alert">
