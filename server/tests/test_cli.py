@@ -63,6 +63,38 @@ def test_eval_announcements_command(tmp_path):
     assert (out_dir / "announcements_review.html").exists()
 
 
+def test_score_candidates_command(tmp_path):
+    """Test score-candidates CLI command with mock audited CSV."""
+    runner = CliRunner()
+    csv_file = tmp_path / "candidates.csv"
+    csv_file.write_text(
+        "id,status,human_verified,category\n"
+        "ANN-001,VERIFIED,TRUE,exam\n"
+        "ANN-002,REJECTED,FALSE,exam\n"
+        "ANN-003,PENDING_REVIEW,FALSE,assignment\n"
+    )
+    result = runner.invoke(cli, ["eval", "score-candidates", str(csv_file)])
+    assert result.exit_code == 0
+    assert "Overall Human-Audited Precision: 50.0%" in result.output
+    assert "Verified (TP):      1" in result.output
+    assert "Rejected (FP):      1" in result.output
+
+
+def test_score_calibration_command(tmp_path):
+    """Test score-calibration CLI command with mock audited CSV."""
+    runner = CliRunner()
+    csv_file = tmp_path / "calibration.csv"
+    csv_file.write_text(
+        "reference_text,hypothesis_text,human_verified_text\n"
+        "hello world,hello world,hello world\n"
+    )
+    result = runner.invoke(cli, ["eval", "score-calibration", str(csv_file)])
+    assert result.exit_code == 0
+    assert "Ground Truth Calibration Analysis" in result.output
+    assert "ASR Strict WER vs Human Gold Reference:       0.00%" in result.output
+
+
+
 
 def test_train_command():
     """Train command should run fine-tuning and promotion evaluation."""

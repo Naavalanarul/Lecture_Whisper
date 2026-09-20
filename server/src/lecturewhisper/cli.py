@@ -244,6 +244,92 @@ def announcements_cmd(folder: str, output: str) -> None:
     console.print(f"  • Review Web UI:  [bold]{html_path}[/bold]\n")
 
 
+@eval_cmd.command("score-candidates")
+@click.argument("csv_path", default="review/candidates.csv", type=click.Path(exists=True, dir_okay=False))
+def score_candidates_cmd(csv_path: str) -> None:
+    """Score precision of human-audited announcement and question candidates."""
+    import csv
+    from collections import defaultdict
+    from pathlib import Path
+
+    path = Path(csv_path)
+    with open(path, mode="r", encoding="utf-8") as f:
+        reader = csv.DictReader(f)
+        rows = list(reader)
+
+    total = len(rows)
+    verified = [r for r in rows if r.get("status") == "VERIFIED" or r.get("human_verified", "").upper() == "TRUE"]
+    rejected = [r for r in rows if r.get("status") == "REJECTED"]
+    pending = [r for r in rows if r.get("status") in ("PENDING_REVIEW", "PENDING", "")]
+
+    console.print(f"\n[bold]📋 Candidate Audit Summary ({path.name})[/bold]\n")
+    console.print(f"Total Candidates:   {total}")
+    console.print(f"Verified (TP):      [green]{len(verified)}[/green]")
+    console.print(f"Rejected (FP):      [red]{len(rejected)}[/red]")
+    console.print(f"Pending Review:     [yellow]{len(pending)}[/yellow]\n")
+
+    audited = len(verified) + len(rejected)
+    if audited == 0:
+        console.print("[bold yellow]⚠️ No candidates have been human-verified yet![/bold yellow]")
+        console.print("In accordance with test suite rules, model predictions cannot be counted as ground truth without human verification.")
+        console.print("Please open [bold]review/announcements_review.html[/bold] in your browser to verify candidate rows.\n")
+        return
+
+    precision = len(verified) / audited
+    console.print(f"Overall Human-Audited Precision: [bold green]{precision * 100:.1f}%[/bold green]")
+
+    cat_tp = defaultdict(int)
+    cat_fp = defaultdict(int)
+    for r in verified:
+        cat_tp[r.get("category", "other")] += 1
+    for r in rejected:
+        cat_fp[r.get("category", "other")] += 1
+
+    all_cats = sorted(set(list(cat_tp.keys()) + list(cat_fp.keys())))
+    console.print("\n[bold]Category Breakdown:[/bold]")
+    for cat in all_cats:
+        tp = cat_tp[cat]
+        fp = cat_fp[cat]
+        p = tp / (tp + fp) if (tp + fp) > 0 else 0.0
+        console.print(f"  • {cat:<18}: {tp} TP, {fp} FP (Precision: {p * 100:.1f}%)")
+    console.print("")
+
+
+@eval_cmd.command("score-calibration")
+@click.argument("csv_path", default="review/asr-calibration.csv", type=click.Path(exists=True, dir_okay=False))
+def score_calibration_cmd(csv_path: str) -> None:
+    """Score true calibrated WER against human-verified gold transcript."""
+    import csv
+    from pathlib import Path
+    from lecturewhisper.eval.asr import calculate_wer_metrics
+
+    path = Path(csv_path)
+    with open(path, mode="r", encoding="utf-8") as f:
+        reader = csv.DictReader(f)
+        rows = list(reader)
+
+    audited_rows = [r for r in rows if r.get("human_verified_text", "").strip()]
+    if not audited_rows:
+        console.print(f"\n[bold yellow]⚠️ No human-verified verbatim text found in {path.name}[/bold yellow]")
+        console.print("Open [bold]review/calibration.html[/bold] to listen and verify the 5-minute calibration window.\n")
+        return
+
+    ref_text = " ".join(r["reference_text"] for r in audited_rows)
+    gold_text = " ".join(r["human_verified_text"] for r in audited_rows)
+    hyp_text = " ".join(r["hypothesis_text"] for r in audited_rows)
+
+    caption_metrics = calculate_wer_metrics(ref_text, hyp_text)
+    gold_metrics = calculate_wer_metrics(gold_text, hyp_text)
+    sanitization_diff = calculate_wer_metrics(ref_text, gold_text)
+
+    console.print(f"\n[bold]🎙️ Ground Truth Calibration Analysis ({len(audited_rows)} segments)[/bold]\n")
+    console.print(f"Caption Sanitization Rate (Gold vs Captions): [bold yellow]{sanitization_diff.strict_wer * 100:.2f}%[/bold yellow]")
+    console.print(f"ASR Strict WER vs Video Captions:             [bold]{caption_metrics.strict_wer * 100:.2f}%[/bold]")
+    console.print(f"ASR Strict WER vs Human Gold Reference:       [bold green]{gold_metrics.strict_wer * 100:.2f}%[/bold green]")
+    console.print(f"ASR Filler WER vs Human Gold Reference:       [bold green]{gold_metrics.filler_insensitive_wer * 100:.2f}%[/bold green]\n")
+
+
+
 
 @cli.command()
 @click.option("--iters", default=50, type=int, help="Training iterations.")

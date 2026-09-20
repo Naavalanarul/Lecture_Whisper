@@ -12,8 +12,8 @@
 </p>
 
 <p align="center">
-  <a href="server/tests"><img src="https://img.shields.io/badge/Tests-73%20Passing-10B981?style=flat-square&logo=pytest&logoColor=white" alt="Tests" /></a>
-  <a href="eval"><img src="https://img.shields.io/badge/Benchmark-10%20Golden%20Lectures-4F46E5?style=flat-square" alt="Benchmark" /></a>
+  <a href="server/tests"><img src="https://img.shields.io/badge/Tests-118%20Passing-10B981?style=flat-square&logo=pytest&logoColor=white" alt="Tests" /></a>
+  <a href="eval"><img src="https://img.shields.io/badge/Benchmark-Real%20Lectures%20%2B%20TIE-4F46E5?style=flat-square" alt="Benchmark" /></a>
   <a href="server/pyproject.toml"><img src="https://img.shields.io/badge/Python-3.12%2B-3776AB?style=flat-square&logo=python&logoColor=white" alt="Python" /></a>
   <a href="docs/architecture.md"><img src="https://img.shields.io/badge/Hardware-Apple%20Silicon%20M4-black?style=flat-square&logo=apple&logoColor=white" alt="Hardware" /></a>
   <a href="mobile"><img src="https://img.shields.io/badge/Android-SDK%2035%20(Android%2015)-3DDC84?style=flat-square&logo=android&logoColor=white" alt="Android" /></a>
@@ -148,21 +148,41 @@ flowchart TD
 
 ## 📊 Evaluation & Benchmark Suite
 
-Lecture Whisper includes an automated evaluation harness (`eval/run_eval.py`) tested on **10 Golden University Lectures** across Computer Science, Physics, Chemistry, Economics, Statistics, and Academic Writing:
+## 📊 Real-Recording Test Suite & Benchmark Evaluation
 
-| Metric | Measured Score | Target Threshold | Validation Status |
-|---|---|---|---|
-| **Word Error Rate (WER)** | **0.00%** | ≤ 8.0% | ✅ Passed |
-| **Note Factual Faithfulness** | **90.0%** | ≥ 85.0% | ✅ Passed |
-| **Event Extraction Precision** | **76.9%** | ≥ 65.0% | ✅ Passed |
-| **Event Extraction Recall** | **47.6%** | Baseline | ⚠️ Beta Refinement |
-| **Event F1-Score** | **58.8%** | Baseline | ⚠️ Beta Refinement |
-| **Real-Time Factor (RTF)** | **0.18x** (5.5x faster than real-time) | ≤ 0.35x | ✅ Passed |
+Lecture Whisper includes a comprehensive evaluation suite tested against real university lectures (MIT OpenCourseWare, Technical Indian English / NPTEL, and simulated acoustic classroom degradation). Full report: [`docs/eval/testsuite-report-2026-09-20.md`](docs/eval/testsuite-report-2026-09-20.md).
 
-Run the benchmark suite locally:
+### 🎯 Measured Performance Matrix
+
+| Benchmark Profile | Corpus & Instructor | Real-Time Factor (RTF) | Strict WER | Filler-Insensitive WER | Validation Status |
+|---|---|---|---|---|---|
+| **Clean Lecture Hall** | MIT 6.006 (Jason Ku) | **0.032x** ($31\times$ real-time) | **6.46%** | **5.93%** | ✅ Passed |
+| **Interactive Discussion**| MIT 6.0001 (Dr. Ana Bell) | **0.028x** ($36\times$ real-time) | **7.10%** | **6.54%** | ✅ Passed |
+| **Accented Technical English** | TIE / NPTEL (10 Speakers) | **0.045x** ($22\times$ real-time) | **8.46%** | **8.30%** | ✅ Passed |
+| **Acoustic Classroom Simulation (Mild)** | RIR $RT_{60}=0.3$s, SNR 25 dB | **0.066x** ($15\times$ real-time) | **11.86%** | **10.98%** | ✅ Passed |
+| **Acoustic Classroom Simulation (Moderate)** | RIR $RT_{60}=0.7$s, SNR 18 dB | **0.032x** ($31\times$ real-time) | **15.25%** | **15.03%** | ✅ Passed |
+| **Acoustic Classroom Simulation (High)** | RIR $RT_{60}=1.2$s, SNR 10 dB | **0.032x** ($31\times$ real-time) | **16.95%** | **16.18%** | ✅ Passed |
+
+### 🛠️ Evaluation Commands & Makefile Targets
 
 ```bash
-python3 eval/run_eval.py
+# Run end-to-end evaluation suite (ASR scoring + discovery scanner)
+make testsuite
+
+# Run classroom acoustic degradation simulation (Mild, Moderate, High)
+make farfield-sim
+
+# Scan transcripts for announcements, deadlines, and questions
+lecturewhisper eval announcements data/transcripts --output review
+
+# Audit candidate precision and score verified ground truth
+lecturewhisper eval score-candidates review/candidates.csv
+
+# Score true calibrated WER against human-verified gold transcripts
+lecturewhisper eval score-calibration review/asr-calibration.csv
+
+# Run all 118 unit and integration tests
+make test
 ```
 
 ---
@@ -176,7 +196,10 @@ python3 eval/run_eval.py
 | `lecturewhisper pair` | Print terminal ASCII QR code and one-time pairing token |
 | `lecturewhisper process <audio>` | Execute offline neural pipeline directly on an audio file |
 | `lecturewhisper bench <audio>` | Benchmark individual pipeline stages and compute Real-Time Factor (RTF) |
-| `lecturewhisper eval` | Run evaluation harness across the 10 golden lecture benchmark suite |
+| `lecturewhisper eval` | Run legacy evaluation harness across golden fixture suite |
+| `lecturewhisper eval announcements <folder>` | Scan transcripts for candidate announcements, events, and questions |
+| `lecturewhisper eval score-candidates [csv]` | Score precision on human-audited candidate announcements |
+| `lecturewhisper eval score-calibration [csv]` | Score true calibrated WER against human-verified gold transcripts |
 | `lecturewhisper train` | Run LoRA fine-tuning on human correction pairs with promotion gating |
 | `lecturewhisper backup` | Create compressed `.tar.gz` archive of database, config, and notes |
 | `lecturewhisper service install` | Configure macOS `launchd` LaunchAgent to start automatically on login |
