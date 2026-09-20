@@ -1,6 +1,8 @@
 package com.lecturewhisper;
 
 import android.Manifest;
+import android.animation.ObjectAnimator;
+import android.animation.ValueAnimator;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.Context;
@@ -10,27 +12,47 @@ import android.content.pm.PackageManager;
 import android.content.res.ColorStateList;
 import android.content.res.Configuration;
 import android.graphics.Color;
+import android.graphics.SurfaceTexture;
+import android.hardware.Camera;
 import android.media.MediaPlayer;
 import android.net.Uri;
+import android.net.wifi.WifiManager;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.Handler;
 import android.os.Looper;
 import android.os.StatFs;
+import android.os.VibrationEffect;
+import android.os.Vibrator;
 import android.provider.Settings;
 import android.util.Log;
+import android.view.GestureDetector;
 import android.view.Gravity;
+import android.view.MotionEvent;
+import android.view.TextureView;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.WindowInsets;
+import android.view.animation.AccelerateDecelerateInterpolator;
+import android.view.animation.DecelerateInterpolator;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ProgressBar;
+import android.widget.ScrollView;
 import android.widget.TextView;
 import android.widget.Toast;
+
+import com.google.zxing.BarcodeFormat;
+import com.google.zxing.BinaryBitmap;
+import com.google.zxing.DecodeHintType;
+import com.google.zxing.MultiFormatReader;
+import com.google.zxing.PlanarYUVLuminanceSource;
+import com.google.zxing.Result;
+import com.google.zxing.common.HybridBinarizer;
 
 import com.lecturewhisper.model.RecordingSession;
 import com.lecturewhisper.model.TimetableSlot;
@@ -44,9 +66,16 @@ import com.lecturewhisper.store.TimetableStore;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.InputStream;
+import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Collections;
+import java.util.EnumMap;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 public class MainActivity extends Activity {
 
@@ -145,6 +174,12 @@ public class MainActivity extends Activity {
 
     // Layer 2: QR Scanner / Pairing Overlay Sheet
     private View overlayQrScanner;
+    private TextureView cameraTextureView;
+    private View viewQrScanLine;
+    private ImageButton btnQrTorch;
+    private TextView textQrScannerStatus;
+    private ScrollView scrollPairingSheet;
+    private LinearLayout layoutPairingSheet;
     private EditText editFallbackCode;
     private Button btnSubmitCode;
     private TextView textToggleAdvancedHost;
@@ -152,6 +187,17 @@ public class MainActivity extends Activity {
     private EditText editServerHost;
     private EditText editServerPort;
     private Button btnManualConnect;
+
+    // Camera & QR Scanner State
+    private Camera mCamera;
+    private boolean isScanning = false;
+    private boolean isTorchOn = false;
+    private ObjectAnimator scanLineAnimator;
+    private final ExecutorService cameraExecutor = Executors.newSingleThreadExecutor();
+
+    // Swipe Gesture Navigation
+    private GestureDetector gestureDetector;
+    private boolean isTransitioningTab = false;
 
     // Recording Runtime State
     private boolean isRecording = false;
@@ -219,6 +265,7 @@ public class MainActivity extends Activity {
 
         bindViews();
         setupWindowInsets();
+        setupSwipeGestureDetector();
         setupListeners();
         setupDaySelector();
         updateThemeButtons(savedTheme);
@@ -250,6 +297,7 @@ public class MainActivity extends Activity {
     @Override
     protected void onPause() {
         super.onPause();
+        stopCameraPreview();
         if (connectionManager != null) {
             connectionManager.onAppBackground();
         }
@@ -258,6 +306,15 @@ public class MainActivity extends Activity {
             previewPlayer.release();
             previewPlayer = null;
         }
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        stopCameraPreview();
+        try {
+            cameraExecutor.shutdown();
+        } catch (Exception ignored) {}
     }
 
     @Override
@@ -310,6 +367,7 @@ public class MainActivity extends Activity {
         rootLayout.setOnApplyWindowInsetsListener((v, insets) -> {
             int statusBarTop = 0;
             int navBarBottom = 0;
+            int imeBottom = 0;
 
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
                 android.graphics.Insets sb = insets.getInsets(
@@ -318,8 +376,12 @@ public class MainActivity extends Activity {
                 android.graphics.Insets nb = insets.getInsets(
                         WindowInsets.Type.navigationBars()
                 );
+                android.graphics.Insets ime = insets.getInsets(
+                        WindowInsets.Type.ime()
+                );
                 statusBarTop = sb.top;
                 navBarBottom = nb.bottom;
+                imeBottom = ime.bottom;
             } else {
                 statusBarTop = insets.getSystemWindowInsetTop();
                 navBarBottom = insets.getSystemWindowInsetBottom();
@@ -330,20 +392,82 @@ public class MainActivity extends Activity {
                 topAppBar.setPadding(dpToPx(16), safeTopPadding, dpToPx(16), dpToPx(6));
             }
 
-            int safeBottomPadding = Math.max(navBarBottom, dpToPx(8));
+            // High-clearance navigation bar padding to prevent interference with gesture pill / 3-button nav
+            int safeBottomPadding = Math.max(navBarBottom, dpToPx(24)) + dpToPx(8);
             if (bottomNavBar != null) {
                 bottomNavBar.setPadding(
                         bottomNavBar.getPaddingLeft(),
-                        dpToPx(4),
+                        dpToPx(8),
                         bottomNavBar.getPaddingRight(),
-                        safeBottomPadding + dpToPx(4)
+                        safeBottomPadding
                 );
+            }
+
+            // Dynamically elevate pairing bottom sheet and scroll input box above keyboard
+            if (layoutPairingSheet != null) {
+                int sheetBottomPadding = (imeBottom > 0)
+                        ? (imeBottom + dpToPx(16))
+                        : (Math.max(navBarBottom, dpToPx(24)) + dpToPx(16));
+                layoutPairingSheet.setPadding(
+                        layoutPairingSheet.getPaddingLeft(),
+                        layoutPairingSheet.getPaddingTop(),
+                        layoutPairingSheet.getPaddingRight(),
+                        sheetBottomPadding
+                );
+                if (imeBottom > 0 && scrollPairingSheet != null) {
+                    scrollPairingSheet.post(() -> {
+                        scrollPairingSheet.smoothScrollTo(0, layoutPairingSheet.getBottom());
+                    });
+                }
             }
 
             return insets;
         });
 
         rootLayout.requestApplyInsets();
+    }
+
+    private void setupSwipeGestureDetector() {
+        gestureDetector = new GestureDetector(this, new GestureDetector.SimpleOnGestureListener() {
+            @Override
+            public boolean onFling(MotionEvent e1, MotionEvent e2, float velocityX, float velocityY) {
+                if (e1 == null || e2 == null) return false;
+                if (overlayQrScanner != null && overlayQrScanner.getVisibility() == View.VISIBLE) return false;
+                if (isRecording && isScreenLocked) return false;
+
+                float diffX = e2.getX() - e1.getX();
+                float diffY = e2.getY() - e1.getY();
+
+                // Calibrated sensitivity: predominantly horizontal fling with min distance and velocity
+                if (Math.abs(diffX) > Math.abs(diffY) * 1.35f
+                        && Math.abs(diffX) > dpToPx(45)
+                        && Math.abs(velocityX) > dpToPx(100)) {
+                    if (diffX > 0) {
+                        // Swipe right -> advance to next section
+                        int next = (currentTab + 1) % 5;
+                        selectTabWithAnimation(next, true);
+                        return true;
+                    } else {
+                        // Swipe left -> return to previous section
+                        int prev = (currentTab - 1 + 5) % 5;
+                        selectTabWithAnimation(prev, false);
+                        return true;
+                    }
+                }
+                return false;
+            }
+        });
+    }
+
+    @Override
+    public boolean dispatchTouchEvent(MotionEvent ev) {
+        if (overlayQrScanner != null && overlayQrScanner.getVisibility() == View.VISIBLE) {
+            return super.dispatchTouchEvent(ev);
+        }
+        if (gestureDetector != null && gestureDetector.onTouchEvent(ev)) {
+            return true;
+        }
+        return super.dispatchTouchEvent(ev);
     }
 
     private void bindViews() {
@@ -437,6 +561,12 @@ public class MainActivity extends Activity {
 
         // Overlay Views
         overlayQrScanner = findViewById(R.id.overlay_qr_scanner);
+        cameraTextureView = findViewById(R.id.camera_texture_view);
+        viewQrScanLine = findViewById(R.id.view_qr_scan_line);
+        btnQrTorch = findViewById(R.id.btn_qr_torch);
+        textQrScannerStatus = findViewById(R.id.text_qr_scanner_status);
+        scrollPairingSheet = findViewById(R.id.scroll_pairing_sheet);
+        layoutPairingSheet = findViewById(R.id.layout_pairing_sheet);
         editFallbackCode = findViewById(R.id.edit_fallback_code);
         btnSubmitCode = findViewById(R.id.btn_submit_code);
         textToggleAdvancedHost = findViewById(R.id.text_toggle_advanced_host);
@@ -447,19 +577,34 @@ public class MainActivity extends Activity {
     }
 
     private void setupListeners() {
-        // Tab Navigation
-        tabBtnToday.setOnClickListener(v -> selectTab(0));
-        tabBtnSchedule.setOnClickListener(v -> selectTab(1));
+        // Tab Navigation with animated slide/fade
+        tabBtnToday.setOnClickListener(v -> selectTabWithAnimation(0, 0 > currentTab));
+        tabBtnSchedule.setOnClickListener(v -> selectTabWithAnimation(1, 1 > currentTab));
         tabBtnRecord.setOnClickListener(v -> {
             if (!isRecording) {
                 startRecordingSession();
             }
-            selectTab(2);
+            selectTabWithAnimation(2, 2 > currentTab);
         });
-        tabBtnLibrary.setOnClickListener(v -> selectTab(3));
-        tabBtnSettings.setOnClickListener(v -> selectTab(4));
+        tabBtnLibrary.setOnClickListener(v -> selectTabWithAnimation(3, 3 > currentTab));
+        tabBtnSettings.setOnClickListener(v -> selectTabWithAnimation(4, 4 > currentTab));
 
         chipConnectionStatus.setOnClickListener(v -> showQrScannerOverlay());
+
+        // Keyboard elevation listener: auto scroll PIN code into full view above keyboard
+        if (editFallbackCode != null) {
+            editFallbackCode.setOnFocusChangeListener((v, hasFocus) -> {
+                if (hasFocus && scrollPairingSheet != null && layoutPairingSheet != null) {
+                    scrollPairingSheet.postDelayed(() -> {
+                        scrollPairingSheet.smoothScrollTo(0, layoutPairingSheet.getBottom());
+                    }, 250);
+                }
+            });
+        }
+
+        if (btnQrTorch != null) {
+            btnQrTorch.setOnClickListener(v -> toggleCameraTorch());
+        }
 
         // Tab 0 Actions
         btnHeroRecord.setOnClickListener(v -> {
@@ -567,19 +712,18 @@ public class MainActivity extends Activity {
         });
     }
 
-    private void selectTab(int tabIndex) {
-        currentTab = tabIndex;
-        viewTabToday.setVisibility(tabIndex == 0 ? View.VISIBLE : View.GONE);
-        viewTabSchedule.setVisibility(tabIndex == 1 ? View.VISIBLE : View.GONE);
-        viewTabRecord.setVisibility(tabIndex == 2 ? View.VISIBLE : View.GONE);
-        viewTabLibrary.setVisibility(tabIndex == 3 ? View.VISIBLE : View.GONE);
-        viewTabSettings.setVisibility(tabIndex == 4 ? View.VISIBLE : View.GONE);
+    private View getTabView(int index) {
+        switch (index) {
+            case 0: return viewTabToday;
+            case 1: return viewTabSchedule;
+            case 2: return viewTabRecord;
+            case 3: return viewTabLibrary;
+            case 4: return viewTabSettings;
+            default: return null;
+        }
+    }
 
-        updateTabAppearance(tabBtnToday, iconTabToday, textTabToday, tabIndex == 0);
-        updateTabAppearance(tabBtnSchedule, iconTabSchedule, textTabSchedule, tabIndex == 1);
-        updateTabAppearance(tabBtnLibrary, iconTabLibrary, textTabLibrary, tabIndex == 3);
-        updateTabAppearance(tabBtnSettings, iconTabSettings, textTabSettings, tabIndex == 4);
-
+    private void updatePageHeader(int tabIndex) {
         switch (tabIndex) {
             case 0:
                 textCurrentPageTitle.setText("Today");
@@ -606,6 +750,77 @@ public class MainActivity extends Activity {
                 updateSettingsView();
                 break;
         }
+    }
+
+    private void selectTab(int tabIndex) {
+        currentTab = tabIndex;
+        for (int i = 0; i < 5; i++) {
+            View tv = getTabView(i);
+            if (tv != null) {
+                tv.setVisibility(i == tabIndex ? View.VISIBLE : View.GONE);
+                tv.setTranslationX(0f);
+                tv.setAlpha(1.0f);
+            }
+        }
+
+        updateTabAppearance(tabBtnToday, iconTabToday, textTabToday, tabIndex == 0);
+        updateTabAppearance(tabBtnSchedule, iconTabSchedule, textTabSchedule, tabIndex == 1);
+        updateTabAppearance(tabBtnLibrary, iconTabLibrary, textTabLibrary, tabIndex == 3);
+        updateTabAppearance(tabBtnSettings, iconTabSettings, textTabSettings, tabIndex == 4);
+
+        updatePageHeader(tabIndex);
+    }
+
+    private void selectTabWithAnimation(final int targetTab, final boolean forward) {
+        if (targetTab == currentTab || isTransitioningTab) return;
+        isTransitioningTab = true;
+
+        final View currentView = getTabView(currentTab);
+        final View nextView = getTabView(targetTab);
+
+        final int width = currentView != null && currentView.getWidth() > 0
+                ? currentView.getWidth()
+                : getResources().getDisplayMetrics().widthPixels;
+        final float startOffset = forward ? width : -width;
+        final float endOffset = forward ? -width : width;
+
+        if (nextView != null) {
+            nextView.setVisibility(View.VISIBLE);
+            nextView.setTranslationX(startOffset);
+            nextView.setAlpha(0.2f);
+
+            nextView.animate()
+                    .translationX(0f)
+                    .alpha(1.0f)
+                    .setDuration(240)
+                    .setInterpolator(new DecelerateInterpolator())
+                    .start();
+        }
+
+        if (currentView != null) {
+            currentView.animate()
+                    .translationX(endOffset)
+                    .alpha(0.0f)
+                    .setDuration(240)
+                    .setInterpolator(new DecelerateInterpolator())
+                    .withEndAction(() -> {
+                        currentView.setVisibility(View.GONE);
+                        currentView.setTranslationX(0f);
+                        currentView.setAlpha(1.0f);
+                        isTransitioningTab = false;
+                    })
+                    .start();
+        } else {
+            isTransitioningTab = false;
+        }
+
+        currentTab = targetTab;
+        updateTabAppearance(tabBtnToday, iconTabToday, textTabToday, targetTab == 0);
+        updateTabAppearance(tabBtnSchedule, iconTabSchedule, textTabSchedule, targetTab == 1);
+        updateTabAppearance(tabBtnLibrary, iconTabLibrary, textTabLibrary, targetTab == 3);
+        updateTabAppearance(tabBtnSettings, iconTabSettings, textTabSettings, targetTab == 4);
+
+        updatePageHeader(targetTab);
     }
 
     private void updateTabAppearance(View tabBtn, ImageView icon, TextView text, boolean isActive) {
@@ -696,13 +911,219 @@ public class MainActivity extends Activity {
 
     private void showQrScannerOverlay() {
         overlayQrScanner.setVisibility(View.VISIBLE);
-        editFallbackCode.setText("");
-        editServerHost.setText(connectionManager.getActiveHost() != null ? connectionManager.getActiveHost() : "127.0.0.1");
-        editServerPort.setText(String.valueOf(connectionManager.getActivePort()));
+        if (editFallbackCode != null) editFallbackCode.setText("");
+        if (editServerHost != null) editServerHost.setText(connectionManager.getActiveHost() != null ? connectionManager.getActiveHost() : "127.0.0.1");
+        if (editServerPort != null) editServerPort.setText(String.valueOf(connectionManager.getActivePort()));
+        initCameraViewfinder();
     }
 
     private void hideQrScannerOverlay() {
+        stopCameraPreview();
         overlayQrScanner.setVisibility(View.GONE);
+    }
+
+    private void initCameraViewfinder() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && checkSelfPermission(Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
+            requestPermissions(new String[]{Manifest.permission.CAMERA}, PERMISSION_REQUEST_CODE);
+            return;
+        }
+
+        if (cameraTextureView == null) return;
+
+        if (cameraTextureView.isAvailable()) {
+            startCameraPreview(cameraTextureView.getSurfaceTexture());
+        } else {
+            cameraTextureView.setSurfaceTextureListener(new TextureView.SurfaceTextureListener() {
+                @Override
+                public void onSurfaceTextureAvailable(SurfaceTexture surface, int width, int height) {
+                    startCameraPreview(surface);
+                }
+
+                @Override
+                public void onSurfaceTextureSizeChanged(SurfaceTexture surface, int width, int height) {}
+
+                @Override
+                public boolean onSurfaceTextureDestroyed(SurfaceTexture surface) {
+                    stopCameraPreview();
+                    return true;
+                }
+
+                @Override
+                public void onSurfaceTextureUpdated(SurfaceTexture surface) {}
+            });
+        }
+    }
+
+    private void startCameraPreview(SurfaceTexture surface) {
+        try {
+            stopCameraPreview();
+            mCamera = Camera.open(0);
+            if (mCamera == null) {
+                if (textQrScannerStatus != null) {
+                    textQrScannerStatus.setText("Camera not available. Enter 6-digit code below.");
+                }
+                return;
+            }
+
+            mCamera.setDisplayOrientation(90);
+            Camera.Parameters params = mCamera.getParameters();
+
+            List<String> focusModes = params.getSupportedFocusModes();
+            if (focusModes != null && focusModes.contains(Camera.Parameters.FOCUS_MODE_CONTINUOUS_PICTURE)) {
+                params.setFocusMode(Camera.Parameters.FOCUS_MODE_CONTINUOUS_PICTURE);
+            }
+
+            List<Camera.Size> sizes = params.getSupportedPreviewSizes();
+            if (sizes != null && !sizes.isEmpty()) {
+                Camera.Size best = sizes.get(0);
+                for (Camera.Size s : sizes) {
+                    if (Math.abs(s.width - 1280) + Math.abs(s.height - 720) < Math.abs(best.width - 1280) + Math.abs(best.height - 720)) {
+                        best = s;
+                    }
+                }
+                params.setPreviewSize(best.width, best.height);
+            }
+
+            mCamera.setParameters(params);
+            mCamera.setPreviewTexture(surface);
+
+            isScanning = true;
+            final MultiFormatReader qrReader = new MultiFormatReader();
+            Map<DecodeHintType, Object> hints = new EnumMap<>(DecodeHintType.class);
+            hints.put(DecodeHintType.POSSIBLE_FORMATS, Collections.singletonList(BarcodeFormat.QR_CODE));
+            hints.put(DecodeHintType.TRY_HARDER, Boolean.TRUE);
+            qrReader.setHints(hints);
+
+            final AtomicBoolean isProcessingFrame = new AtomicBoolean(false);
+
+            mCamera.setPreviewCallback((data, camera) -> {
+                if (!isScanning || isProcessingFrame.get()) return;
+                isProcessingFrame.set(true);
+
+                cameraExecutor.execute(() -> {
+                    try {
+                        if (!isScanning) return;
+                        Camera.Size size = camera.getParameters().getPreviewSize();
+                        int width = size.width;
+                        int height = size.height;
+
+                        PlanarYUVLuminanceSource source = new PlanarYUVLuminanceSource(
+                                data, width, height, 0, 0, width, height, false
+                        );
+                        BinaryBitmap bitmap = new BinaryBitmap(new HybridBinarizer(source));
+
+                        Result result = null;
+                        try {
+                            result = qrReader.decodeWithState(bitmap);
+                        } catch (Exception notFound) {
+                            qrReader.reset();
+                        }
+
+                        if (result != null && result.getText() != null && !result.getText().isEmpty()) {
+                            final String qrText = result.getText();
+                            Log.i(TAG, "Scanned QR code content: " + qrText);
+                            isScanning = false;
+                            runOnUiThread(() -> onQrCodeScanned(qrText));
+                        }
+                    } catch (Exception e) {
+                        Log.v(TAG, "Frame decode error: " + e.getMessage());
+                    } finally {
+                        qrReader.reset();
+                        isProcessingFrame.set(false);
+                    }
+                });
+            });
+
+            mCamera.startPreview();
+            startScanAnimation();
+            if (textQrScannerStatus != null) {
+                textQrScannerStatus.setText("Point camera at QR code on Mac to connect automatically");
+            }
+        } catch (Exception e) {
+            Log.e(TAG, "Error starting camera preview", e);
+            if (textQrScannerStatus != null) {
+                textQrScannerStatus.setText("Camera error. You can enter the 6-digit code below.");
+            }
+        }
+    }
+
+    private void stopCameraPreview() {
+        isScanning = false;
+        stopScanAnimation();
+        if (mCamera != null) {
+            try {
+                mCamera.setPreviewCallback(null);
+                mCamera.stopPreview();
+                mCamera.release();
+            } catch (Exception ignored) {}
+            mCamera = null;
+        }
+    }
+
+    private void startScanAnimation() {
+        if (viewQrScanLine == null) return;
+        stopScanAnimation();
+        viewQrScanLine.setVisibility(View.VISIBLE);
+        scanLineAnimator = ObjectAnimator.ofFloat(viewQrScanLine, "translationY", 0f, dpToPx(190));
+        scanLineAnimator.setDuration(1600);
+        scanLineAnimator.setRepeatMode(ValueAnimator.REVERSE);
+        scanLineAnimator.setRepeatCount(ValueAnimator.INFINITE);
+        scanLineAnimator.setInterpolator(new AccelerateDecelerateInterpolator());
+        scanLineAnimator.start();
+    }
+
+    private void stopScanAnimation() {
+        if (scanLineAnimator != null) {
+            scanLineAnimator.cancel();
+            scanLineAnimator = null;
+        }
+        if (viewQrScanLine != null) {
+            viewQrScanLine.setTranslationY(0f);
+        }
+    }
+
+    private void toggleCameraTorch() {
+        if (mCamera == null) return;
+        try {
+            Camera.Parameters params = mCamera.getParameters();
+            List<String> flashModes = params.getSupportedFlashModes();
+            if (flashModes != null && flashModes.contains(Camera.Parameters.FLASH_MODE_TORCH)) {
+                isTorchOn = !isTorchOn;
+                params.setFlashMode(isTorchOn ? Camera.Parameters.FLASH_MODE_TORCH : Camera.Parameters.FLASH_MODE_OFF);
+                mCamera.setParameters(params);
+                if (btnQrTorch != null) {
+                    btnQrTorch.setImageTintList(ColorStateList.valueOf(getColor(isTorchOn ? R.color.primary : R.color.text_secondary)));
+                }
+            }
+        } catch (Exception e) {
+            Log.w(TAG, "Torch toggle error", e);
+        }
+    }
+
+    private void onQrCodeScanned(String qrText) {
+        // Haptic feedback
+        try {
+            Vibrator v = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
+            if (v != null) {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                    v.vibrate(VibrationEffect.createOneShot(100, VibrationEffect.DEFAULT_AMPLITUDE));
+                } else {
+                    v.vibrate(100);
+                }
+            }
+        } catch (Exception ignored) {}
+
+        if (textQrScannerStatus != null) {
+            textQrScannerStatus.setText("QR detected! Connecting to Mac...");
+        }
+
+        PairingPayload payload = PairingPayload.parse(qrText);
+        if (payload != null) {
+            completePairingWithPayload(payload);
+        } else {
+            Toast.makeText(this, "Unrecognized QR code. Point at Lecture Whisper QR.", Toast.LENGTH_SHORT).show();
+            isScanning = true;
+        }
     }
 
     private void promptPairingConfirmation(PairingPayload payload) {
@@ -728,34 +1149,106 @@ public class MainActivity extends Activity {
     }
 
     private void completePairingWithPayload(PairingPayload payload) {
-        Toast.makeText(this, "Pairing with " + payload.macName + "...", Toast.LENGTH_SHORT).show();
+        runOnUiThread(() -> Toast.makeText(this, "Pairing with " + payload.macName + "...", Toast.LENGTH_SHORT).show());
 
         new Thread(() -> {
-            String targetHost = payload.addressCandidates.isEmpty() ? "127.0.0.1" : payload.addressCandidates.get(0);
-            LaptopSyncClient.PairResult res = LaptopSyncClient.completePairing(
-                    targetHost,
-                    payload.port,
-                    payload.oneTimeToken,
-                    Settings.Secure.getString(getContentResolver(), Settings.Secure.ANDROID_ID),
-                    Build.MODEL
-            );
+            // Build candidates in priority order
+            List<String> candidatesToTry = new ArrayList<>();
+
+            // 1. Hosts from QR payload
+            for (String h : payload.addressCandidates) {
+                if (h != null && !h.trim().isEmpty() && !candidatesToTry.contains(h.trim())) {
+                    candidatesToTry.add(h.trim());
+                }
+            }
+
+            // 2. Manual host field if user typed one
+            if (editServerHost != null) {
+                String manualHost = editServerHost.getText().toString().trim();
+                if (!manualHost.isEmpty() && !candidatesToTry.contains(manualHost)) {
+                    candidatesToTry.add(manualHost);
+                }
+            }
+
+            // 3. Active host in connectionManager
+            String active = connectionManager.getActiveHost();
+            if (active != null && !candidatesToTry.contains(active)) {
+                candidatesToTry.add(active);
+            }
+
+            // 4. MRU cached hosts
+            for (String h : connectionManager.getMruCandidates()) {
+                if (h != null && !candidatesToTry.contains(h)) {
+                    candidatesToTry.add(h);
+                }
+            }
+
+            // 5. Default Wi-Fi gateway IP
+            try {
+                WifiManager wm = (WifiManager) getApplicationContext().getSystemService(Context.WIFI_SERVICE);
+                if (wm != null && wm.getDhcpInfo() != null) {
+                    int gw = wm.getDhcpInfo().gateway;
+                    if (gw != 0) {
+                        String gwIp = String.format(Locale.US, "%d.%d.%d.%d",
+                                (gw & 0xff), (gw >> 8 & 0xff), (gw >> 16 & 0xff), (gw >> 24 & 0xff));
+                        if (!candidatesToTry.contains(gwIp)) {
+                            candidatesToTry.add(gwIp);
+                        }
+                    }
+                }
+            } catch (Exception ignored) {}
+
+            // 6. Loopback fallback (for adb reverse)
+            if (!candidatesToTry.contains("127.0.0.1")) {
+                candidatesToTry.add("127.0.0.1");
+            }
+
+            LaptopSyncClient.PairResult res = null;
+            String connectedHost = null;
+
+            for (String candidate : candidatesToTry) {
+                Log.i(TAG, "Attempting pairing with: " + candidate + ":" + payload.port);
+                res = LaptopSyncClient.completePairing(
+                        candidate,
+                        payload.port,
+                        payload.oneTimeToken,
+                        Settings.Secure.getString(getContentResolver(), Settings.Secure.ANDROID_ID),
+                        Build.MODEL
+                );
+                if (res != null && res.ok) {
+                    connectedHost = candidate;
+                    break;
+                }
+            }
+
+            final LaptopSyncClient.PairResult finalRes = res;
+            final String finalHost = connectedHost;
 
             runOnUiThread(() -> {
-                if (res.ok) {
+                if (finalRes != null && finalRes.ok) {
+                    List<String> mergedCandidates = new ArrayList<>();
+                    if (finalHost != null) mergedCandidates.add(finalHost);
+                    if (finalRes.candidates != null) {
+                        for (String c : finalRes.candidates) {
+                            if (!mergedCandidates.contains(c)) mergedCandidates.add(c);
+                        }
+                    }
                     connectionManager.savePairingData(
-                            res.deviceToken,
-                            res.serverId,
-                            res.macName,
+                            finalRes.deviceToken,
+                            finalRes.serverId,
+                            finalRes.macName,
                             payload.certFingerprint,
-                            res.candidates,
+                            mergedCandidates,
                             payload.port
                     );
                     hideQrScannerOverlay();
-                    Toast.makeText(this, "Successfully paired with " + res.macName + "!", Toast.LENGTH_LONG).show();
+                    Toast.makeText(this, "Paired successfully with " + finalRes.macName + " (" + finalHost + ")!", Toast.LENGTH_LONG).show();
                     updateSettingsView();
                     syncAllUnsyncedAudio();
                 } else {
-                    Toast.makeText(this, "Pairing failed: " + res.error, Toast.LENGTH_LONG).show();
+                    String err = (finalRes != null && finalRes.error != null) ? finalRes.error : "Failed to connect to host";
+                    Toast.makeText(this, "Pairing failed: " + err, Toast.LENGTH_LONG).show();
+                    isScanning = true;
                 }
             });
         }).start();
@@ -1164,6 +1657,23 @@ public class MainActivity extends Activity {
                 };
             }
             requestPermissions(perms, PERMISSION_REQUEST_CODE);
+        }
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        if (requestCode == PERMISSION_REQUEST_CODE) {
+            boolean camGranted = false;
+            for (int i = 0; i < permissions.length; i++) {
+                if (Manifest.permission.CAMERA.equals(permissions[i]) && grantResults[i] == PackageManager.PERMISSION_GRANTED) {
+                    camGranted = true;
+                    break;
+                }
+            }
+            if (camGranted && overlayQrScanner != null && overlayQrScanner.getVisibility() == View.VISIBLE) {
+                initCameraViewfinder();
+            }
         }
     }
 

@@ -50,7 +50,11 @@ while IFS= read -r -d '' file; do
   JAVA_FILES+=("$file")
 done < <(find "$DIR/android/app/src/main/java" -name "*.java" -print0)
 
-javac --release 17 -cp "$ANDROID_JAR" "${JAVA_FILES[@]}" -d "$BUILD_DIR/classes"
+CP="$ANDROID_JAR"
+for j in "$DIR/libs/"*.jar; do
+  [ -f "$j" ] && CP="$CP:$j"
+done
+javac --release 17 -cp "$CP" "${JAVA_FILES[@]}" -d "$BUILD_DIR/classes"
 
 echo "==> 4. Converting bytecode to Dalvik dex via d8..."
 CLASS_FILES=()
@@ -58,7 +62,11 @@ while IFS= read -r -d '' file; do
   CLASS_FILES+=("$file")
 done < <(find "$BUILD_DIR/classes" -name "*.class" -print0)
 
-"$D8" --lib "$ANDROID_JAR" --min-api 26 --output "$BUILD_DIR/" "${CLASS_FILES[@]}"
+D8_EXTRA=()
+for j in "$DIR/libs/"*.jar; do
+  [ -f "$j" ] && D8_EXTRA+=("$j")
+done
+"$D8" --lib "$ANDROID_JAR" --min-api 26 --output "$BUILD_DIR/" "${CLASS_FILES[@]}" "${D8_EXTRA[@]}"
 
 echo "==> 5. Packaging classes.dex into APK..."
 (cd "$BUILD_DIR" && zip -u base.apk classes.dex)

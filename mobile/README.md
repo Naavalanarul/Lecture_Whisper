@@ -30,11 +30,11 @@ bash mobile/connect_device.sh
 | Parameter | Value |
 |---|---|
 | **File** | `mobile/release/LectureWhisper-v1.0.0-release.apk` |
-| **File Size** | **197 KB** (Lean, zero heavy framework overhead) |
+| **File Size** | **461 KB** (Standalone offline ZXing QR decoder, zero framework bloat) |
 | **Target SDK** | **35 (Android 15)** |
 | **Min SDK** | **26 (Android 8.0+)** |
 | **Signature Schemes** | **APK Signature Scheme v2 & v3 (Verified)** |
-| **SHA-256 Checksum** | `655ebbb57ed4163f77576c0a7786eaaee8fa717bab5d8900dfeb57ff0817e6e9` |
+| **SHA-256 Checksum** | `9ee6468c23b99d1d63be607ab105c62c2eee51252198ddb4d66d23017f0f9f61` |
 
 ---
 
@@ -64,9 +64,11 @@ The mobile client is engineered as a resilient academic companion with a 5-tab I
 - **Direct Manual & Auto-Sync**: Background auto-sync pushes completed chunks to MacBook Pro via `/api/recordings/upload`.
 
 ### 5. Settings, QR Pairing & Connection Diagnostics (Tab 5)
-- **One-Tap QR Camera Scanner**: Viewfinder with corner brackets, animated scan line, and camera flash toggle. Point at laptop QR code for instant pairing with SHA-256 fingerprint pinning and 2-minute expiring tokens.
-- **6-Digit Fallback Code**: Enter the numeric fallback code if camera access is restricted.
-- **ConnectionManager 5-State Engine**: Live state machine (`NOT_PAIRED`, `SEARCHING`, `CONNECTED`, `SYNCING`, `UNREACHABLE`) with parallel MRU ping (1.5s), mDNS discovery (4s), and automatic background reconnection.
+- **Live Camera QR Viewfinder & Auto-Connect**: 210dp viewfinder frame with animated laser scanning line, torch toggle, and instant camera deep link handling. Point the camera at the laptop screen QR code to connect and pair automatically with zero manual taps.
+- **Dynamic Keyboard Insets & Elevation**: Soft keyboard window insets automatically elevate the 6-digit PIN fallback input box and "Pair" button cleanly above the Android IME.
+- **Fluid Horizontal Swipe Navigation**: Smooth 240ms slide and fade animations between the 5 tabs with calibrated horizontal gesture sensitivity (swipe right to advance, swipe left to return).
+- **Gesture Bar Clearance**: Raised bottom navigation bar with 32dp safe insets preventing interference with the Android gesture navigation pill or 3-button bar.
+- **ConnectionManager 5-State Engine**: Live state machine (`NOT_PAIRED`, `SEARCHING`, `CONNECTED`, `SYNCING`, `UNREACHABLE`) with parallel MRU ping (1.5s), mDNS discovery (4s), /24 subnet fallback, and automatic background reconnection.
 - **Live Storage Metrics & Cleaner**: Android `StatFs` metrics for free device space and audio cache footprint, with one-tap pruning of synced chunks.
 - **Theme Switcher**: Instant switching between System, Light, and Dark modes adhering to WCAG AA contrast.
 

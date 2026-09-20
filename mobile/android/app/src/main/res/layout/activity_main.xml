@@ -940,11 +940,14 @@
         <LinearLayout
             android:id="@+id/bottom_navigation_bar"
             android:layout_width="match_parent"
-            android:layout_height="64dp"
+            android:layout_height="wrap_content"
+            android:minHeight="84dp"
             android:orientation="horizontal"
             android:gravity="center_vertical"
             android:background="@drawable/bg_tab_bar"
-            android:paddingHorizontal="4dp">
+            android:paddingHorizontal="4dp"
+            android:paddingTop="8dp"
+            android:paddingBottom="28dp">
 
             <!-- Tab 0: Today -->
             <LinearLayout
@@ -1092,167 +1095,258 @@
         android:id="@+id/overlay_qr_scanner"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:background="#D9000000"
+        android:background="#E6000000"
         android:visibility="gone"
         android:clickable="true"
         android:focusable="true">
 
-        <LinearLayout
+        <ScrollView
+            android:id="@+id/scroll_pairing_sheet"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_gravity="bottom"
-            android:orientation="vertical"
-            android:background="@drawable/bg_bottom_sheet"
-            android:padding="20dp">
-
-            <!-- Sheet Handle -->
-            <View
-                android:layout_width="36dp"
-                android:layout_height="4dp"
-                android:layout_gravity="center_horizontal"
-                android:background="@drawable/bg_bottom_sheet_handle"
-                android:layout_marginBottom="16dp" />
-
-            <!-- Title & Close -->
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:gravity="center_vertical">
-
-                <ImageView
-                    android:layout_width="28dp"
-                    android:layout_height="28dp"
-                    android:src="@drawable/ic_qr_scan"
-                    android:tint="@color/primary" />
-
-                <TextView
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:text="Pair with MacBook"
-                    android:textColor="@color/text_primary"
-                    android:textSize="16sp"
-                    android:textStyle="bold"
-                    android:layout_marginStart="10dp" />
-
-                <ImageButton
-                    android:id="@+id/btn_close_qr_scanner"
-                    android:layout_width="36dp"
-                    android:layout_height="36dp"
-                    android:background="@drawable/bg_close_btn_circle"
-                    android:src="@drawable/ic_hamburger"
-                    android:tint="@color/text_secondary"
-                    android:contentDescription="Close pairing sheet" />
-            </LinearLayout>
-
-            <TextView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="Scan the QR code shown on your Mac dashboard or enter the 6-digit code."
-                android:textColor="@color/text_secondary"
-                android:textSize="13sp"
-                android:layout_marginTop="8dp" />
-
-            <!-- 6-Digit Code Fallback Input -->
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:gravity="center_vertical"
-                android:layout_marginTop="16dp">
-
-                <EditText
-                    android:id="@+id/edit_fallback_code"
-                    android:layout_width="0dp"
-                    android:layout_height="48dp"
-                    android:layout_weight="1"
-                    android:background="@drawable/bg_input_field"
-                    android:hint="Enter 6-digit code"
-                    android:inputType="number"
-                    android:maxLength="6"
-                    android:textColor="@color/text_primary"
-                    android:textColorHint="@color/text_muted"
-                    android:textSize="15sp"
-                    android:paddingHorizontal="14dp" />
-
-                <Button
-                    android:id="@+id/btn_submit_code"
-                    android:layout_width="wrap_content"
-                    android:layout_height="48dp"
-                    android:background="@drawable/bg_btn_primary"
-                    android:text="Pair"
-                    android:textColor="@color/on_primary"
-                    android:textSize="13sp"
-                    android:textStyle="bold"
-                    android:layout_marginStart="8dp"
-                    android:paddingHorizontal="20dp" />
-            </LinearLayout>
-
-            <!-- Manual Host & Port Configuration (Moved to secondary position) -->
-            <TextView
-                android:id="@+id/text_toggle_advanced_host"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Advanced Host Settings ▼"
-                android:textColor="@color/primary"
-                android:textSize="12sp"
-                android:textStyle="bold"
-                android:layout_marginTop="16dp"
-                android:clickable="true"
-                android:focusable="true" />
+            android:layout_height="match_parent"
+            android:fillViewport="true"
+            android:fitsSystemWindows="true">
 
             <LinearLayout
-                android:id="@+id/layout_advanced_host"
+                android:id="@+id/layout_pairing_sheet"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:layout_gravity="bottom"
                 android:orientation="vertical"
-                android:layout_marginTop="10dp"
-                android:visibility="gone">
+                android:background="@drawable/bg_bottom_sheet"
+                android:paddingHorizontal="20dp"
+                android:paddingTop="16dp"
+                android:paddingBottom="28dp">
 
+                <!-- Sheet Handle -->
+                <View
+                    android:layout_width="36dp"
+                    android:layout_height="4dp"
+                    android:layout_gravity="center_horizontal"
+                    android:background="@drawable/bg_bottom_sheet_handle"
+                    android:layout_marginBottom="12dp" />
+
+                <!-- Title & Actions -->
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:orientation="horizontal">
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical">
 
-                    <EditText
-                        android:id="@+id/edit_server_host"
-                        android:layout_width="0dp"
-                        android:layout_height="44dp"
-                        android:layout_weight="2"
-                        android:background="@drawable/bg_input_field"
-                        android:hint="Host (e.g. 192.168.1.50)"
-                        android:textColor="@color/text_primary"
-                        android:textColorHint="@color/text_muted"
-                        android:textSize="13sp"
-                        android:paddingHorizontal="10dp" />
+                    <ImageView
+                        android:layout_width="26dp"
+                        android:layout_height="26dp"
+                        android:src="@drawable/ic_qr_scan"
+                        android:tint="@color/primary" />
 
-                    <EditText
-                        android:id="@+id/edit_server_port"
+                    <TextView
                         android:layout_width="0dp"
-                        android:layout_height="44dp"
+                        android:layout_height="wrap_content"
                         android:layout_weight="1"
-                        android:background="@drawable/bg_input_field"
-                        android:hint="Port (8420)"
-                        android:inputType="number"
+                        android:text="Pair with MacBook"
                         android:textColor="@color/text_primary"
-                        android:textColorHint="@color/text_muted"
-                        android:textSize="13sp"
-                        android:paddingHorizontal="10dp"
-                        android:layout_marginStart="6dp" />
+                        android:textSize="16sp"
+                        android:textStyle="bold"
+                        android:layout_marginStart="10dp" />
+
+                    <!-- Flashlight / Torch Toggle -->
+                    <ImageButton
+                        android:id="@+id/btn_qr_torch"
+                        android:layout_width="36dp"
+                        android:layout_height="36dp"
+                        android:background="@drawable/bg_close_btn_circle"
+                        android:src="@drawable/ic_torch"
+                        android:tint="@color/text_secondary"
+                        android:layout_marginEnd="8dp"
+                        android:contentDescription="Toggle flashlight" />
+
+                    <!-- Close Button -->
+                    <ImageButton
+                        android:id="@+id/btn_close_qr_scanner"
+                        android:layout_width="36dp"
+                        android:layout_height="36dp"
+                        android:background="@drawable/bg_close_btn_circle"
+                        android:src="@drawable/ic_hamburger"
+                        android:tint="@color/text_secondary"
+                        android:contentDescription="Close pairing sheet" />
                 </LinearLayout>
 
-                <Button
-                    android:id="@+id/btn_manual_connect"
+                <TextView
+                    android:id="@+id/text_qr_scanner_status"
                     android:layout_width="match_parent"
-                    android:layout_height="40dp"
-                    android:background="@drawable/bg_input_field"
-                    android:text="Connect to Host"
-                    android:textColor="@color/text_primary"
+                    android:layout_height="wrap_content"
+                    android:text="Point camera at QR code on Mac to connect automatically"
+                    android:textColor="@color/text_secondary"
+                    android:textSize="13sp"
+                    android:layout_marginTop="6dp" />
+
+                <!-- LIVE CAMERA VIEWFINDER FRAME -->
+                <FrameLayout
+                    android:id="@+id/layout_camera_viewfinder"
+                    android:layout_width="match_parent"
+                    android:layout_height="210dp"
+                    android:layout_marginTop="14dp"
+                    android:background="@drawable/bg_qr_viewfinder"
+                    android:clipToOutline="true">
+
+                    <TextureView
+                        android:id="@+id/camera_texture_view"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent" />
+
+                    <!-- Animated Scanning Laser Line -->
+                    <View
+                        android:id="@+id/view_qr_scan_line"
+                        android:layout_width="match_parent"
+                        android:layout_height="3dp"
+                        android:background="@drawable/bg_qr_scan_line"
+                        android:layout_gravity="top"
+                        android:layout_marginTop="10dp" />
+
+                    <TextView
+                        android:id="@+id/text_viewfinder_hint"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="bottom|center_horizontal"
+                        android:layout_marginBottom="12dp"
+                        android:background="#99000000"
+                        android:paddingHorizontal="10dp"
+                        android:paddingVertical="4dp"
+                        android:text="Auto-connecting on scan..."
+                        android:textColor="#FFFFFF"
+                        android:textSize="11sp" />
+                </FrameLayout>
+
+                <!-- Divider: Or Enter PIN -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical"
+                    android:layout_marginTop="14dp">
+
+                    <View
+                        android:layout_width="0dp"
+                        android:layout_height="1dp"
+                        android:layout_weight="1"
+                        android:background="@color/border" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="OR ENTER 6-DIGIT CODE"
+                        android:textColor="@color/text_muted"
+                        android:textSize="11sp"
+                        android:textStyle="bold"
+                        android:paddingHorizontal="10dp" />
+
+                    <View
+                        android:layout_width="0dp"
+                        android:layout_height="1dp"
+                        android:layout_weight="1"
+                        android:background="@color/border" />
+                </LinearLayout>
+
+                <!-- 6-Digit Code Fallback Input -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical"
+                    android:layout_marginTop="10dp">
+
+                    <EditText
+                        android:id="@+id/edit_fallback_code"
+                        android:layout_width="0dp"
+                        android:layout_height="48dp"
+                        android:layout_weight="1"
+                        android:background="@drawable/bg_input_field"
+                        android:hint="Enter 6-digit code (e.g. 535697)"
+                        android:inputType="number"
+                        android:maxLength="6"
+                        android:textColor="@color/text_primary"
+                        android:textColorHint="@color/text_muted"
+                        android:textSize="15sp"
+                        android:paddingHorizontal="14dp" />
+
+                    <Button
+                        android:id="@+id/btn_submit_code"
+                        android:layout_width="wrap_content"
+                        android:layout_height="48dp"
+                        android:background="@drawable/bg_btn_primary"
+                        android:text="Pair"
+                        android:textColor="@color/on_primary"
+                        android:textSize="13sp"
+                        android:textStyle="bold"
+                        android:layout_marginStart="8dp"
+                        android:paddingHorizontal="20dp" />
+                </LinearLayout>
+
+                <!-- Manual Host & Port Configuration (Collapsible) -->
+                <TextView
+                    android:id="@+id/text_toggle_advanced_host"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Advanced Host Settings ▼"
+                    android:textColor="@color/primary"
                     android:textSize="12sp"
                     android:textStyle="bold"
-                    android:layout_marginTop="8dp" />
+                    android:layout_marginTop="12dp"
+                    android:clickable="true"
+                    android:focusable="true" />
+
+                <LinearLayout
+                    android:id="@+id/layout_advanced_host"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:layout_marginTop="8dp"
+                    android:visibility="gone">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal">
+
+                        <EditText
+                            android:id="@+id/edit_server_host"
+                            android:layout_width="0dp"
+                            android:layout_height="44dp"
+                            android:layout_weight="2"
+                            android:background="@drawable/bg_input_field"
+                            android:hint="Host (e.g. 192.168.1.50)"
+                            android:textColor="@color/text_primary"
+                            android:textColorHint="@color/text_muted"
+                            android:textSize="13sp"
+                            android:paddingHorizontal="10dp" />
+
+                        <EditText
+                            android:id="@+id/edit_server_port"
+                            android:layout_width="0dp"
+                            android:layout_height="44dp"
+                            android:layout_weight="1"
+                            android:background="@drawable/bg_input_field"
+                            android:hint="Port (8420)"
+                            android:inputType="number"
+                            android:textColor="@color/text_primary"
+                            android:textColorHint="@color/text_muted"
+                            android:textSize="13sp"
+                            android:paddingHorizontal="10dp"
+                            android:layout_marginStart="6dp" />
+                    </LinearLayout>
+
+                    <Button
+                        android:id="@+id/btn_manual_connect"
+                        android:layout_width="match_parent"
+                        android:layout_height="40dp"
+                        android:background="@drawable/bg_input_field"
+                        android:text="Connect to Host"
+                        android:textColor="@color/text_primary"
+                        android:textSize="12sp"
+                        android:textStyle="bold"
+                        android:layout_marginTop="8dp" />
+                </LinearLayout>
             </LinearLayout>
-        </LinearLayout>
+        </ScrollView>
     </FrameLayout>
 </FrameLayout>
