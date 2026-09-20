@@ -24,6 +24,7 @@ import android.view.ViewGroup;
 import android.view.WindowInsets;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ProgressBar;
 import android.widget.TextView;
@@ -64,6 +65,22 @@ public class MainActivity extends Activity {
     private LinearLayout chipConnectionStatus;
     private View viewConnectionDot;
     private TextView textConnectionBadge;
+    private TextView textCurrentPageTitle;
+
+    // 390px Mobile Bottom Sheet Navigation Items
+    private View btnSheetNavRecorder;
+    private View btnSheetNavTimetable;
+    private View btnSheetNavRecordings;
+    private View btnSheetNavConnection;
+    private ImageView iconSheetNavRecorder;
+    private ImageView iconSheetNavTimetable;
+    private ImageView iconSheetNavRecordings;
+    private ImageView iconSheetNavConnection;
+    private TextView textSheetNavRecorder;
+    private TextView textSheetNavTimetable;
+    private TextView textSheetNavRecordings;
+    private TextView textSheetNavConnection;
+    private int currentTab = 0;
 
     // Drawer Views
     private TextView textStorageAvailable;
@@ -248,24 +265,25 @@ public class MainActivity extends Activity {
             int safeTopPadding = Math.max(statusBarTop, dpToPx(38));
             if (topAppBar != null) {
                 topAppBar.setPadding(
-                    dpToPx(14),
+                    dpToPx(16),
                     safeTopPadding + dpToPx(6),
-                    dpToPx(14),
-                    dpToPx(12)
+                    dpToPx(16),
+                    dpToPx(8)
                 );
             }
 
+            // Ensure ample padding for mobile gesture navigation handle in bottom sheet
+            int safeBottomPadding = Math.max(navBarBottom, dpToPx(16));
             if (sidebarDrawer != null) {
                 sidebarDrawer.setPadding(
                     dpToPx(20),
-                    safeTopPadding + dpToPx(16),
+                    dpToPx(12),
                     dpToPx(20),
-                    dpToPx(20)
+                    safeBottomPadding + dpToPx(12)
                 );
             }
 
             // Ensure ample padding for mobile gesture navigation handle
-            int safeBottomPadding = Math.max(navBarBottom, dpToPx(10));
             if (bottomNavBar != null) {
                 bottomNavBar.setPadding(
                     bottomNavBar.getPaddingLeft(),
@@ -343,6 +361,20 @@ public class MainActivity extends Activity {
         btnPresetWifi = findViewById(R.id.btn_preset_wifi);
         btnTestConnection = findViewById(R.id.btn_test_connection);
         textConnectionDiagnostic = findViewById(R.id.text_connection_diagnostic);
+
+        textCurrentPageTitle = findViewById(R.id.text_current_page_title);
+        btnSheetNavRecorder = findViewById(R.id.btn_sheet_nav_recorder);
+        btnSheetNavTimetable = findViewById(R.id.btn_sheet_nav_timetable);
+        btnSheetNavRecordings = findViewById(R.id.btn_sheet_nav_recordings);
+        btnSheetNavConnection = findViewById(R.id.btn_sheet_nav_connection);
+        iconSheetNavRecorder = findViewById(R.id.icon_sheet_nav_recorder);
+        iconSheetNavTimetable = findViewById(R.id.icon_sheet_nav_timetable);
+        iconSheetNavRecordings = findViewById(R.id.icon_sheet_nav_recordings);
+        iconSheetNavConnection = findViewById(R.id.icon_sheet_nav_connection);
+        textSheetNavRecorder = findViewById(R.id.text_sheet_nav_recorder);
+        textSheetNavTimetable = findViewById(R.id.text_sheet_nav_timetable);
+        textSheetNavRecordings = findViewById(R.id.text_sheet_nav_recordings);
+        textSheetNavConnection = findViewById(R.id.text_sheet_nav_connection);
     }
 
     private void setupListeners() {
@@ -350,6 +382,12 @@ public class MainActivity extends Activity {
         findViewById(R.id.btn_open_drawer).setOnClickListener(v -> openDrawer());
         findViewById(R.id.btn_close_drawer).setOnClickListener(v -> closeDrawer());
         drawerScrim.setOnClickListener(v -> closeDrawer());
+
+        // 390px Mobile Bottom Sheet navigation listeners
+        if (btnSheetNavRecorder != null) btnSheetNavRecorder.setOnClickListener(v -> { selectTab(0); closeDrawer(); });
+        if (btnSheetNavTimetable != null) btnSheetNavTimetable.setOnClickListener(v -> { selectTab(1); closeDrawer(); });
+        if (btnSheetNavRecordings != null) btnSheetNavRecordings.setOnClickListener(v -> { selectTab(2); closeDrawer(); });
+        if (btnSheetNavConnection != null) btnSheetNavConnection.setOnClickListener(v -> { selectTab(3); closeDrawer(); });
 
         if (btnThemeSystem != null) btnThemeSystem.setOnClickListener(v -> setAppTheme("system"));
         if (btnThemeLight != null) btnThemeLight.setOnClickListener(v -> setAppTheme("light"));
@@ -426,13 +464,19 @@ public class MainActivity extends Activity {
     }
 
     private void selectTab(int tabIndex) {
+        currentTab = tabIndex;
         viewTabRecorder.setVisibility(tabIndex == 0 ? View.VISIBLE : View.GONE);
         viewTabTimetable.setVisibility(tabIndex == 1 ? View.VISIBLE : View.GONE);
         viewTabRecordings.setVisibility(tabIndex == 2 ? View.VISIBLE : View.GONE);
         viewTabConnection.setVisibility(tabIndex == 3 ? View.VISIBLE : View.GONE);
 
-        int activeColor = 0xFF818CF8;
-        int inactiveColor = 0xFF64748B;
+        String[] titles = {"Live Recorder", "Class Schedule", "Audio Library", "MacBook Sync"};
+        if (textCurrentPageTitle != null && tabIndex >= 0 && tabIndex < titles.length) {
+            textCurrentPageTitle.setText(titles[tabIndex]);
+        }
+
+        int activeColor = getColor(R.color.primary);
+        int inactiveColor = getColor(R.color.text_muted);
         ColorStateList activeTint = ColorStateList.valueOf(activeColor);
         ColorStateList inactiveTint = ColorStateList.valueOf(inactiveColor);
 
@@ -448,23 +492,86 @@ public class MainActivity extends Activity {
         navBtnConnection.setTextColor(tabIndex == 3 ? activeColor : inactiveColor);
         navBtnConnection.setCompoundDrawableTintList(tabIndex == 3 ? activeTint : inactiveTint);
 
+        updateSheetNavHighlights(tabIndex);
+
         if (tabIndex == 1) updateTimetableSlotsList();
         if (tabIndex == 2) updateRecordingsList();
     }
 
+    private void updateSheetNavHighlights(int tabIndex) {
+        int activeBg = R.drawable.bg_sheet_nav_item_active;
+        int idleBg = R.drawable.bg_sheet_nav_item_idle;
+        int activeColor = getColor(R.color.primary);
+        int idleColor = getColor(R.color.text_primary);
+        int iconIdleColor = getColor(R.color.text_muted);
+
+        if (btnSheetNavRecorder != null) {
+            btnSheetNavRecorder.setBackgroundResource(tabIndex == 0 ? activeBg : idleBg);
+            if (iconSheetNavRecorder != null) iconSheetNavRecorder.setColorFilter(tabIndex == 0 ? activeColor : iconIdleColor);
+            if (textSheetNavRecorder != null) textSheetNavRecorder.setTextColor(tabIndex == 0 ? activeColor : idleColor);
+        }
+        if (btnSheetNavTimetable != null) {
+            btnSheetNavTimetable.setBackgroundResource(tabIndex == 1 ? activeBg : idleBg);
+            if (iconSheetNavTimetable != null) iconSheetNavTimetable.setColorFilter(tabIndex == 1 ? activeColor : iconIdleColor);
+            if (textSheetNavTimetable != null) textSheetNavTimetable.setTextColor(tabIndex == 1 ? activeColor : idleColor);
+        }
+        if (btnSheetNavRecordings != null) {
+            btnSheetNavRecordings.setBackgroundResource(tabIndex == 2 ? activeBg : idleBg);
+            if (iconSheetNavRecordings != null) iconSheetNavRecordings.setColorFilter(tabIndex == 2 ? activeColor : iconIdleColor);
+            if (textSheetNavRecordings != null) textSheetNavRecordings.setTextColor(tabIndex == 2 ? activeColor : idleColor);
+        }
+        if (btnSheetNavConnection != null) {
+            btnSheetNavConnection.setBackgroundResource(tabIndex == 3 ? activeBg : idleBg);
+            if (iconSheetNavConnection != null) iconSheetNavConnection.setColorFilter(tabIndex == 3 ? activeColor : iconIdleColor);
+            if (textSheetNavConnection != null) textSheetNavConnection.setTextColor(tabIndex == 3 ? activeColor : idleColor);
+        }
+    }
+
     private void openDrawer() {
+        if (isDrawerOpen) return;
         isDrawerOpen = true;
         updateStorageDrawer();
+        updateSheetNavHighlights(currentTab);
         drawerScrim.setVisibility(View.VISIBLE);
         drawerScrim.setAlpha(0f);
-        drawerScrim.animate().alpha(1f).setDuration(250).start();
-        sidebarDrawer.animate().translationX(0).setDuration(250).start();
+        drawerScrim.animate().alpha(1f).setDuration(240).start();
+
+        sidebarDrawer.setVisibility(View.VISIBLE);
+        sidebarDrawer.post(() -> {
+            int h = sidebarDrawer.getHeight();
+            if (h <= 0) h = dpToPx(600);
+            sidebarDrawer.setTranslationY(h);
+            sidebarDrawer.animate()
+                .translationY(0)
+                .setDuration(260)
+                .setInterpolator(new android.view.animation.DecelerateInterpolator())
+                .start();
+        });
     }
 
     private void closeDrawer() {
+        if (!isDrawerOpen && (sidebarDrawer == null || sidebarDrawer.getVisibility() != View.VISIBLE)) return;
         isDrawerOpen = false;
         drawerScrim.animate().alpha(0f).setDuration(200).withEndAction(() -> drawerScrim.setVisibility(View.GONE)).start();
-        sidebarDrawer.animate().translationX(-sidebarDrawer.getWidth() - 50).setDuration(200).start();
+        int h = sidebarDrawer != null ? sidebarDrawer.getHeight() : 0;
+        if (h <= 0) h = dpToPx(600);
+        if (sidebarDrawer != null) {
+            sidebarDrawer.animate()
+                .translationY(h)
+                .setDuration(200)
+                .setInterpolator(new android.view.animation.AccelerateInterpolator())
+                .withEndAction(() -> sidebarDrawer.setVisibility(View.GONE))
+                .start();
+        }
+    }
+
+    @Override
+    public void onBackPressed() {
+        if (isDrawerOpen) {
+            closeDrawer();
+            return;
+        }
+        super.onBackPressed();
     }
 
     private void setupDaySelector() {

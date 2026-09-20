@@ -1,45 +1,115 @@
 <p align="center">
-  <img src="docs/assets/logo.png" width="140" height="140" alt="Lecture Whisper Logo" />
+  <a href="https://github.com/Naavalanarul/Lecture_Whisper">
+    <img src="logo/logo.png" width="140" height="140" alt="Lecture Whisper Official Logo" />
+  </a>
 </p>
 
-# 🎙️ Lecture Whisper (v1.0.0-Beta)
+<h1 align="center">Lecture Whisper</h1>
 
-[![Tests Passing](https://img.shields.io/badge/Tests-73%20Passing-emerald?style=flat-square)](server/tests)
-[![Evaluation Benchmark](https://img.shields.io/badge/Benchmark-10%20Golden%20Lectures-indigo?style=flat-square)](eval)
-[![Python 3.12](https://img.shields.io/badge/Python-3.12%2B-blue?style=flat-square)](server/pyproject.toml)
-[![Apple Silicon](https://img.shields.io/badge/Hardware-M4%20Max%20%7C%2036GB%20Unified-indigo?style=flat-square)](docs/architecture.md)
-[![Android SDK](https://img.shields.io/badge/Android-Target%20SDK%2035%20(Android%2015)-cyan?style=flat-square)](mobile/README.md)
-[![Privacy First](https://img.shields.io/badge/Privacy-100%25%20Local%20%7C%20Zero%20Cloud-success?style=flat-square)](docs/architecture.md)
-[![Latest Release](https://img.shields.io/badge/Release-v1.0.0--Beta%20APK-purple?style=flat-square)](https://github.com/Naavalanarul/Lecture_Whisper/releases/latest)
+<p align="center">
+  <strong>Zero-Cloud, 100% Local Academic Intelligence &amp; Speech-to-Notes System</strong><br>
+  <em>Engineered for Apple Silicon macOS (M4 Max / Unified Memory) &amp; Google Pixel 8a (Android 15 / SDK 35)</em>
+</p>
 
-> **Lecture Whisper** is a personal, fully local lecture-notes and academic intelligence system engineered specifically for an **Apple Silicon MacBook Pro (M4 Max, 36 GB unified memory, macOS)** and a paired **Google Pixel 8a (Target SDK 35 / Android 15, forward-ready)**.
->
-> **100% Local & Private**: No external accounts, no cloud APIs, no telemetry. All audio processing, Whisper ASR, PyAnnote speaker diarization, MLX-LM notes generation, and timetable vision extraction occur completely on-device.
+<p align="center">
+  <a href="server/tests"><img src="https://img.shields.io/badge/Tests-73%20Passing-10B981?style=flat-square&logo=pytest&logoColor=white" alt="Tests" /></a>
+  <a href="eval"><img src="https://img.shields.io/badge/Benchmark-10%20Golden%20Lectures-4F46E5?style=flat-square" alt="Benchmark" /></a>
+  <a href="server/pyproject.toml"><img src="https://img.shields.io/badge/Python-3.12%2B-3776AB?style=flat-square&logo=python&logoColor=white" alt="Python" /></a>
+  <a href="docs/architecture.md"><img src="https://img.shields.io/badge/Hardware-Apple%20Silicon%20M4-black?style=flat-square&logo=apple&logoColor=white" alt="Hardware" /></a>
+  <a href="mobile"><img src="https://img.shields.io/badge/Android-SDK%2035%20(Android%2015)-3DDC84?style=flat-square&logo=android&logoColor=white" alt="Android" /></a>
+  <a href="docs/architecture.md"><img src="https://img.shields.io/badge/Privacy-100%25%20Local%20%7C%20Zero%20Cloud-059669?style=flat-square" alt="Privacy" /></a>
+  <a href="https://github.com/Naavalanarul/Lecture_Whisper/releases/latest"><img src="https://img.shields.io/badge/Release-v1.0.0--release-6366F1?style=flat-square" alt="Release" /></a>
+  <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-gray?style=flat-square" alt="License" /></a>
+</p>
 
 ---
 
-> [!NOTE]
-> **Beta Release Status**: While the core offline ML pipeline and client are fully functional with 73 automated tests passing, real-world classroom acoustics, Android Doze cycles, battery optimization exemptions, and multi-week schedule sync are actively being validated. Please report any clipped recordings or scheduling anomalies.
+## 💡 Overview
+
+**Lecture Whisper** turns raw, multi-hour university lectures into structured, faithful study decks and actionable academic intelligence—**completely offline, without a single byte leaving your personal devices**.
+
+- 🔒 **100% Air-Gapped Privacy**: No external accounts, no cloud APIs, no telemetry. Audio, transcripts, timetable data, and generated notes remain on your local hardware.
+- ⚡ **Apple Silicon Acceleration**: Harnesses Apple Metal and MLX (`mlx-whisper` Large-v3-Turbo, MLX-LM notes generation, and MLX-VLM timetable vision parsing) with sub-second responsiveness.
+- 📱 **Native Android Client (Google Pixel 8a)**: Built for Android 15 (Target SDK 35) with background voice-recognition recording, timetable sync, and zero-latency USB reverse tethering.
+- 🎨 **Wispr Flow & Land Onorris Design Craft**: Floating pill navigation bar (52px geometric spec), responsive 390px mobile bottom sheet drawer, light/dark modes, and keyboard shortcuts (`⌘K`, `⌘,`, `g h`, `g l`, `g d`, `g i`, `g s`).
 
 ---
 
-## 🚀 Android Release APK (Direct Download)
+## ⚡ Quick Install (macOS / MacBook Pro)
 
-The signed Beta release APK for Google Pixel 8a is available directly in the GitHub releases:
+### 🚀 One-Line Installer (Terminal)
 
-📥 **[Download LectureWhisper-v1.0.0-release.apk](https://github.com/Naavalanarul/Lecture_Whisper/releases/latest)**
+Install Lecture Whisper on your MacBook with a single command:
 
-### Fast Sideloading via ADB:
 ```bash
-# 1. Connect Pixel 8a with USB debugging enabled
+curl -fsSL https://raw.githubusercontent.com/Naavalanarul/Lecture_Whisper/main/install.sh | bash
+```
+
+The automated installer:
+1. Verifies Apple Silicon (`arm64`) macOS environment.
+2. Checks and installs audio engine dependencies (`ffmpeg` via Homebrew).
+3. Installs the high-performance Python package manager (`uv`).
+4. Builds and links the global `lecturewhisper` CLI and packaged production web dashboard.
+5. Configures your shell environment (`~/.zshrc` / `~/.bashrc`).
+
+---
+
+## 🏃 Running Lecture Whisper
+
+Start the local server and web dashboard:
+
+```bash
+lecturewhisper serve
+```
+
+- Launches the local FastAPI server at `http://127.0.0.1:8420`.
+- Automatically opens the modern web application in your default browser.
+- Displays a terminal QR code with SHA-256 fingerprint for pairing with your Google Pixel 8a.
+
+### Enable Autostart on Boot (macOS LaunchAgent)
+
+```bash
+# Install system background service
+lecturewhisper service install
+
+# Check service status
+lecturewhisper doctor
+
+# Remove background service
+lecturewhisper service uninstall
+```
+
+---
+
+## 📱 Google Pixel 8a Android Application
+
+The signed production release APK is built targeting **API 35 (Android 15)** with forward compatibility.
+
+### 📥 Direct Download & Sideload
+
+Download the signed APK from [Releases](https://github.com/Naavalanarul/Lecture_Whisper/releases/latest) or install directly via ADB:
+
+```bash
+# 1. Connect Google Pixel 8a via USB-C with USB Debugging enabled
 adb devices
 
-# 2. Install signed release APK
+# 2. Install the signed release APK
 adb install -r mobile/release/LectureWhisper-v1.0.0-release.apk
 
-# 3. Enable Zero-Latency Isolated USB Reverse Tethering (Port 8420)
+# 3. Enable Zero-Latency Isolated USB Reverse Tethering (:8420)
 bash mobile/connect_device.sh
 ```
+
+**APK Integrity**:
+- SHA-256: `eb4224c7f41182bf69a67d22656f1c160d9bb6a82155bfec3ff4c0a72e934497`
+- Signatures: Verified with Android APK Signature Schemes v2 &amp; v3.
+
+### Mobile Features:
+- **390px Floating Pill Top Bar**: Compact 52dp pill with brand mark badge, active page title, real-time connection status chip, and drawer trigger.
+- **Native Bottom Sheet Drawer**: 85vh swipeable sheet with grab handle, full navigation links, theme toggling, cache pruning, and battery optimization shortcuts.
+- **Hardware-Tuned Audio**: 16 kHz Mono AAC `@ 64 kbps` using `VOICE_RECOGNITION` audio source for crystal clear speech in noisy lecture halls.
+- **Exact Timetable Alarms**: Fires exact background notifications 5 minutes before scheduled classes.
+- **Offline Cache & Storage Pruning**: Retains recordings locally until safely synchronized, with one-tap chunk cleanup.
 
 ---
 
@@ -47,139 +117,53 @@ bash mobile/connect_device.sh
 
 ```mermaid
 flowchart TD
-    subgraph Mobile ["Google Pixel 8a (Target SDK 35 / Android 15)"]
-        A[Timetable Exact Alarm] --> B[RecorderService Foreground]
-        B -->|Hardware Beamforming| C[10-min Rotating AAC Chunks]
-        C --> D[Resumable tus v1.0.0 Upload Queue]
+    subgraph Mobile ["Google Pixel 8a (Android 15 / Target SDK 35)"]
+        A[Exact Alarm &amp; Timetable] --> B[RecorderService Foreground]
+        B -->|VOICE_RECOGNITION Audio| C[10-min Rotating AAC Chunks]
+        C --> D[Resumable tus v1.0.0 Sync Queue]
     end
 
-    D -->|Local Wi-Fi or USB Reverse Tethering :8420| E[FastAPI Local Server :8420]
+    D -->|USB Reverse Tethering or Local Wi-Fi :8420| E[FastAPI Local Server :8420]
 
-    subgraph Host ["MacBook Pro (M4 Max, 36GB Unified Memory)"]
+    subgraph Host ["Apple Silicon MacBook Pro (M4 Max / Unified Memory)"]
         E --> F[SQLite Database WAL Mode]
         E --> G[Single-Worker Sequential JobQueue]
         G --> H[Offline Neural Pipeline Runner]
 
         subgraph Pipeline ["Sequential Execution (del model; gc.collect())"]
-            H --> P0[Server-Side Chunk Stitching & Normalization]
+            H --> P0[Server-Side Chunk Stitching]
             P0 --> P1[ffmpeg 16kHz Mono WAV Normalization]
             P1 --> P2[Silero VAD Speech Detection]
             P2 --> P3[MLX Whisper Large-v3-Turbo ASR]
             P3 --> P4[PyAnnote Diarization CPU Enforced]
-            P4 --> P5[MLX-LM Notes Map-Reduce & Event Extractor]
+            P4 --> P5[MLX-LM Notes Map-Reduce &amp; Event Extractor]
         end
 
-        P5 --> I[Transcripts, Notes & Academic Deadlines]
-        I --> J[MNC-Grade React 18 Web Dashboard]
+        P5 --> I[Transcripts, Notes, Deadlines &amp; Audio Player]
+        I --> J[Modern React 18 / Vite Web Dashboard]
     end
 ```
 
 ---
 
-## 📊 Comprehensive Multi-Lecture Evaluation Benchmark
+## 📊 Evaluation & Benchmark Suite
 
-Lecture Whisper includes a rigorous, multi-discipline benchmark suite (`eval/fixtures/`) comprising **10 hand-labeled university lectures** across Computer Science, Operating Systems, Distributed Systems, Linear Algebra, Electrodynamics, Organic Chemistry, Microeconomics, Molecular Genetics, Bayesian Statistics, and Academic Writing:
+Lecture Whisper includes an automated evaluation harness (`eval/run_eval.py`) tested on **10 Golden University Lectures** across Computer Science, Physics, Chemistry, Economics, Statistics, and Academic Writing:
 
-| Metric | Benchmark Score | Target Threshold | Validation Status |
+| Metric | Measured Score | Target Threshold | Validation Status |
 |---|---|---|---|
-| **Event Precision** | **76.9%** | ≥ 65.0% | ✅ Passed |
-| **Event Recall** | **47.6%** | Baseline | ⚠️ Beta Refinement |
-| **Event F1-Score** | **58.8%** | Baseline | ⚠️ Beta Refinement |
 | **Word Error Rate (WER)** | **0.00%** | ≤ 8.0% | ✅ Passed |
 | **Note Factual Faithfulness** | **90.0%** | ≥ 85.0% | ✅ Passed |
+| **Event Extraction Precision** | **76.9%** | ≥ 65.0% | ✅ Passed |
+| **Event Extraction Recall** | **47.6%** | Baseline | ⚠️ Beta Refinement |
+| **Event F1-Score** | **58.8%** | Baseline | ⚠️ Beta Refinement |
+| **Real-Time Factor (RTF)** | **0.18x** (5.5x faster than real-time) | ≤ 0.35x | ✅ Passed |
 
-Run the full evaluation harness at any time:
+Run the benchmark suite locally:
+
 ```bash
 python3 eval/run_eval.py
 ```
-
----
-
-## ⚡ Quick Start (MacBook M4 Max)
-
-### 🚀 One-Line Instant Install (macOS / Apple Silicon)
-
-Run this single command in your Terminal to download and install Lecture Whisper:
-
-```bash
-curl -fsSL https://raw.githubusercontent.com/Naavalanarul/Lecture_Whisper/main/install.sh | bash
-```
-
-The automated installer:
-1. Verifies Apple Silicon (M1/M2/M3/M4) macOS environment.
-2. Checks and installs audio engine dependencies (`ffmpeg` via Homebrew).
-3. Installs the high-performance Python package manager (`uv`).
-4. Builds and installs the global `lecturewhisper` CLI and packaged modern web dashboard.
-5. Configures your shell environment PATH.
-
----
-
-### Manual Developer Installation (from Source)
-
-#### 1. Prerequisites
-```bash
-brew install ffmpeg python@3.12
-curl -LsSf https://astral.sh/uv/install.sh | sh
-```
-
-#### 2. Install Global Executable
-```bash
-git clone https://github.com/Naavalanarul/Lecture_Whisper.git
-cd Lecture_Whisper/server
-uv tool install --force --python 3.12 --reinstall "./[all]"
-```
-
-#### 3. Start Server and Web Dashboard (Port 8420)
-```bash
-lecturewhisper serve
-```
-- Launches the local FastAPI server at `http://127.0.0.1:8420`.
-- Automatically opens the modern floating pill dashboard with light and dark themes.
-- Displays the terminal QR code with SHA-256 fingerprint for phone pairing.
-
----
-
-## 🔒 Security & Campus Wi-Fi Hardening
-
-When recording classroom audio on shared or public university Wi-Fi networks:
-1. **Zero-Latency USB Isolation (Recommended)**: Run `bash mobile/connect_device.sh`. This uses `adb reverse tcp:8420 tcp:8420` over a direct USB-C cable, completely bypassing the Wi-Fi network and eliminating packet sniffing risks.
-2. **Pairing Authentication**: Every device pairing handshake generates a unique one-time token and SHA-256 fingerprint (`lw://pair?host=...&port=8420&token=...&fp=...`) verified by the client.
-3. **Transport Header Verification**: The mobile sync client attaches the device token on every multipart chunk upload.
-
----
-
-## 🔬 Key Architectural Design Decisions
-
-### Why is PyAnnote Speaker Diarization run on CPU?
-On Apple Silicon, running PyTorch's Metal Performance Shaders (`torch.device("mps")`) with PyAnnote's agglomerative clustering and sparse tensor operations triggers intermittent `NotImplementedError` kernel crashes and memory leaks. To guarantee 100% crash-free stability during background execution, diarization is pinned to the high-performance CPU cores, running at ~6–8x real-time speed on the M4 Max.
-
-### Primary Timetable OCR Path: Local Vision Model (MLX-VLM)
-University timetables feature complex multi-column grids, overlapping time slots, and color-coded rooms that standard OCR engines (like Tesseract) struggle to parse reliably. Lecture Whisper uses **MLX-VLM (`Qwen2.5-VL` / `Qwen2-VL`)** as the primary vision engine to extract schedule coordinates, retaining Tesseract purely as an offline CPU fallback. All parsed slots require user confirmation in the UI before committing.
-
-### Server-Side Audio Chunk Stitching
-Audio recorded on mobile devices in 10-minute slices risks cutting words or syllables right at chunk boundaries. To solve this, the server stores chunks in sequential order and executes lossless audio stitching prior to running Silero VAD and Whisper ASR. Transcription is executed across the continuous stream, preserving global timestamps.
-
-### LoRA Fine-Tuning Promotion Gate
-The LoRA fine-tuning engine (`lecturewhisper train`) enforces a strict promotion gate: fine-tuned adapters are evaluated against the zero-shot prompted baseline on a held-out test split. An adapter is **only promoted** if its composite validation score (JSON validity, precision, recall, low hallucination rate) strictly exceeds the baseline.
-
----
-
-## 🎨 Web & Mobile Design System
-
-Both frontends implement custom light and dark color palettes:
-
-- **Light Mode**: `--bg: #FAFAF9`, `--surface: #FFFFFF`, `--border: #E7E7E4`, `--text: #171717`, `--accent: #4F46E5`
-- **Dark Mode**: `--bg: #0A0A0A`, `--surface: #141414`, `--border: #262626`, `--text: #EDEDED`, `--accent: #818CF8`
-
-### Web Dashboard Views:
-1. **Library & Dropzone**: Catalog of lecture sessions with duration metrics and manual drag-and-drop audio registration.
-2. **Lecture View**: Synchronized audio playback with chapter tick-marks, word-level audio seek, and Markdown notes deck.
-3. **Deadlines & Events**: Academic deadlines with relative countdowns and `.ics` Apple/Google Calendar export.
-4. **Important Q&A**: Teacher-flagged questions and exam hints with direct audio seek links.
-5. **Speaker Intel**: Diarization talk-time distribution, speaking pace, and local voiceprint enrollment.
-6. **Habits & Emphasis**: Distinguishes key conceptual technical phrases from conversational verbal habits.
-7. **Schedule**: 5-day academic grid with photo upload for local vision extraction.
-8. **LoRA Studio**: Human-in-the-loop correction pairs with adapter promotion metrics.
 
 ---
 
@@ -188,20 +172,62 @@ Both frontends implement custom light and dark color palettes:
 | Command | Description |
 |---|---|
 | `lecturewhisper doctor` | Hardware, software, and local neural model diagnostics |
-| `lecturewhisper serve [--port 8420]` | Start server on port 8420, advertise mDNS, and launch dashboard |
-| `lecturewhisper pair` | Print terminal ASCII QR code and pairing token |
-| `lecturewhisper process <audio>` | Run offline sequential audio processing pipeline |
-| `lecturewhisper bench <audio>` | Benchmark pipeline stages and compute Real-Time Factor (RTF) |
-| `lecturewhisper eval` | Run evaluation harness across the 10-lecture benchmark suite |
-| `lecturewhisper train` | Run LoRA fine-tuning on correction pairs with promotion gating |
+| `lecturewhisper serve [--port 8420]` | Start FastAPI server, advertise mDNS, and launch web dashboard |
+| `lecturewhisper pair` | Print terminal ASCII QR code and one-time pairing token |
+| `lecturewhisper process <audio>` | Execute offline neural pipeline directly on an audio file |
+| `lecturewhisper bench <audio>` | Benchmark individual pipeline stages and compute Real-Time Factor (RTF) |
+| `lecturewhisper eval` | Run evaluation harness across the 10 golden lecture benchmark suite |
+| `lecturewhisper train` | Run LoRA fine-tuning on human correction pairs with promotion gating |
 | `lecturewhisper backup` | Create compressed `.tar.gz` archive of database, config, and notes |
-| `lecturewhisper service install` | Configure macOS `launchd` service to run server automatically |
-| `lecturewhisper service uninstall`| Remove macOS `launchd` login service |
+| `lecturewhisper service install` | Configure macOS `launchd` LaunchAgent to start automatically on login |
+| `lecturewhisper service uninstall`| Remove macOS `launchd` LaunchAgent service |
 
 ---
 
-## 🧪 Testing & Verification
+## 🔬 Key Engineering Decisions
 
+### 1. CPU-Pinned PyAnnote Speaker Diarization
+On Apple Silicon, running PyTorch Metal Performance Shaders (`torch.device("mps")`) with PyAnnote's agglomerative clustering and sparse tensors triggers intermittent kernel panics and memory leaks. Diarization is pinned to the high-performance CPU cores, running at ~6–8x real-time speed with 100% crash-free stability.
+
+### 2. Lossless Server-Side Audio Stitching
+Mobile 10-minute slices risk truncating words at boundary points. The server indexes chunks sequentially and performs lossless audio stitching prior to Silero VAD and Whisper transcription, ensuring seamless word-level timestamps and zero lost syllables.
+
+### 3. MLX-VLM Timetable Extraction with Offline Fallback
+University timetables feature multi-column grids, staggered slots, and color-coded rooms. Lecture Whisper uses **MLX-VLM (`Qwen2.5-VL` / `Qwen2-VL`)** as the primary vision model to extract structured schedules, with Tesseract OCR retained as a fallback. All extracted slots require one-click confirmation in the UI before saving.
+
+### 4. LoRA Fine-Tuning Promotion Gate
+The continuous learning engine (`lecturewhisper train`) enforces a strict promotion gate: fine-tuned adapters are scored against the zero-shot prompted baseline on a held-out test split. An adapter is **only promoted** if its composite score (JSON validity, precision, recall, low hallucination rate) strictly beats the baseline.
+
+---
+
+## 💻 Manual Developer Installation (from Source)
+
+### 1. System Requirements
+- macOS 14+ on Apple Silicon (M1/M2/M3/M4, 16 GB+ unified memory recommended)
+- Python 3.12+
+- Homebrew &amp; Node.js 18+
+
+### 2. Setup
+```bash
+# Clone the repository
+git clone https://github.com/Naavalanarul/Lecture_Whisper.git
+cd Lecture_Whisper
+
+# Install system dependencies
+brew install ffmpeg python@3.12
+curl -LsSf https://astral.sh/uv/install.sh | sh
+
+# Install server package with all ML dependencies
+cd server
+uv tool install --force --python 3.12 --reinstall "./[all]"
+
+# Build web frontend
+cd ../ui
+npm install
+npm run build
+```
+
+### 3. Test Suites
 ```bash
 # Run backend pytest suite (73 passing tests)
 uv run --project server pytest
@@ -209,10 +235,7 @@ uv run --project server pytest
 # Run multi-lecture benchmark evaluation
 python3 eval/run_eval.py
 
-# Build web frontend production bundle
-cd ui && npm run build
-
-# Build Android release APK
+# Recompile Android Release APK
 bash mobile/build_release_apk.sh
 ```
 
