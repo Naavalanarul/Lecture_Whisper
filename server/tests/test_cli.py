@@ -46,6 +46,24 @@ def test_eval_command():
     assert "Evaluation Results" in result.output
 
 
+def test_eval_announcements_command(tmp_path):
+    """Eval announcements command should scan folder and output CSV and HTML."""
+    from pathlib import Path
+    runner = CliRunner()
+    # Create a tiny mock transcript in tmp_path
+    mock_transcript = tmp_path / "test_lecture.srt"
+    mock_transcript.write_text(
+        "1\n00:00:01,000 --> 00:00:04,000\nPROFESSOR: Midterm exam is next Wednesday.\n"
+    )
+    out_dir = tmp_path / "review"
+    result = runner.invoke(cli, ["eval", "announcements", str(tmp_path), "--output", str(out_dir)])
+    assert result.exit_code == 0
+    assert "Discovered" in result.output
+    assert (out_dir / "candidates.csv").exists()
+    assert (out_dir / "announcements_review.html").exists()
+
+
+
 def test_train_command():
     """Train command should run fine-tuning and promotion evaluation."""
     runner = CliRunner()

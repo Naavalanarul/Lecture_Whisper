@@ -231,7 +231,37 @@ public class MainActivity extends Activity {
 
         requestAppPermissions();
         mainHandler.post(pingRunnable);
+        handleAdbIntent(getIntent());
     }
+
+    @Override
+    protected void onNewIntent(Intent intent) {
+        super.onNewIntent(intent);
+        setIntent(intent);
+        handleAdbIntent(intent);
+    }
+
+    private void handleAdbIntent(Intent intent) {
+        if (intent == null) return;
+        String action = intent.getStringExtra("action");
+        if (action != null) {
+            Log.i(TAG, "Received ADB intent action: " + action);
+            if ("start".equalsIgnoreCase(action)) {
+                String subject = intent.getStringExtra("subject");
+                if (subject != null && !subject.isEmpty() && editRecordingSubject != null) {
+                    editRecordingSubject.setText(subject);
+                }
+                if (!isRecording) {
+                    startRecordingSession();
+                }
+            } else if ("stop".equalsIgnoreCase(action)) {
+                if (isRecording) {
+                    stopRecordingSession();
+                }
+            }
+        }
+    }
+
 
     private void setupWindowInsets() {
         View rootLayout = findViewById(R.id.root_layout);

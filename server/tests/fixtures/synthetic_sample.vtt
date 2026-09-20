@@ -1,0 +1,17 @@
+WEBVTT
+Kind: captions
+Language: en
+
+NOTE This is a synthetic test fixture for WebVTT caption parsing.
+
+00:00:01.200 --> 00:00:04.500
+<v Dr. Bell>Welcome to Introduction to Computer Science.</v>
+
+00:00:05.100 --> 00:00:09.800
+We will begin with basic Python syntax and variables.
+
+00:00:10.500 --> 00:00:15.000
+<v Student>Is the assignment submission due at midnight?</v>
+
+00:00:16.000 --> 00:00:20.500
+<v Dr. Bell>Yes, assignments are always due at 11:59 PM.</v>

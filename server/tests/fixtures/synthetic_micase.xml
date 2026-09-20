@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<MICASE>
+  <HEADER>
+    <TITLE>Introductory Biology Classroom Discussion</TITLE>
+    <ID>LES155SU099_SYNTHETIC</ID>
+  </HEADER>
+  <BODY>
+    <U WHO="PRF" START="2.5" END="7.8">
+      Okay class, let's settle down. Today we are finishing our discussion on cellular respiration.
+    </U>
+    <U WHO="S1" START="8.4" END="13.2">
+      Professor, could you clarify whether the lab report is due on Friday or Monday?
+    </U>
+    <U WHO="PRF" START="14.0" END="20.5">
+      The lab report is due on Friday before 5:00 PM. Also, the midterm exam will be held next Wednesday in Room 102.
+    </U>
+    <U WHO="S2" START="21.0" END="24.8">
+      Will office hours be held tomorrow afternoon?
+    </U>
+  </BODY>
+</MICASE>

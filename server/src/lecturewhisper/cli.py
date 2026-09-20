@@ -168,10 +168,14 @@ def pair() -> None:
     _show_pairing_qr("0.0.0.0", 8420)
 
 
-@cli.command("eval")
+@cli.group("eval", invoke_without_command=True)
 @click.option("--fixtures", default=None, help="Custom fixtures directory.")
-def eval_cmd(fixtures: str | None) -> None:
-    """Run evaluation harness on golden fixtures."""
+@click.pass_context
+def eval_cmd(ctx: click.Context, fixtures: str | None) -> None:
+    """Run evaluation harness on golden fixtures or scan announcements."""
+    if ctx.invoked_subcommand is not None:
+        return
+
     import sys
     from pathlib import Path
 
@@ -190,6 +194,55 @@ def eval_cmd(fixtures: str | None) -> None:
     console.print(f"Question Recall:   [bold green]{res['question_recall'] * 100:.1f}%[/bold green]")
     console.print(f"Emphasis Phrases:  [bold]{res['emphasis_phrases_count']}[/bold]")
     console.print(f"Habit Phrases:     [bold]{res['habit_phrases_count']}[/bold]\n")
+
+
+@eval_cmd.command("announcements")
+@click.argument("folder", default="data/transcripts", type=click.Path(exists=True, file_okay=False, dir_okay=True))
+@click.option("--output", default="review", help="Output directory for candidates CSV and HTML.")
+def announcements_cmd(folder: str, output: str) -> None:
+    """Scan transcripts for announcements, deadlines, events, and questions."""
+    from pathlib import Path
+    from lecturewhisper.eval.parsers import parse_transcript
+    from lecturewhisper.eval.discovery import (
+        discover_announcements_and_events,
+        write_candidates_csv,
+        generate_announcements_review_html,
+    )
+
+    in_dir = Path(folder)
+    out_dir = Path(output)
+    out_dir.mkdir(parents=True, exist_ok=True)
+
+    transcript_files = []
+    for ext in ("*.json", "*.srt", "*.vtt", "*.pdf", "*.xml"):
+        transcript_files.extend(in_dir.glob(ext))
+
+    if not transcript_files:
+        console.print(f"[yellow]No transcript files found in {in_dir}[/yellow]")
+        return
+
+    all_candidates = []
+    for tf in sorted(transcript_files):
+        if tf.name in ("tie_eval.json", "tie_concat_list.txt"):
+            continue
+        try:
+            t = parse_transcript(tf)
+            cands = discover_announcements_and_events(t)
+            all_candidates.extend(cands)
+            console.print(f"Scanned [bold]{tf.name}[/bold]: found {len(cands)} candidates.")
+        except Exception as e:
+            console.print(f"[red]Error parsing {tf.name}: {e}[/red]")
+
+    csv_path = out_dir / "candidates.csv"
+    html_path = out_dir / "announcements_review.html"
+
+    write_candidates_csv(all_candidates, csv_path)
+    generate_announcements_review_html(all_candidates, html_path)
+
+    console.print(f"\n[bold green]✓ Discovered {len(all_candidates)} candidates across {len(transcript_files)} transcripts.[/bold green]")
+    console.print(f"  • Candidate CSV:  [bold]{csv_path}[/bold]")
+    console.print(f"  • Review Web UI:  [bold]{html_path}[/bold]\n")
+
 
 
 @cli.command()

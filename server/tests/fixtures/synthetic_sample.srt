@@ -1,0 +1,16 @@
+1
+00:00:01,000 --> 00:00:03,500
+[SQUEAKING]
+PROFESSOR: Good morning, everyone.
+
+2
+00:00:04,000 --> 00:00:08,250
+Today we are discussing asymptotic runtime analysis.
+
+3
+00:00:09,100 --> 00:00:14,400
+STUDENT: Will this be on the midterm exam next Wednesday?
+
+4
+00:00:15,000 --> 00:00:19,800
+PROFESSOR: Yes, definitely. Remember problem set two is due on Friday.
