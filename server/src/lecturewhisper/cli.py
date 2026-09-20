@@ -258,9 +258,9 @@ def score_candidates_cmd(csv_path: str) -> None:
         rows = list(reader)
 
     total = len(rows)
-    verified = [r for r in rows if r.get("status") == "VERIFIED" or r.get("human_verified", "").upper() == "TRUE"]
+    verified = [r for r in rows if r.get("status") == "VERIFIED"]
     rejected = [r for r in rows if r.get("status") == "REJECTED"]
-    pending = [r for r in rows if r.get("status") in ("PENDING_REVIEW", "PENDING", "")]
+    pending = [r for r in rows if r.get("status") in ("PENDING_REVIEW", "PENDING", "") and r not in verified and r not in rejected]
 
     console.print(f"\n[bold]📋 Candidate Audit Summary ({path.name})[/bold]\n")
     console.print(f"Total Candidates:   {total}")

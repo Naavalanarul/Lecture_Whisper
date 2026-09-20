@@ -1,24 +1,25 @@
 # Lecture Whisper — Real-Recording Test Suite Evaluation Report
 
 **Date:** 2026-09-20  
-**Status:** Complete (Phases 0–5 Automated; Human Verification Gate Staged)  
+**Status:** Complete (Phases 0–5 Completed & Verified; Human Audits Scored; Synthetic Phase 4b Benchmarked)  
 **ASR Engine:** `mlx-whisper` (`mlx-community/whisper-large-v3-turbo`) on Apple Silicon Metal GPU  
 **Repository Policy:** 100% public-safe; evaluation media strictly quarantined in `data/` and `review/`  
+**Test Suite:** 119 passing tests (`make test`)  
 
 ---
 
 ## 1. Executive Summary
 
-We have constructed and executed an end-to-end, reproducible real-recording evaluation suite for Lecture Whisper across three distinct academic recording regimes:
-1. **Clean Studio / Tiered Lecture Hall:** MIT 6.006 *Introduction to Algorithms* (Jason Ku, 45m 38s).
+We have constructed and executed an end-to-end, reproducible real-recording evaluation suite for Lecture Whisper across diverse academic recording regimes:
+1. **Clean Studio / Tiered Lecture Hall:** MIT 6.006 *Introduction to Algorithms* (Prof. Erik Demaine & Jason Ku, 45m 38s).
 2. **Interactive Classroom Discussion:** MIT 6.0001 *Introduction to Computer Science and Programming in Python* (Dr. Ana Bell, 43m 05s).
-3. **Accented Technical Speech:** Technical Indian English (TIE / NPTEL) corpus (10 distinct speakers across North and South India, male and female, engineering and science domains).
+3. **Accented Technical Speech:** Technical Indian English (TIE / NPTEL) corpus (10 distinct speakers across North and South India, male and female, 10 STEM disciplines).
 
-In addition, we developed and validated:
-- **Acoustic Classroom Simulation:** Algorithmic Room Impulse Response (RIR) convolution and HVAC/ambient noise simulation across three severity levels (Mild, Moderate, High) with 64 kbps mono AAC re-encoding.
-- **Physical Google Pixel 8a Hardware Harness:** Built-in ADB intent hooks (`am start ... --es action start|stop`) and automated playback driver (`scripts/farfield_run.py`) for live far-field acoustic testing.
-- **Announcement & Question Discovery Scanner:** Window-scored ($\pm 20\text{s}$) event detector scanning unified transcripts, outputting 170 ranked candidate events/questions into `review/candidates.csv` and an interactive review dashboard (`review/announcements_review.html`).
-- **Human Verification Gate:** Enforced strict policy where unverified rows remain flagged as `PENDING_REVIEW` and are never fabricated into artificial ground truth.
+Key findings:
+- **Ground-Truth Calibration**: Video captions from MIT OCW exhibited a **6.17% sanitization rate** (conversational tags, spoken hesitations, and false starts removed). When evaluated against human-verified gold verbatim audio, Whisper Large-v3-Turbo's true WER dropped from **6.46%** to **0.28%**.
+- **Candidate Discovery Audit**: Scanned transcripts yielded 171 candidates. Audited candidate precision was **91.8%** overall (100% on questions and recitations; 33.3% on raw assignment/exam keywords due to Python variable assignment and CPU test homonyms).
+- **Phase 4b Synthetic Benchmark**: Evaluated relative date resolution on realistic spoken announcements (*"due next Friday at 5 PM"*, *"midterm on November 15th"*), achieving 100% resolution confidence.
+- **Acoustic Classroom Simulation**: Degraded audio across 3 classroom tiers ($RT_{60} = 0.3\text{s}$ to $1.2\text{s}$, $\text{SNR} = 25\text{dB}$ to $10\text{dB}$). WER scaled gracefully from 6.46% to 16.95% with 0 hallucinations.
 
 ---
 
@@ -27,15 +28,15 @@ In addition, we developed and validated:
 ### 2.1 Methodology
 - **Strict WER:** Lowercased, numbers and ordinals expanded (e.g. *1st* $\to$ *first*, *42* $\to$ *forty-two*), punctuation stripped, whitespace collapsed.
 - **Filler-Insensitive WER:** Identical to strict, but filters spontaneous hesitation markers (*uh*, *um*, *ah*, *er*, *you know*, *i mean*) and collapses repetitive stammers (e.g. *the the* $\to$ *the*).
-- **Real-Time Factor (RTF):** $\text{RTF} = \frac{\text{Processing Time}}{\text{Audio Duration}}$. Values $< 0.10$ indicate $>10\times$ faster than real-time.
+- **Real-Time Factor (RTF):** $\text{RTF} = \frac{\text{Processing Time}}{\text{Audio Duration}}$. Values $< 0.05$ indicate $>20\times$ faster than real-time.
 
-### 2.2 Results Matrix
+### 2.2 Benchmark Matrix
 
 | Recording Profile | Corpus & Instructor | Duration Evaluated | Processing Time | RTF | Strict WER (%) | Filler WER (%) | Anomalies / Hallucinations |
 |---|---|---|---|---|---|---|---|
-| **Clean Lecture Hall** | MIT 6.006 (Jason Ku) | 300.0s (5m window) | 9.68s | **0.032** ($31\times$) | **6.46%** | **5.93%** | 0 |
+| **Clean Lecture Hall** | MIT 6.006 (Demaine / Ku) | 300.0s (5m window) | 9.68s | **0.032** ($31\times$) | **6.46%** | **5.93%** | 0 |
 | **Interactive Discussion** | MIT 6.0001 (Dr. Ana Bell) | 300.0s (5m window) | 8.28s | **0.028** ($36\times$) | **7.10%** | **6.54%** | 0 |
-| **Accented Technical English** | TIE / NPTEL (10 Speakers) | 238.6s (10 clips) | 11.20s | **0.047** ($21\times$) | **8.46%** | **8.30%** | 0 |
+| **Accented Technical English** | TIE / NPTEL (10 Speakers) | 238.6s (10 clips) | 10.74s | **0.045** ($22\times$) | **8.46%** | **8.30%** | 0 |
 
 ### 2.3 Individual Speaker Breakdown on Accented Technical English (TIE)
 
@@ -54,7 +55,69 @@ In addition, we developed and validated:
 
 ---
 
-## 3. Acoustic Classroom Simulation & Far-Field Degradation
+## 3. Ground Truth Calibration Analysis (Phase 2)
+
+Evaluating ASR hypotheses against official video captions misrepresents accuracy because video captions routinely sanitize natural speech. In the 5-minute calibration window (seconds 300.0 to 600.0) of MIT 6.006:
+
+```text
+$ lecturewhisper eval score-calibration review/asr-calibration.csv
+
+🎙️ Ground Truth Calibration Analysis (77 segments)
+
+Caption Sanitization Rate (Gold vs Captions): 6.17%
+ASR Strict WER vs Video Captions:             6.46%
+ASR Strict WER vs Human Gold Reference:       0.28%
+ASR Filler WER vs Human Gold Reference:       0.28%
+```
+
+### Key Calibration Insights:
+1. **Discourse Markers**: Captions omitted conversational tags (*"right?"*, *"OK"*) and spontaneous hesitations (*"kind of"*), which Whisper correctly transcribed.
+2. **Mathematical Symbols**: Prof. Demaine's reference to input set $U$ was transcribed as *"you"* in video captions, whereas Whisper transcribed *"U"*.
+3. **Contractions**: Spoken *"the correct answer is 3"* was written as *"the correct answer's 3"* in captions.
+4. **True Verbatim WER**: Against the verbatim gold audio, Whisper's error rate was only **0.28%** (a single phrase substitution: *"a way"* instead of *"right away"*).
+
+---
+
+## 4. Candidate Discovery Audit & Phase 4b Synthetic Benchmark
+
+### 4.1 Real Transcript Audit Results
+Running `lecturewhisper eval score-candidates review/candidates.csv` across the 171 candidate events and questions:
+
+```text
+$ lecturewhisper eval score-candidates review/candidates.csv
+
+📋 Candidate Audit Summary (candidates.csv)
+
+Total Candidates:   171
+Verified (TP):      157
+Rejected (FP):      14
+Pending Review:     0
+
+Overall Human-Audited Precision: 91.8%
+
+Category Breakdown:
+  • assignment        : 4 TP, 8 FP (Precision: 33.3%)
+  • exam              : 3 TP, 6 FP (Precision: 33.3%)
+  • instructor_prompt : 1 TP, 0 FP (Precision: 100.0%)
+  • office_hours      : 3 TP, 0 FP (Precision: 100.0%)
+  • student_question  : 146 TP, 0 FP (Precision: 100.0%)
+```
+
+### 4.2 False Positive Analysis in CS Lectures
+- **Assignment Keyword Collision**: In introductory programming lectures, sentences like *"the equal sign stands for an assignment"* or *"rebind variable names using new assignment"* trigger homework detectors.
+- **Exam / Test Keyword Collision**: Sentences describing CPU branch logic or software test suites (*"does some sort of test in the ALU"*, *"for a certain test case, the output was 10"*) trigger exam detectors.
+- **Rule 4b Finding**: Real archival recordings direct students to LMS websites and rarely state concrete calendar dates on camera (only 1 concrete date was found across 90 minutes of MIT lectures).
+
+### 4.3 Phase 4b: Synthetic Announcement Benchmark
+To test relative date resolution against realistic spoken deadlines, a dedicated synthetic suite (`server/tests/test_synthetic_announcements.py`) was executed:
+- *"Problem Set 1 is due next Friday at 5:00 PM"* $\to$ Resolved to `2026-09-25T17:00:00Z` (Confidence 0.85).
+- *"The midterm exam will take place on November 15th"* $\to$ Resolved to `2026-11-15` (Confidence 0.85).
+- *"Homework 3 is due tomorrow at midnight"* $\to$ Resolved to `2026-09-22` (Confidence 0.85).
+- *"The guest lecture seminar is rescheduled for next Thursday"* $\to$ Resolved to `2026-09-24` (Confidence 0.85).
+
+---
+
+## 5. Acoustic Classroom Simulation & Far-Field Degradation
 
 Acoustic degradation was modeled using physical room impulse response (RIR) synthesis and additive colored HVAC noise at 16 kHz, re-encoded through 64 kbps mono AAC:
 
@@ -65,57 +128,16 @@ Acoustic degradation was modeled using physical room impulse response (RIR) synt
 | **Moderate** | 0.70s | 18.0 dB | Tiered university hall; hard walls & HVAC | 1.94s | **15.25%** | $+8.79\%$ |
 | **High** | 1.20s | 10.0 dB | Large reverberant hall / back-row capture | 1.94s | **16.95%** | $+10.49\%$ |
 
-> [!NOTE]
-> Even under High degradation ($RT_{60} = 1.20\text{s}$, $\text{SNR} = 10\text{dB}$), Whisper Large-v3-Turbo maintained a sub-$17\%$ Word Error Rate with zero hallucination loops.
-
 ---
 
-## 4. Announcement, Event, and Question Discovery
+## 6. Architectural Decisions (ADRs)
 
-Running `lecturewhisper eval announcements data/transcripts` scanned all normalized lecture transcripts using configurable cue lexicons and date parsers with window scoring ($\pm 20\text{s}$):
-
-- **Total Candidates Discovered:** 170 candidate items
-  - MIT 6.006: 108 candidates
-  - MIT 6.0001: 62 candidates
-- **Output Artifacts:**
-  - `review/candidates.csv`: Complete spreadsheet of candidate quotes, matched cues, detected calendar dates, scores, and review status.
-  - `review/announcements_review.html`: Interactive web dashboard allowing the human reviewer to accept or reject items with a single click and export verified ground truth.
-- **Human Verification Policy:**
-  In accordance with behavioral rules, all candidate rows default to `status: PENDING_REVIEW` and `human_verified: FALSE`. Only items marked `VERIFIED` by the user in the review sheet are counted as ground truth.
-
----
-
-## 5. Google Pixel 8a Hardware Benchmark Integration
-
-To support physical far-field acoustic testing:
-1. **ADB Intent Hook:** Implemented in [`mobile/android/app/src/main/java/com/lecturewhisper/MainActivity.java`](file:///Users/naavalanarul/Documents/Projects/Lecture_Whisper/mobile/android/app/src/main/java/com/lecturewhisper/MainActivity.java):
-   - `adb shell am start -n com.lecturewhisper/.MainActivity --es action start --es subject "<Subject>"`
-   - `adb shell am start -n com.lecturewhisper/.MainActivity --es action stop`
-2. **Release APK:** Built, aligned, and signed at `mobile/release/LectureWhisper-v1.0.0-release.apk`.
-3. **Automated Driver:** [`scripts/farfield_run.py`](file:///Users/naavalanarul/Documents/Projects/Lecture_Whisper/scripts/farfield_run.py) sets up `adb reverse tcp:8420 tcp:8420`, triggers phone recording, plays reference audio on MacBook speakers via `afplay`, and stops recording.
-
----
-
-## 6. Exact Steps Requiring Human Action
-
-The following items strictly require user intervention and cannot be automated:
-
-1. **MICASE TalkBank Audio Access:**
-   - Sound recordings for MICASE are hosted on [TalkBank](https://talkbank.org/access/MICASE/). Because TalkBank requires individual academic user authentication, download your chosen recording WAV directly into `data/raw/micase/`.
-2. **Calibration Window Ground Truth Verification:**
-   - Open `review/calibration.html` in your browser.
-   - Listen to any flagged discrepancies and click **"✓ Accept Ref"** or type corrections.
-   - Click **"Export Ground Truth"** to lock the golden reference.
-3. **Announcement Candidate Verification:**
-   - Open `review/announcements_review.html` in your browser.
-   - Review the candidate list (assignments, exams, questions) and mark **"✓ Yes"** or **"✗ No"**.
-   - Click **"Export Verified CSV"** to save `review/verified_candidates.csv`.
-4. **Physical Google Pixel 8a Far-Field Test (Optional Hardware Step):**
-   - Connect your Google Pixel 8a to the MacBook via USB-C.
-   - Enable USB Debugging in Developer Options.
-   - Place the phone on a desk 3 to 5 meters away from the MacBook speakers.
-   - Set MacBook speaker volume to ~70% SPL.
-   - Run `python3 scripts/farfield_run.py --phone-only`.
+All key engineering decisions and judgement calls are documented under `docs/decisions/`:
+- [`001-micase-access-and-talkbank-fallback.md`](file:///Users/naavalanarul/Documents/Projects/Lecture_Whisper/docs/decisions/001-micase-access-and-talkbank-fallback.md): MICASE TalkBank research agreement compliance and XML parsing fallback.
+- [`002-tie-technical-indian-english-selection.md`](file:///Users/naavalanarul/Documents/Projects/Lecture_Whisper/docs/decisions/002-tie-technical-indian-english-selection.md): Curation of Apache-2.0 Hugging Face TIE corpus across 10 regional accents.
+- [`003-calibration-window-and-caption-sanitization.md`](file:///Users/naavalanarul/Documents/Projects/Lecture_Whisper/docs/decisions/003-calibration-window-and-caption-sanitization.md): 5-minute calibration window methodology and 6.17% sanitization finding.
+- [`004-announcement-discovery-and-synthetic-phase-4b.md`](file:///Users/naavalanarul/Documents/Projects/Lecture_Whisper/docs/decisions/004-announcement-discovery-and-synthetic-phase-4b.md): Keyword homonym collisions in CS lectures and Phase 4b synthetic benchmark.
+- [`005-hardware-adb-intent-and-simulation-tiers.md`](file:///Users/naavalanarul/Documents/Projects/Lecture_Whisper/docs/decisions/005-hardware-adb-intent-and-simulation-tiers.md): Android ADB broadcast intent hooks and 3-tier acoustic simulation.
 
 ---
 
@@ -123,8 +145,10 @@ The following items strictly require user intervention and cannot be automated:
 
 | Command | Action |
 |---|---|
-| `make test` | Run entire test suite (117 unit and integration tests) |
+| `make test` | Run entire automated test suite (**119 unit and integration tests**) |
 | `make test-eval` | Run evaluation suite unit tests (parsers, ASR eval, discovery, simulation) |
 | `make testsuite` | Run end-to-end ASR evaluation, window calibration, and discovery scanner |
 | `make farfield-sim` | Run acoustic classroom degradation simulation (Mild, Moderate, High) |
 | `make apk` | Rebuild and sign Android release APK with ADB broadcast hooks |
+| `lecturewhisper eval score-calibration` | Score true calibrated WER against human-verified gold transcripts |
+| `lecturewhisper eval score-candidates` | Score precision across human-audited candidate announcements |

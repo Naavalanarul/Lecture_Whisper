@@ -12,7 +12,7 @@
 </p>
 
 <p align="center">
-  <a href="server/tests"><img src="https://img.shields.io/badge/Tests-118%20Passing-10B981?style=flat-square&logo=pytest&logoColor=white" alt="Tests" /></a>
+  <a href="server/tests"><img src="https://img.shields.io/badge/Tests-119%20Passing-10B981?style=flat-square&logo=pytest&logoColor=white" alt="Tests" /></a>
   <a href="eval"><img src="https://img.shields.io/badge/Benchmark-Real%20Lectures%20%2B%20TIE-4F46E5?style=flat-square" alt="Benchmark" /></a>
   <a href="server/pyproject.toml"><img src="https://img.shields.io/badge/Python-3.12%2B-3776AB?style=flat-square&logo=python&logoColor=white" alt="Python" /></a>
   <a href="docs/architecture.md"><img src="https://img.shields.io/badge/Hardware-Apple%20Silicon%20M4-black?style=flat-square&logo=apple&logoColor=white" alt="Hardware" /></a>
@@ -181,7 +181,7 @@ lecturewhisper eval score-candidates review/candidates.csv
 # Score true calibrated WER against human-verified gold transcripts
 lecturewhisper eval score-calibration review/asr-calibration.csv
 
-# Run all 118 unit and integration tests
+# Run all 119 unit and integration tests
 make test
 ```
 
