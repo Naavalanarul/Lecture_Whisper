@@ -24,6 +24,8 @@ class TimetableSlotCreate(BaseModel):
     timetable_group_id: str = "default"
 
 
+@router.get("")
+@router.get("/")
 @router.get("/slots")
 async def list_slots(db: Session = Depends(get_db)) -> list[dict]:
     """List all timetable slots."""
