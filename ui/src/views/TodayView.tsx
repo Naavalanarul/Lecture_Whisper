@@ -67,12 +67,14 @@ export const TodayView: React.FC<TodayViewProps> = ({
 
   return (
     <div className="space-y-6">
-      {/* Header section */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 border-b border-border pb-4">
+      {/* Header section with Wispr Flow editorial serif emphasis */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-border pb-5 pt-1">
         <div>
-          <h2 className="text-xl font-semibold tracking-tight text-text">Today</h2>
-          <p className="text-sm text-muted">
-            {todayDayName}, {new Date().toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}
+          <h1 className="text-2xl sm:text-3xl font-serif font-normal tracking-tight text-text">
+            Every lecture, <span className="italic text-accent">written down.</span>
+          </h1>
+          <p className="text-xs sm:text-sm text-muted mt-1 font-sans">
+            {todayDayName}, {new Date().toLocaleDateString(undefined, { month: 'long', day: 'numeric', year: 'numeric' })}
           </p>
         </div>
         <div className="flex items-center gap-2">
