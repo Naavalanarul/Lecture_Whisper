@@ -15,8 +15,33 @@ export function formatTime(seconds: number): string {
 export function formatDate(isoString: string | null | undefined): string {
   if (!isoString) return 'Unscheduled';
   try {
-    const d = new Date(isoString);
+    const trimmed = isoString.trim();
+    const dateOnlyMatch = trimmed.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+    if (dateOnlyMatch) {
+      const year = parseInt(dateOnlyMatch[1], 10);
+      const month = parseInt(dateOnlyMatch[2], 10) - 1;
+      const day = parseInt(dateOnlyMatch[3], 10);
+      const localDate = new Date(year, month, day);
+      return localDate.toLocaleDateString('en-US', {
+        weekday: 'short',
+        month: 'short',
+        day: 'numeric',
+        year: 'numeric',
+      });
+    }
+
+    const d = new Date(trimmed);
     if (isNaN(d.getTime())) return isoString;
+
+    if (!trimmed.includes('T') && !trimmed.includes(':')) {
+      return d.toLocaleDateString('en-US', {
+        weekday: 'short',
+        month: 'short',
+        day: 'numeric',
+        year: 'numeric',
+      });
+    }
+
     return d.toLocaleDateString('en-US', {
       weekday: 'short',
       month: 'short',
@@ -33,7 +58,26 @@ export function formatDate(isoString: string | null | undefined): string {
 export function formatRelative(isoString: string | null | undefined): string {
   if (!isoString) return '';
   try {
-    const d = new Date(isoString);
+    const trimmed = isoString.trim();
+    const dateOnlyMatch = trimmed.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+    if (dateOnlyMatch) {
+      const year = parseInt(dateOnlyMatch[1], 10);
+      const month = parseInt(dateOnlyMatch[2], 10) - 1;
+      const day = parseInt(dateOnlyMatch[3], 10);
+      const targetDate = new Date(year, month, day);
+      const today = new Date();
+      const todayDate = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+      const diffMs = targetDate.getTime() - todayDate.getTime();
+      const diffDays = Math.round(diffMs / (1000 * 60 * 60 * 24));
+
+      if (diffDays === 0) return 'Today';
+      if (diffDays === 1) return 'Tomorrow';
+      if (diffDays === -1) return 'Yesterday';
+      if (diffDays > 1) return `in ${diffDays} days`;
+      return `${Math.abs(diffDays)} days ago`;
+    }
+
+    const d = new Date(trimmed);
     const now = new Date();
     const diffMs = d.getTime() - now.getTime();
     const diffDays = Math.round(diffMs / (1000 * 60 * 60 * 24));
@@ -64,14 +108,33 @@ export async function copyToClipboard(text: string): Promise<boolean> {
 }
 
 export function downloadICS(event: LectureEvent, subject = 'Academic Lecture'): void {
-  const dt = event.date_iso ? new Date(event.date_iso) : new Date(Date.now() + 86400000 * 3);
   const pad = (n: number) => n.toString().padStart(2, '0');
   const formatDateICS = (d: Date) =>
     `${d.getUTCFullYear()}${pad(d.getUTCMonth() + 1)}${pad(d.getUTCDate())}T${pad(d.getUTCHours())}${pad(d.getUTCMinutes())}00Z`;
 
-  const dtStart = formatDateICS(dt);
-  const dtEnd = formatDateICS(new Date(dt.getTime() + 3600000)); // +1 hr
   const now = formatDateICS(new Date());
+  const trimmed = (event.date_iso || '').trim();
+  const dateOnlyMatch = trimmed.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+
+  let dtStartLine = '';
+  let dtEndLine = '';
+
+  if (dateOnlyMatch) {
+    const y = dateOnlyMatch[1];
+    const m = dateOnlyMatch[2];
+    const d = dateOnlyMatch[3];
+    dtStartLine = `DTSTART;VALUE=DATE:${y}${m}${d}`;
+    // Next day for all-day event per RFC 5545
+    const nextDay = new Date(Date.UTC(parseInt(y, 10), parseInt(m, 10) - 1, parseInt(d, 10) + 1));
+    const nextY = nextDay.getUTCFullYear();
+    const nextM = pad(nextDay.getUTCMonth() + 1);
+    const nextD = pad(nextDay.getUTCDate());
+    dtEndLine = `DTEND;VALUE=DATE:${nextY}${nextM}${nextD}`;
+  } else {
+    const dt = event.date_iso ? new Date(event.date_iso) : new Date(Date.now() + 86400000 * 3);
+    dtStartLine = `DTSTART:${formatDateICS(dt)}`;
+    dtEndLine = `DTEND:${formatDateICS(new Date(dt.getTime() + 3600000))}`;
+  }
 
   const icsContent = [
     'BEGIN:VCALENDAR',
@@ -82,8 +145,8 @@ export function downloadICS(event: LectureEvent, subject = 'Academic Lecture'): 
     'BEGIN:VEVENT',
     `UID:lw-${Date.now()}@lecturewhisper.local`,
     `DTSTAMP:${now}`,
-    `DTSTART:${dtStart}`,
-    `DTEND:${dtEnd}`,
+    dtStartLine,
+    dtEndLine,
     `SUMMARY:[${subject}] ${event.title}`,
     `DESCRIPTION:${event.source_quote || 'Detected from lecture recording.'}\\n\\nType: ${event.type}`,
     'STATUS:CONFIRMED',
@@ -111,15 +174,33 @@ export function downloadAllICS(events: LectureEvent[], subject = 'Academic Deadl
   const now = formatDateICS(new Date());
 
   const vevents = events.map((ev, idx) => {
-    const dt = ev.date_iso ? new Date(ev.date_iso) : new Date(Date.now() + 86400000 * (idx + 1));
-    const dtStart = formatDateICS(dt);
-    const dtEnd = formatDateICS(new Date(dt.getTime() + 3600000));
+    const trimmed = (ev.date_iso || '').trim();
+    const dateOnlyMatch = trimmed.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+    let dtStartLine = '';
+    let dtEndLine = '';
+
+    if (dateOnlyMatch) {
+      const y = dateOnlyMatch[1];
+      const m = dateOnlyMatch[2];
+      const d = dateOnlyMatch[3];
+      dtStartLine = `DTSTART;VALUE=DATE:${y}${m}${d}`;
+      const nextDay = new Date(Date.UTC(parseInt(y, 10), parseInt(m, 10) - 1, parseInt(d, 10) + 1));
+      const nextY = nextDay.getUTCFullYear();
+      const nextM = pad(nextDay.getUTCMonth() + 1);
+      const nextD = pad(nextDay.getUTCDate());
+      dtEndLine = `DTEND;VALUE=DATE:${nextY}${nextM}${nextD}`;
+    } else {
+      const dt = ev.date_iso ? new Date(ev.date_iso) : new Date(Date.now() + 86400000 * (idx + 1));
+      dtStartLine = `DTSTART:${formatDateICS(dt)}`;
+      dtEndLine = `DTEND:${formatDateICS(new Date(dt.getTime() + 3600000))}`;
+    }
+
     return [
       'BEGIN:VEVENT',
       `UID:lw-${Date.now()}-${idx}@lecturewhisper.local`,
       `DTSTAMP:${now}`,
-      `DTSTART:${dtStart}`,
-      `DTEND:${dtEnd}`,
+      dtStartLine,
+      dtEndLine,
       `SUMMARY:${ev.title}`,
       `DESCRIPTION:${ev.source_quote || 'Academic event detected from lecture.'}\\n\\nType: ${ev.type}`,
       'STATUS:CONFIRMED',

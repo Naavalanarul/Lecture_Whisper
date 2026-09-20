@@ -175,10 +175,21 @@ def seed_demo_data(session: Session) -> UUID:
                 "speaker": "SPEAKER_01",
                 "answer_text": "Yes, provided the state space is polynomial and lookups take O(1) time.",
                 "answer_start_s": 45.5,
-                "transcript_snippet": "Does memoization always improve the asymptotic time complexity? Yes, provided the state space is polynomial",
+                "transcript_snippet": "Does memoization always improve the asymptotic time complexity? Yes, provided the state space is polynomial and lookups take O(1) time.",
                 "lecturer_self_answered": False,
                 "student_asked": True,
-            }
+            },
+            {
+                "question": "What is the primary condition for applying dynamic programming?",
+                "start_s": 14.5,
+                "end_s": 25.0,
+                "speaker": "SPEAKER_00",
+                "answer_text": "The problem must exhibit both optimal substructure and overlapping subproblems.",
+                "answer_start_s": 25.5,
+                "transcript_snippet": "Remember that dynamic programming applies when we have overlapping subproblems and optimal substructure.",
+                "lecturer_self_answered": True,
+                "student_asked": False,
+            },
         ],
         "speaker_stats": {
             "lecturer_speaker_id": "SPEAKER_00",
@@ -210,6 +221,26 @@ def seed_demo_data(session: Session) -> UUID:
                 "description": "Cache data structure indexed by subproblem parameters",
             },
         ],
+        "repeated_habits": [
+            {
+                "phrase": "you know",
+                "count": 14,
+                "first_occurrence_s": 12.0,
+                "last_occurrence_s": 3100.0,
+                "mean_inter_arrival_s": 237.5,
+                "context_snippet": "dynamic programming applies, you know, when we have overlapping subproblems and optimal substructure",
+                "description": "Conversational bridge filler used when explaining complex recurrence steps",
+            },
+            {
+                "phrase": "basically",
+                "count": 8,
+                "first_occurrence_s": 48.0,
+                "last_occurrence_s": 2850.0,
+                "mean_inter_arrival_s": 400.3,
+                "context_snippet": "it basically stores intermediate states so we don't recalculate the same branch",
+                "description": "Clarifying transition phrase used during algorithmic intuition summaries",
+            },
+        ],
     }
     session.add(
         NotesRow(
@@ -225,7 +256,7 @@ def seed_demo_data(session: Session) -> UUID:
             recording_id=DEMO_REC_UUID,
             type="deadline",
             title="Assignment 3: Dynamic Programming",
-            date_iso=due_date,
+            date_iso=f"{due_date}T23:59:00Z",
             date_text="next Friday at 11:59 PM",
             resolved=True,
             confidence=0.96,

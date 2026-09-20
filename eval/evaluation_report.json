@@ -3,8 +3,8 @@
   "event_precision": 0.7692,
   "event_recall": 0.4762,
   "event_f1": 0.5882,
-  "question_precision": 0.0,
-  "question_recall": 0.0,
+  "question_precision": 0.6,
+  "question_recall": 0.3,
   "mean_wer": 0.0,
   "note_faithfulness": 0.9,
   "lectures": [

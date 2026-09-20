@@ -194,15 +194,26 @@ def eval_cmd(ctx: click.Context, fixtures: str | None) -> None:
     from eval.run_eval import evaluate_fixtures
 
     fix_dir = Path(fixtures) if fixtures else monorepo_root / "eval" / "fixtures"
-    res = evaluate_fixtures(fix_dir)
+    res = evaluate_fixtures(fix_dir, suite=True)
 
     console.print("\n[bold]📊 Lecture Whisper Evaluation Results[/bold]\n")
-    console.print(f"Event Precision:   [bold green]{res['event_precision'] * 100:.1f}%[/bold green]")
-    console.print(f"Event Recall:      [bold green]{res['event_recall'] * 100:.1f}%[/bold green]")
-    console.print(f"Event F1 Score:    [bold]{res['event_f1'] * 100:.1f}%[/bold]")
-    console.print(f"Question Recall:   [bold green]{res['question_recall'] * 100:.1f}%[/bold green]")
-    console.print(f"Emphasis Phrases:  [bold]{res['emphasis_phrases_count']}[/bold]")
-    console.print(f"Habit Phrases:     [bold]{res['habit_phrases_count']}[/bold]\n")
+    if "benchmark_lectures_count" in res:
+        console.print(f"Benchmark Lectures: [bold]{res['benchmark_lectures_count']}[/bold]")
+        console.print(f"Event Precision:   [bold green]{res['event_precision'] * 100:.1f}%[/bold green]")
+        console.print(f"Event Recall:      [bold green]{res['event_recall'] * 100:.1f}%[/bold green]")
+        console.print(f"Event F1 Score:    [bold]{res['event_f1'] * 100:.1f}%[/bold]")
+        console.print(f"Question Recall:   [bold green]{res['question_recall'] * 100:.1f}%[/bold green]")
+        console.print(f"Mean WER:          [bold]{res.get('mean_wer', 0.0) * 100:.2f}%[/bold]")
+        console.print(f"Note Faithfulness: [bold green]{res.get('note_faithfulness', 1.0) * 100:.1f}%[/bold green]\n")
+    else:
+        console.print(f"Event Precision:   [bold green]{res['event_precision'] * 100:.1f}%[/bold green]")
+        console.print(f"Event Recall:      [bold green]{res['event_recall'] * 100:.1f}%[/bold green]")
+        console.print(f"Event F1 Score:    [bold]{res['event_f1'] * 100:.1f}%[/bold]")
+        console.print(f"Question Recall:   [bold green]{res['question_recall'] * 100:.1f}%[/bold green]")
+        if "emphasis_phrases_count" in res:
+            console.print(f"Emphasis Phrases:  [bold]{res['emphasis_phrases_count']}[/bold]")
+        if "habit_phrases_count" in res:
+            console.print(f"Habit Phrases:     [bold]{res['habit_phrases_count']}[/bold]\n")
 
 
 @eval_cmd.command("announcements")
@@ -376,7 +387,7 @@ def train(iters: int, batch_size: int) -> None:
     evaluator = AdapterEvaluator()
     baseline = evaluator.evaluate_baseline(valid_f)
     adapter_eval = evaluator.evaluate_adapter(result.adapter_path, valid_f)
-    decision = evaluator.decide_promotion(baseline, adapter_eval)
+    decision = evaluator.decide_promotion(baseline, adapter_eval, human_pair_count=len(sample_pairs))
 
     console.print("[bold]Evaluation & Promotion Decision:[/bold]")
     console.print(f"   Baseline Score: {decision.baseline_score}")

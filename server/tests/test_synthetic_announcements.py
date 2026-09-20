@@ -42,11 +42,12 @@ def test_synthetic_lecture_announcements_benchmark():
 
     assert len(events) >= 5
 
-    # Check date resolution on concrete expressions
+    # Check date resolution on concrete expressions: "next Friday" on Monday maps to next week with candidate dates
     due_events = [e for e in events if e.type == "assignment_deadline" and "Problem Set 1" in e.title]
     assert len(due_events) == 1
     assert due_events[0].resolved is True
-    assert "2026-09-25" in str(due_events[0].date_iso)
+    assert "2026-10-02" in str(due_events[0].date_iso)
+    assert any("2026-09-25" in c for c in (due_events[0].candidate_dates or []))
 
     exam_events = [e for e in events if e.type == "exam"]
     assert len(exam_events) >= 1

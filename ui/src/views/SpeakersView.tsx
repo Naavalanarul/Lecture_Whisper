@@ -106,44 +106,52 @@ export const SpeakersView: React.FC<SpeakersViewProps> = ({
 
         {/* Stacked Bar with Silence Accounting */}
         <div className="h-4 bg-bg rounded-md overflow-hidden flex border border-border">
-          {speakers.map((spk, idx) => (
-            <div
-              key={idx}
-              className={`h-full transition-all relative ${
-                spk.isLecturer ? 'bg-accent' : 'bg-accent/60'
-              }`}
-              style={{ width: `${(spk.talkTime / totalDuration) * 100}%` }}
-              title={`${spk.name}: ${spk.share.toFixed(1)}% of speech`}
-            />
-          ))}
+          {speakers.map((spk, idx) => {
+            const widthPct = totalDuration > 0 ? (spk.talkTime / totalDuration) * 100 : 0;
+            return (
+              <div
+                key={idx}
+                className={`h-full transition-all relative ${
+                  spk.isLecturer ? 'bg-accent' : 'bg-accent/60'
+                }`}
+                style={{ width: `${widthPct}%` }}
+                title={`${spk.name}: ${widthPct.toFixed(1)}% of lecture (${spk.share.toFixed(1)}% of speech)`}
+              />
+            );
+          })}
           {silenceTime > 0 && (
             <div
               className="h-full bg-border"
               style={{ width: `${(silenceTime / totalDuration) * 100}%` }}
-              title={`Silence / Pause: ${formatTime(silenceTime)}`}
+              title={`Silence / Pause: ${formatTime(silenceTime)} (${((silenceTime / totalDuration) * 100).toFixed(1)}%)`}
             />
           )}
         </div>
 
         {/* Legend */}
         <div className="flex flex-wrap items-center gap-4 pt-1 text-xs">
-          {speakers.map((spk, idx) => (
-            <div key={idx} className="flex items-center gap-1.5">
-              <span
-                className={`w-3 h-3 rounded-sm ${
-                  spk.isLecturer ? 'bg-accent' : 'bg-accent/60'
-                }`}
-              />
-              <span className="text-text font-medium">{spk.name}</span>
-              <span className="text-muted font-mono tabular-nums">({spk.share.toFixed(1)}%)</span>
-            </div>
-          ))}
+          {speakers.map((spk, idx) => {
+            const lecturePct = totalDuration > 0 ? (spk.talkTime / totalDuration) * 100 : 0;
+            return (
+              <div key={idx} className="flex items-center gap-1.5">
+                <span
+                  className={`w-3 h-3 rounded-sm ${
+                    spk.isLecturer ? 'bg-accent' : 'bg-accent/60'
+                  }`}
+                />
+                <span className="text-text font-medium">{spk.name}</span>
+                <span className="text-muted font-mono tabular-nums">
+                  {formatTime(spk.talkTime)} ({lecturePct.toFixed(1)}%)
+                </span>
+              </div>
+            );
+          })}
           {silenceTime > 0 && (
             <div className="flex items-center gap-1.5">
               <span className="w-3 h-3 rounded-sm bg-border" />
               <span className="text-muted">Silence & pauses</span>
               <span className="text-muted font-mono tabular-nums">
-                ({((silenceTime / totalDuration) * 100).toFixed(1)}%)
+                {formatTime(silenceTime)} ({((silenceTime / totalDuration) * 100).toFixed(1)}%)
               </span>
             </div>
           )}
@@ -152,7 +160,9 @@ export const SpeakersView: React.FC<SpeakersViewProps> = ({
 
       {/* Speaker Cards Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {speakers.map((spk) => (
+        {speakers.map((spk) => {
+          const lecturePct = totalDuration > 0 ? (spk.talkTime / totalDuration) * 100 : 0;
+          return (
           <div
             key={spk.id}
             className="rounded-lg border border-border bg-surface p-4 flex flex-col justify-between space-y-4 hover:border-accent/40 transition-colors"
@@ -183,21 +193,27 @@ export const SpeakersView: React.FC<SpeakersViewProps> = ({
               </div>
 
               {/* Metrics Grid */}
-              <div className="grid grid-cols-3 gap-2 p-2.5 rounded-md bg-bg border border-border text-center">
+              <div className="grid grid-cols-4 gap-2 p-2.5 rounded-md bg-bg border border-border text-center">
                 <div>
-                  <span className="text-[11px] text-muted block">Talk time</span>
+                  <span className="text-[10px] text-muted block truncate">Talk time</span>
                   <span className="text-xs font-mono font-medium text-text tabular-nums">
                     {formatTime(spk.talkTime)}
                   </span>
                 </div>
                 <div>
-                  <span className="text-[11px] text-muted block">Speech share</span>
+                  <span className="text-[10px] text-muted block truncate">Lecture %</span>
+                  <span className="text-xs font-mono font-medium text-text tabular-nums">
+                    {lecturePct.toFixed(1)}%
+                  </span>
+                </div>
+                <div>
+                  <span className="text-[10px] text-muted block truncate">Speech %</span>
                   <span className="text-xs font-mono font-medium text-text tabular-nums">
                     {spk.share.toFixed(1)}%
                   </span>
                 </div>
                 <div>
-                  <span className="text-[11px] text-muted block">Speaking pace</span>
+                  <span className="text-[10px] text-muted block truncate">Pace</span>
                   <span className="text-xs font-mono font-medium text-text tabular-nums">
                     {spk.wpm} WPM
                   </span>
@@ -234,7 +250,8 @@ export const SpeakersView: React.FC<SpeakersViewProps> = ({
               </button>
             </div>
           </div>
-        ))}
+        );
+      })}
       </div>
     </div>
   );

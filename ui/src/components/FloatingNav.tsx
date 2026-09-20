@@ -58,6 +58,7 @@ export interface FloatingNavProps {
   lectureTitle?: string;
   theme: 'light' | 'dark' | 'system';
   onToggleTheme: () => void;
+  demoMode?: boolean;
 }
 
 export const FloatingNav: React.FC<FloatingNavProps> = ({
@@ -70,6 +71,7 @@ export const FloatingNav: React.FC<FloatingNavProps> = ({
   upcomingEventsCount,
   isLectureDetail = false,
   lectureTitle,
+  demoMode = false,
 }) => {
   const [scrolled, setScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -292,6 +294,12 @@ export const FloatingNav: React.FC<FloatingNavProps> = ({
                 <span className="text-xs font-semibold text-text px-1 max-w-[140px] truncate">
                   {isLectureDetail ? lectureTitle || 'Lecture' : currentTabLabel}
                 </span>
+
+                {demoMode && (
+                  <span className="px-1.5 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/30">
+                    Demo
+                  </span>
+                )}
               </div>
 
               {/* Menu Drawer Trigger (40px) */}
@@ -310,6 +318,14 @@ export const FloatingNav: React.FC<FloatingNavProps> = ({
           {/* Exact geometry: 52px height pills, 40px interactive items */}
           {/* ========================================================= */}
           <div className="hidden md:flex items-center gap-2 pointer-events-auto">
+            {/* Prominent Demo Mode Badge when seeded data is displayed */}
+            {demoMode && (
+              <div className="nav-pill-container flex items-center gap-2 px-3.5 py-1 shadow-xs border border-amber-500/40 bg-amber-500/10 text-amber-600 dark:text-amber-400">
+                <span className="w-2 h-2 rounded-full bg-amber-500 animate-pulse" />
+                <span className="text-[11px] font-bold uppercase tracking-wider">Demo Mode (Sample Data)</span>
+              </div>
+            )}
+
             {/* 40px Circular Search Button in 52px Pill */}
             <div className="nav-pill-container flex items-center justify-center shadow-xs">
               <button

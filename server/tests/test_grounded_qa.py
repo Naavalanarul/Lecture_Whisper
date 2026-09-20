@@ -140,3 +140,46 @@ def test_ui_backend_enum_match():
     backend_reasons = set(typing.get_args(schema_field.annotation))
 
     assert ts_reasons == backend_reasons
+
+
+def test_distinct_answers_across_multiple_questions():
+    """Two different questions must NOT be assigned the exact same answer segment."""
+    transcript = Transcript(
+        asr_model="test",
+        language="en",
+        segments=[
+            # Question 1
+            TranscriptSegment(
+                start=1.0,
+                end=5.0,
+                speaker="PROFESSOR",
+                text="Pay attention to this: what is optimal substructure?",
+                words=[],
+            ),
+            # Question 2 right after
+            TranscriptSegment(
+                start=6.0,
+                end=10.0,
+                speaker="PROFESSOR",
+                text="And another question: who can tell me about overlapping subproblems?",
+                words=[],
+            ),
+            # Only ONE answer segment follows
+            TranscriptSegment(
+                start=11.0,
+                end=18.0,
+                speaker="PROFESSOR",
+                text="An optimal solution contains optimal solutions to subproblems.",
+                words=[],
+            ),
+        ],
+    )
+
+    questions = QuestionExtractor.find_questions(transcript)
+    assert len(questions) == 2
+    # Question 1 claims the answer segment
+    assert "optimal solution contains" in (questions[0].answer_text or "")
+    # Question 2 must NOT duplicate Question 1's answer; it must report no answer given
+    assert questions[1].answer_text == "No answer given in this lecture"
+    assert questions[0].answer_text != questions[1].answer_text
+

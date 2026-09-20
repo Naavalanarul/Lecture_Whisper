@@ -42,6 +42,7 @@ import {
   getAudioStreamUrl,
   addCorrection,
   uploadTimetableImage,
+  fetchSystemMode,
 } from './api';
 
 export default function App() {
@@ -57,6 +58,7 @@ export default function App() {
   const [pairedDevices, setPairedDevices] = useState<any[]>([]);
   const [showPairModal, setShowPairModal] = useState<boolean>(false);
   const [showShortcutsModal, setShowShortcutsModal] = useState<boolean>(false);
+  const [demoMode, setDemoMode] = useState<boolean>(false);
   const [toasts, setToasts] = useState<ToastMessage[]>([]);
 
   // Theme Management (System, Light, Dark)
@@ -178,12 +180,15 @@ export default function App() {
   useEffect(() => {
     const loadInitialData = async () => {
       try {
-        const [recs, slots, pairInfo, devices] = await Promise.all([
+        const [recs, slots, pairInfo, devices, sysMode] = await Promise.all([
           fetchRecordings().catch(() => []),
           fetchTimetableSlots().catch(() => []),
           fetchPairingInfo().catch(() => null),
           fetchPairedDevices().catch(() => []),
+          fetchSystemMode().catch(() => ({ demo_mode: false, version: '1.0.0' })),
         ]);
+
+        if (sysMode?.demo_mode) setDemoMode(true);
 
         if (recs && recs.length > 0) {
           setRecordings(recs);
@@ -421,6 +426,7 @@ export default function App() {
         lectureTitle={lectureTitle}
         theme={theme}
         onToggleTheme={handleToggleTheme}
+        demoMode={demoMode}
       />
 
       {/* Main Content Area */}
@@ -510,14 +516,26 @@ export default function App() {
 
               {activeTab === 'phrases' && (
                 <PhrasesView
-                  phrases={notes?.repeated_phrases ? {
-                    emphasis: notes.repeated_phrases.map((p: any) => ({
+                  phrases={notes ? {
+                    emphasis: (notes.repeated_phrases || []).map((p: any) => ({
                       phrase: p.phrase,
                       count: p.count,
-                      spans: [[p.first_occurrence_s || 0, (p.first_occurrence_s || 0) + 5]],
+                      spans: p.spans || [[p.first_occurrence_s || 0, (p.first_occurrence_s || 0) + 5]],
                       context_snippet: p.context_snippet,
+                      first_occurrence_s: p.first_occurrence_s,
+                      last_occurrence_s: p.last_occurrence_s,
+                      mean_inter_arrival_s: p.mean_inter_arrival_s,
+                      description: p.description,
                     })),
-                    habits: [],
+                    habits: ((notes as any).repeated_habits || (notes as any).habits || []).map((h: any) => ({
+                      phrase: h.phrase,
+                      count: h.count,
+                      context_snippet: h.context_snippet,
+                      first_occurrence_s: h.first_occurrence_s,
+                      last_occurrence_s: h.last_occurrence_s,
+                      mean_inter_arrival_s: h.mean_inter_arrival_s,
+                      description: h.description,
+                    })),
                   } : undefined}
                   onSeekAudio={(t) => {
                     setCurrentTime(t);

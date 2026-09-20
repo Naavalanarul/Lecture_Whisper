@@ -9,6 +9,16 @@ export async function fetchHealth(): Promise<{ status: string; service: string }
   return res.json();
 }
 
+export async function fetchSystemMode(): Promise<{ demo_mode: boolean; version: string }> {
+  try {
+    const res = await fetch(`${BASE_URL}/system/mode`);
+    if (!res.ok) return { demo_mode: false, version: '1.0.0' };
+    return res.json();
+  } catch {
+    return { demo_mode: false, version: '1.0.0' };
+  }
+}
+
 export async function fetchRecordings(): Promise<Recording[]> {
   const res = await fetch(`${BASE_URL}/recordings/`);
   return res.json();

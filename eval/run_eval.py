@@ -14,6 +14,7 @@ import json
 import sys
 from datetime import UTC, datetime
 from pathlib import Path
+from typing import Any
 
 # Add server source and project root to sys.path
 sys.path.insert(0, str(Path(__file__).parent.parent))
@@ -25,7 +26,7 @@ from lecturewhisper.pipeline.phrases import PhraseAnalyzer
 from eval.wer import compute_wer
 
 
-def evaluate_fixtures(fixtures_dir: Path | None = None, suite: bool = False) -> dict[str, float]:
+def evaluate_fixtures(fixtures_dir: Path | None = None, suite: bool = True) -> dict[str, Any]:
     """Run evaluation suite across all benchmark lectures in fixtures/ (or single fixture if suite=False)."""
     if fixtures_dir is None:
         fixtures_dir = Path(__file__).parent / "fixtures"

@@ -23,9 +23,10 @@ EVENT_PATTERNS = [
 ]
 
 QUESTION_CUE_PATTERNS = [
-    (r"\b(this will come in the exam|remember this for the exam|very important question|pay attention to this)\b", "teacher_flagged"),
-    (r"\b(who can tell me|does anyone know|what do you think|can someone explain)\b", "posed_to_class"),
+    (r"\b(this will come in the exam|remember this for the exam|very important question|vital question|pay (?:close )?attention to this|critical question)\b", "teacher_flagged"),
+    (r"\b(who can tell me|does anyone know|what do you think|can someone explain|can anyone explain|who knows)\b", "posed_to_class"),
     (r"\b(let me repeat the question|again the question is|as i asked before)\b", "repeated"),
+    (r"\b(why does|how does|what happens when|what happens if|why do we|how do we)\b.*?\?", "teacher_flagged"),
 ]
 
 
@@ -191,10 +192,12 @@ class EventExtractor:
             "monday": 0, "tuesday": 1, "wednesday": 2,
             "thursday": 3, "friday": 4, "saturday": 5, "sunday": 6,
         }
-        weekday_pattern = r"\b(?:(next)\s+)?(monday|tuesday|wednesday|thursday|friday|saturday|sunday)\b"
+        weekday_pattern = r"\b(?:(this|next)\s+)?(monday|tuesday|wednesday|thursday|friday|saturday|sunday)\b"
         wd_match = re.search(weekday_pattern, lower_text)
         if wd_match:
-            is_next = bool(wd_match.group(1))
+            modifier = wd_match.group(1) or ""
+            is_next = modifier == "next"
+            is_this = modifier == "this"
             target_wd = weekday_map[wd_match.group(2)]
             base_wd = base_date.weekday()
 
@@ -207,7 +210,7 @@ class EventExtractor:
                 return {
                     "date_iso": cand2 if is_next else cand1,
                     "date_text": wd_match.group(0),
-                    "resolved": False,
+                    "resolved": True if is_next else False,
                     "needs_review": True,
                     "candidate_dates": [cand1, cand2],
                 }
@@ -215,13 +218,27 @@ class EventExtractor:
                 days_ahead = (target_wd - base_wd) % 7
                 if days_ahead == 0:
                     days_ahead = 7
-                target_date = base_date + timedelta(days=days_ahead)
-                return {
-                    "date_iso": format_iso(target_date),
-                    "date_text": wd_match.group(0),
-                    "resolved": True,
-                    "needs_review": False,
-                }
+
+                if is_next and target_wd > base_wd:
+                    # e.g. Monday speaking about "next Friday":
+                    # Standard meaning is Friday of next week (+11 days), but colloquial usage may mean this Friday (+4 days).
+                    cand_this_week = format_iso(base_date + timedelta(days=days_ahead))
+                    cand_next_week = format_iso(base_date + timedelta(days=days_ahead + 7))
+                    return {
+                        "date_iso": cand_next_week,
+                        "date_text": wd_match.group(0),
+                        "resolved": True,
+                        "needs_review": True,
+                        "candidate_dates": [cand_this_week, cand_next_week],
+                    }
+                else:
+                    target_date = base_date + timedelta(days=days_ahead)
+                    return {
+                        "date_iso": format_iso(target_date),
+                        "date_text": wd_match.group(0),
+                        "resolved": True,
+                        "needs_review": False,
+                    }
 
         # Fallback date text search
         fallback_match = re.search(
@@ -251,6 +268,7 @@ class QuestionExtractor:
         """
         questions: list[ImportantQuestion] = []
         seen_texts: set[str] = set()
+        claimed_answer_indices: set[int] = set()
 
         segments = transcript.segments
         n_segs = len(segments)
@@ -268,6 +286,15 @@ class QuestionExtractor:
             if not matched_reason:
                 continue
 
+            # If segment is a question preamble (e.g. "Pay close attention to this vital question:"),
+            # merge with immediate question body in next segment
+            start_offset = 1
+            if (text.endswith(":") or len(text.split()) <= 10) and i + 1 < n_segs:
+                next_seg = segments[i + 1]
+                if next_seg.start - seg.end < 5.0 and ("?" in next_seg.text or any(next_seg.text.lower().startswith(q) for q in ("why", "how", "what", "can", "does", "is"))):
+                    text = f"{text} {next_seg.text.strip()}"
+                    start_offset = 2
+
             if text in seen_texts:
                 continue
             seen_texts.add(text)
@@ -282,7 +309,10 @@ class QuestionExtractor:
             lecturer_self_answered = False
             student_asked = is_student
 
-            for j in range(i + 1, n_segs):
+            for j in range(i + start_offset, n_segs):
+                if j in claimed_answer_indices:
+                    continue
+
                 ans_seg = segments[j]
                 time_diff = ans_seg.start - seg.end
                 if time_diff > 60.0:
@@ -296,7 +326,8 @@ class QuestionExtractor:
                 if "see you all" in ans_lower or "pack up our bags" in ans_lower:
                     continue
 
-                # Found answering segment
+                # Found distinct answering segment
+                claimed_answer_indices.add(j)
                 answer_text = ans_text
                 answer_start_s = ans_seg.start
                 answer_end_s = ans_seg.end

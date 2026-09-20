@@ -100,8 +100,18 @@ def test_notes_generator(sample_transcript: Transcript, monkeypatch: pytest.Monk
 
 
 def test_eval_fixtures_runner() -> None:
-    """Eval runner should compute and report metrics."""
+    """Eval runner should compute and report metrics across benchmark suite."""
     metrics = evaluate_fixtures()
+    assert metrics["benchmark_lectures_count"] == 10
+    assert metrics["event_precision"] >= 0.6
+    assert metrics["event_recall"] >= 0.4
+    assert metrics["note_faithfulness"] >= 0.8
+
+
+def test_eval_legacy_single_fixture() -> None:
+    """Legacy single fixture still passes high recall sanity check."""
+    metrics = evaluate_fixtures(suite=False)
     assert metrics["event_precision"] >= 0.6
     assert metrics["event_recall"] >= 0.6
     assert metrics["question_recall"] >= 0.6
+
