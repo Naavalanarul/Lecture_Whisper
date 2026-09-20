@@ -24,6 +24,14 @@ storage/
 *.db-journal
 *.db-wal
 
+# Testsuite Data & Raw Media (NEVER commit - lives only in data/)
+data/
+review/
+*.mp4
+*.mov
+*.mkv
+*.webm
+
 # Audio files — NEVER commit real audio
 samples/*.m4a
 samples/*.mp3
@@ -37,7 +45,11 @@ samples/*.flac
 *.ogg
 *.aac
 *.flac
-# Allow tiny synthetic fixtures
+*.srt
+*.vtt
+# Allow tiny synthetic fixtures in tests
+!server/tests/fixtures/**
+!tests/fixtures/**
 !samples/synthetic_*.wav
 *.norm.wav
 
