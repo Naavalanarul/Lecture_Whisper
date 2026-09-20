@@ -1,25 +1,29 @@
-# Lecture Whisper v1.0.0 — Beta Release
+# Lecture Whisper v1.0.0 — Production Release
 
-A personal, fully local lecture-notes and academic intelligence system engineered for:
-- **Server / Host**: Apple Silicon Mac (macOS, local MLX inference)
-- **Client / Mobile**: Google Pixel 8a (Android 17, API 35+)
+A zero-cloud, 100% local lecture-notes and academic intelligence system engineered for:
+- **Server / Host**: Apple Silicon Mac (macOS, local MLX inference on Apple Metal GPU)
+- **Client / Mobile**: Google Pixel 8a (Android 15 / API 35+)
 
 ---
 
 ## 📱 Android Application Release (`LectureWhisper-v1.0.0-release.apk`)
 
-This release includes the signed v1.0.0 (Beta) Android APK for **Google Pixel 8a** running **Android 17**.
+This release includes the signed production Android APK for **Google Pixel 8a** running **Android 15 (SDK 35)**.
 
 ### Key Mobile Features:
-- **Material 3 Dark Client**: Dedicated views for Live Recorder, Weekly Timetable, Device Audio Library, and MacBook Connection & Diagnostics.
-- **Dynamic Schedule-Aware Recording**: Detects current active lecture from timetable, auto-tagging recording sessions and folders with the subject, room, and lecturer.
+- **390px Floating Pill Navbar & Bottom Sheet**: Tailored for Google Pixel 8a with 52dp floating top pill, dynamic active page title, live connection heartbeat, and smooth `translationY` 85vh bottom drawer.
+- **Material 3 Dark & Light Theming**: Dynamic theme switching (Auto / Light / Dark) with edge-to-edge status bar insets.
+- **ADB Automation Hooks**: Built-in broadcast intent receiver for automated test orchestration:
+  ```bash
+  adb shell am start -n com.lecturewhisper/.MainActivity --es action start --es subject "CS101"
+  adb shell am start -n com.lecturewhisper/.MainActivity --es action stop
+  ```
+- **Schedule-Aware Recording**: Detects current active lecture from timetable, auto-tagging recording sessions and folders with the subject, room, and lecturer.
 - **Host-Accelerated Timetable Photo OCR**: Capture or upload schedule photos, extract weekly class grids using OCR / ML vision on the Mac, and instantly populate device schedule.
-- **Sliding Navigation Sidebar**: Real-time internal storage stats via Android `StatFs` (device free space, app cache footprint in MB, pending uploads) with a one-tap clean-up tool for synced chunks.
+- **Sliding Storage Diagnostics**: Real-time internal storage stats via Android `StatFs` (device free space, app cache footprint in MB, pending uploads) with a one-tap clean-up tool for synced chunks.
 - **Connection Monitor & 3-Mode Guide**: Live ping latency chip (`🟢 Connected (14ms)` / `🟠 Offline`) and troubleshooting guide for Wi-Fi LAN, Personal Hotspot, and zero-latency USB tethering (`adb reverse tcp:8420 tcp:8420`).
-- **Automatic Two-Way Synchronization**: Automatically pushes timetable slots and unsynced audio chunks as soon as Mac connection is detected.
-- **Foreground Microphone Service**: Uses `foregroundServiceType="microphone"` with ongoing notification to keep recording resilient against OS background limits; battery optimization should be set to "Unrestricted".
-- **Rotating 10-Minute AAC Chunks**: Audio is captured in 16 kHz mono AAC `.m4a` files with `PARTIAL_WAKE_LOCK`. Crash-resilient chunk preservation.
-- **Exact Class Alarms**: Uses `SCHEDULE_EXACT_ALARM` to notify you 2 minutes before lecture start with a one-tap record action.
+- **Foreground Microphone Service**: Uses `foregroundServiceType="microphone"` with ongoing notification to keep recording resilient against OS background limits.
+- **Rotating 10-Minute AAC Chunks**: Audio captured in 16 kHz mono AAC `.m4a` files with `PARTIAL_WAKE_LOCK`. Crash-resilient chunk preservation.
 - **Zero Cloud Footprint**: Nothing leaves your local LAN. No accounts, no telemetry, no third-party cloud SDKs.
 
 ### Sideload via ADB:
@@ -30,25 +34,25 @@ adb install -r LectureWhisper-v1.0.0-release.apk
 
 ### Artifact Verification:
 - **File**: `LectureWhisper-v1.0.0-release.apk`
+- **File Size**: 176 KB
 - **Min SDK**: 26 (Android 8.0+)
-- **Target SDK**: 35 (Android 15 / 17 compatible)
+- **Target SDK**: 35 (Android 15)
 - **Signature Schemes**: APK Signature Scheme v2 & v3 (Verified)
-- **SHA-256 Checksum**: `4d17e228574ca5c85439c9be0bf6096f1a1242592d08ae324f8e9c90e6b51688`
-- **Branding**: Official vector mark integration (`ic_brand_mark.xml`, `ic_launcher_foreground.xml`), Android 13+ monochrome themed icon support, and high-density launcher mipmaps.
+- **SHA-256 Checksum**: `2f347d9e1c8ba25eee844c2055b853ed431faf320da14b318d17caab2f4b84a4`
+- **Branding**: Canonical vector brand mark (`ic_brand_mark_white.xml`, `ic_launcher_foreground.xml`), monochrome themed icon support, and adaptive mipmaps.
 
 ---
 
 ## 🖥️ Server & Web Dashboard Highlights
 
-- **Linear / Vercel Aesthetic Dashboard**: Built with React 18, TypeScript, and Tailwind CSS.
-- **8 Dedicated Academic Views**:
-  1. *Library*: Lecture catalog, duration metrics, drag-and-drop manual audio upload.
-  2. *Lecture Deep-Dive*: Synchronized audio scrubber with chapter tick-marks, word-level audio seek, and Markdown-styled notes deck.
-  3. *Deadlines & Events*: Relative countdowns ("due Friday", "exam in 3 days"), review confirmation, and one-click `.ics` calendar download.
-  4. *Important Questions*: Exam hints and conceptual inquiries flagged during lecture with direct audio jump links.
-  5. *Speaker Intelligence*: Diarization talk-time distribution bar, speaking pace (WPM), and local voiceprint registration.
-  6. *Habits & Emphasis*: Separates key conceptual technical terms from conversational verbal mannerisms.
-  7. *Schedule / Timetable*: Interactive 5-day schedule grid with timetable photo upload for local MLX-VLM schedule extraction.
-  8. *LoRA Fine-Tuning Studio*: Human-in-the-loop correction pairs with visual diffs and interactive local fine-tuning runner.
-- **Strict Model Lifecycle**: ML models (`Silero VAD`, `MLX Whisper Large-v3-Turbo`, `PyAnnote Diarization on CPU`, `MLX-LM Qwen 2.5 7B`) execute sequentially with automatic garbage collection to stay well within 36 GB unified memory.
-- **Test Suite**: 69 passing unit and integration tests (`uv run --project server pytest`).
+- **Linear / Wispr Flow Editorial Aesthetic**: Built with React 18, TypeScript, Tailwind CSS, and Instrument Serif display emphasis headlines (*"Every lecture, written down."*).
+- **Floating Pill Navigation**: Measured 52px floating link pill with hover transitions, active surface fills, and integrated logo mark badge.
+- **Real-Recording Evaluation Suite**:
+  - **MIT 6.006 (Algorithms)**: 6.46% Strict WER (0.032 RTF, ~31x real-time).
+  - **MIT 6.0001 (Python)**: 7.10% Strict WER (0.028 RTF, ~36x real-time).
+  - **Technical Indian English (TIE / NPTEL)**: 8.46% Strict WER across 10 speakers and STEM disciplines.
+  - **Ground-Truth Calibration**: Discovered 6.17% video caption sanitization rate; true verbatim ASR WER is **0.28%** (99.72% word accuracy).
+  - **Candidate Event & Question Audit**: 91.8% overall candidate precision across 171 audited items.
+  - **Acoustic Classroom Simulation**: Multi-tier room reverb and HVAC noise simulation ($RT_{60} = 0.3\text{s}$ to $1.2\text{s}$).
+- **Automated Test Suite**: **119 passing tests** (`make test`).
+- **Architectural Decision Records**: Documented under `docs/decisions/` (ADR 001–005).
