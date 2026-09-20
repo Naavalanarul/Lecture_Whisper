@@ -20,12 +20,12 @@ logger = logging.getLogger(__name__)
 def get_static_dir() -> Path | None:
     """Find the static UI directory across package, repo, and user data locations."""
     candidates = [
-        # 1. Package directory (when installed as a package/wheel)
-        Path(__file__).parent.parent / "static",
-        # 2. Local development checkout: server/static
+        # 1. Local development checkout: server/static
         Path(__file__).parent.parent.parent.parent / "static",
-        # 3. User data directory: ~/.lecturewhisper/static
+        # 2. User data directory: ~/.lecturewhisper/static
         Path.home() / ".lecturewhisper" / "static",
+        # 3. Package directory (when installed as a package/wheel)
+        Path(__file__).parent.parent / "static",
     ]
     for c in candidates:
         if c.exists() and (c / "index.html").exists():
@@ -90,6 +90,7 @@ def create_app() -> FastAPI:
     from lecturewhisper.api.routes.upload import router as upload_router
 
     app.include_router(health_router, prefix="/api")
+    app.include_router(health_router)
     app.include_router(recordings_router, prefix="/api")
     app.include_router(jobs_router, prefix="/api")
     app.include_router(timetable_router, prefix="/api")

@@ -37,6 +37,7 @@ class CreateRecordingRequest(BaseModel):
     chunk_count: int
 
 
+@router.get("")
 @router.get("/")
 async def list_recordings(db: Session = Depends(get_db)) -> list[dict]:
     """List all recordings in the database."""

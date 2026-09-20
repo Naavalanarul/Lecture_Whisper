@@ -14,6 +14,7 @@ from lecturewhisper.api.jobs import job_queue
 router = APIRouter(prefix="/jobs", tags=["jobs"])
 
 
+@router.get("")
 @router.get("/")
 async def list_jobs() -> list[dict]:
     """List all jobs."""
