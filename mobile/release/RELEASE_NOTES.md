@@ -51,5 +51,5 @@ adb install -r mobile/release/LectureWhisper-v1.0.0-release.apk
   - **Ground-Truth Calibration**: Discovered 6.17% video caption sanitization rate; true verbatim ASR WER is **0.28%** (99.72% word accuracy).
   - **Candidate Event & Question Audit**: 91.8% overall candidate precision across 171 audited items.
   - **Acoustic Classroom Simulation**: Multi-tier room reverb and HVAC noise simulation ($RT_{60} = 0.3\text{s}$ to $1.2\text{s}$).
-- **Automated Test Suite**: **119 passing tests** (`make test`).
+- **Automated Test Suite**: **125 passing tests** (`uv run --project server pytest`).
 - **Architectural Decision Records**: Documented under `docs/decisions/` (ADR 001–005).
