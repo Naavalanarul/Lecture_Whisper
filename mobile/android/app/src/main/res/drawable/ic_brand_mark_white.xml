@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="48dp"
+    android:height="48dp"
+    android:viewportWidth="512"
+    android:viewportHeight="512">
+
+    <!-- Document Outer Frame with Fold Cutout -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:fillType="evenOdd"
+        android:pathData="M 155,77.5 L 305,77.5 A 14,14 0 0 1 315,83.5 L 388.5,157 A 14,14 0 0 1 394.5,167 L 394.5,396 A 38,38 0 0 1 356.5,434 L 155,434 A 38,38 0 0 1 117,396 L 117,115.5 A 38,38 0 0 1 155,77.5 Z M 159,102 L 283,102 A 9,9 0 0 1 292,111 L 292,151 A 30.5,30.5 0 0 0 322.5,181.5 L 360.5,181.5 A 9,9 0 0 1 369.5,190.5 L 369.5,392.5 A 17,17 0 0 1 352.5,409.5 L 159,409.5 A 17,17 0 0 1 142,392.5 L 142,119 A 17,17 0 0 1 159,102 Z M 314.5,116 L 356,157.5 L 356,158.5 L 323.5,158.5 A 9,9 0 0 1 314.5,149.5 Z" />
+
+    <!-- Waveform (Audio Pulse) -->
+    <path
+        android:fillColor="#00000000"
+        android:strokeColor="#FFFFFF"
+        android:strokeWidth="16.5"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round"
+        android:pathData="M 179,234.5 L 196.5,234.5 L 212.2,257 L 232.3,193.5 L 255.8,275.5 L 278.7,206.5 L 298.2,257 L 313.5,234.5 L 333,234.5" />
+
+    <!-- Document Line 1 -->
+    <path
+        android:fillColor="#00000000"
+        android:strokeColor="#FFFFFF"
+        android:strokeWidth="16.5"
+        android:strokeLineCap="round"
+        android:pathData="M 179,307.75 L 333,307.75" />
+
+    <!-- Document Line 2 -->
+    <path
+        android:fillColor="#00000000"
+        android:strokeColor="#FFFFFF"
+        android:strokeWidth="16.5"
+        android:strokeLineCap="round"
+        android:pathData="M 179,339.25 L 333,339.25" />
+
+    <!-- Document Line 3 (Short) -->
+    <path
+        android:fillColor="#00000000"
+        android:strokeColor="#FFFFFF"
+        android:strokeWidth="16.5"
+        android:strokeLineCap="round"
+        android:pathData="M 179,371.25 L 280.25,371.25" />
+</vector>

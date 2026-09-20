@@ -33,7 +33,8 @@ adb install -r LectureWhisper-v1.0.0-release.apk
 - **Min SDK**: 26 (Android 8.0+)
 - **Target SDK**: 35 (Android 15 / 17 compatible)
 - **Signature Schemes**: APK Signature Scheme v2 & v3 (Verified)
-- **SHA-256 Checksum**: `e3b7c794a1b3201cf352ebf61355d292ac724543ef861311586c58727a28d090`
+- **SHA-256 Checksum**: `4d17e228574ca5c85439c9be0bf6096f1a1242592d08ae324f8e9c90e6b51688`
+- **Branding**: Official vector mark integration (`ic_brand_mark.xml`, `ic_launcher_foreground.xml`), Android 13+ monochrome themed icon support, and high-density launcher mipmaps.
 
 ---
 
