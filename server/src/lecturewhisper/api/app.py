@@ -95,6 +95,7 @@ def create_app() -> FastAPI:
     app.include_router(jobs_router, prefix="/api")
     app.include_router(timetable_router, prefix="/api")
     app.include_router(pairing_router, prefix="/api")
+    app.include_router(pairing_router)
     app.include_router(upload_router, prefix="/api")
 
     # Serve built UI if available

@@ -37,6 +37,16 @@ public class RecorderService extends Service {
     // 10-minute chunk rotation
     public static final long CHUNK_DURATION_MS = 10 * 60 * 1000L;
 
+    public interface AmplitudeListener {
+        void onAmplitude(int amplitude);
+    }
+    public static AmplitudeListener amplitudeListener = null;
+    public static RecorderService activeInstance = null;
+
+    public static boolean isServiceRecording() {
+        return activeInstance != null && activeInstance.isRecording;
+    }
+
     private PowerManager.WakeLock wakeLock;
     private MediaRecorder mediaRecorder;
     private boolean isRecording = false;
@@ -52,6 +62,21 @@ public class RecorderService extends Service {
             if (isRecording) {
                 rotateChunk();
                 handler.postDelayed(this, CHUNK_DURATION_MS);
+            }
+        }
+    };
+
+    private final Runnable amplitudePollRunnable = new Runnable() {
+        @Override
+        public void run() {
+            if (isRecording && mediaRecorder != null) {
+                try {
+                    int amp = mediaRecorder.getMaxAmplitude();
+                    if (amplitudeListener != null) {
+                        amplitudeListener.onAmplitude(amp);
+                    }
+                } catch (Exception ignored) {}
+                handler.postDelayed(this, 100);
             }
         }
     };
@@ -98,15 +123,19 @@ public class RecorderService extends Service {
         sessionId = UUID.randomUUID().toString();
         chunkIndex = 0;
         isRecording = true;
+        activeInstance = this;
 
         startMediaRecorder();
         handler.postDelayed(chunkRotationRunnable, CHUNK_DURATION_MS);
+        handler.post(amplitudePollRunnable);
     }
 
     private void stopForegroundRecording() {
         if (!isRecording) return;
         isRecording = false;
+        activeInstance = null;
         handler.removeCallbacks(chunkRotationRunnable);
+        handler.removeCallbacks(amplitudePollRunnable);
 
         stopMediaRecorder();
 

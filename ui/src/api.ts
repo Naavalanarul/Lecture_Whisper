@@ -63,13 +63,27 @@ export async function deleteTimetableSlot(id: string): Promise<{ status: string 
   return res.json();
 }
 
-export async function fetchPairingInfo(): Promise<{ host: string; port: number; token: string; server_id: string }> {
+export async function fetchPairingInfo(): Promise<{
+  host: string;
+  port: number;
+  token: string;
+  code_6digit?: string;
+  server_id: string;
+  cert_fingerprint?: string;
+  pairing_uri?: string;
+  expires_in?: number;
+}> {
   const res = await fetch(`${BASE_URL}/pairing/info`);
   return res.json();
 }
 
 export async function fetchPairedDevices(): Promise<any[]> {
   const res = await fetch(`${BASE_URL}/pairing/devices`);
+  return res.json();
+}
+
+export async function unpairDevice(deviceId: string): Promise<{ status: string }> {
+  const res = await fetch(`${BASE_URL}/pairing/devices/${deviceId}`, { method: 'DELETE' });
   return res.json();
 }
 

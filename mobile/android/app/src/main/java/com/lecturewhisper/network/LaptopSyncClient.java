@@ -179,6 +179,72 @@ public class LaptopSyncClient {
         return responseCode == 200;
     }
 
+    public static class PairResult {
+        public final boolean ok;
+        public final String deviceToken;
+        public final String macName;
+        public final String serverId;
+        public final List<String> candidates;
+        public final String error;
+
+        public PairResult(boolean ok, String deviceToken, String macName, String serverId, List<String> candidates, String error) {
+            this.ok = ok;
+            this.deviceToken = deviceToken;
+            this.macName = macName;
+            this.serverId = serverId;
+            this.candidates = candidates;
+            this.error = error;
+        }
+    }
+
+    public static PairResult completePairing(String host, int port, String token, String deviceId, String deviceName) {
+        HttpURLConnection conn = null;
+        try {
+            URL url = new URL("http://" + host + ":" + port + "/api/v1/pair/complete");
+            conn = (HttpURLConnection) url.openConnection();
+            conn.setConnectTimeout(5000);
+            conn.setReadTimeout(5000);
+            conn.setRequestMethod("POST");
+            conn.setRequestProperty("Content-Type", "application/json");
+            conn.setRequestProperty("Accept", "application/json");
+            conn.setDoOutput(true);
+
+            JSONObject body = new JSONObject();
+            body.put("token", token);
+            body.put("device_id", deviceId);
+            body.put("device_name", deviceName != null ? deviceName : "Pixel 8a");
+
+            try (OutputStream os = conn.getOutputStream()) {
+                os.write(body.toString().getBytes(StandardCharsets.UTF_8));
+                os.flush();
+            }
+
+            int code = conn.getResponseCode();
+            if (code == 200) {
+                String res = readStream(conn.getInputStream());
+                JSONObject json = new JSONObject(res);
+                String devTok = json.getString("device_token");
+                String mac = json.optString("mac_name", "MacBook Pro");
+                String sid = json.optString("server_id", "MacBook");
+                List<String> cands = new ArrayList<>();
+                JSONArray arr = json.optJSONArray("address_candidates");
+                if (arr != null) {
+                    for (int i = 0; i < arr.length(); i++) {
+                        cands.add(arr.getString(i));
+                    }
+                }
+                return new PairResult(true, devTok, mac, sid, cands, null);
+            } else {
+                String err = readStream(conn.getErrorStream());
+                return new PairResult(false, null, null, null, null, "Pairing error (" + code + "): " + err);
+            }
+        } catch (Exception e) {
+            return new PairResult(false, null, null, null, null, e.getMessage());
+        } finally {
+            if (conn != null) conn.disconnect();
+        }
+    }
+
     private static void writeFormField(DataOutputStream dos, String boundary, String name, String value) throws Exception {
         String lineEnd = "\r\n";
         String twoHyphens = "--";

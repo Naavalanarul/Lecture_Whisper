@@ -80,10 +80,9 @@ def serve(host: str | None, port: int | None, no_browser: bool, demo: bool = Fal
 
 
 def _advertise_bonjour(host: str, port: int) -> None:
-    """Try to advertise via mDNS/Bonjour."""
+    """Try to advertise via mDNS/Bonjour with server_id in TXT records."""
     try:
         import socket
-
         from zeroconf import ServiceInfo, Zeroconf
 
         hostname = socket.gethostname()
@@ -94,42 +93,52 @@ def _advertise_bonjour(host: str, port: int) -> None:
             f"LectureWhisper ({hostname})._lecturewhisper._tcp.local.",
             addresses=[socket.inet_aton(local_ip)],
             port=port,
-            properties={"version": "0.1.0"},
+            properties={
+                "server_id": hostname,
+                "name": hostname,
+                "version": "1.0.0",
+                "port": str(port),
+            },
         )
         zc = Zeroconf()
         zc.register_service(info)
-        console.print(f"   [green]Bonjour:[/green] advertising _lecturewhisper._tcp")
+        console.print(f"   [green]Bonjour:[/green] advertising _lecturewhisper._tcp (server_id: {hostname})")
     except Exception as e:
         console.print(f"   [yellow]Bonjour:[/yellow] not available ({e})")
 
 
 def _show_pairing_qr(host: str, port: int) -> None:
-    """Show a pairing QR code in the terminal."""
+    """Show a pairing QR code and 6-digit fallback in the terminal."""
     try:
-        import json
+        import sys
         import socket
-        from uuid import uuid4
-
         import qrcode  # type: ignore[import-untyped]
+        from lecturewhisper.api.routes.pairing import get_or_create_one_time_token
+        from lecturewhisper.security.tls import (
+            get_address_candidates,
+            get_cert_fingerprint_base64url,
+        )
 
+        candidates = get_address_candidates()
+        token, code_6digit, exp_unix = get_or_create_one_time_token()
+        fp = get_cert_fingerprint_base64url()
         hostname = socket.gethostname()
-        local_ip = socket.gethostbyname(hostname)
+        ips_joined = ",".join(candidates)
 
-        pairing_data = json.dumps({
-            "host": local_ip,
-            "port": port,
-            "token": str(uuid4()),
-            "server_id": hostname,
-        })
+        pairing_url = (
+            f"lecturewhisper://pair?v=1&sid={hostname}&n={hostname}&h={ips_joined}"
+            f"&p={port}&fp={fp}&t={token}&exp={exp_unix}"
+        )
 
         qr = qrcode.QRCode(box_size=1, border=1)
-        qr.add_data(pairing_data)
+        qr.add_data(pairing_url)
         qr.make(fit=True)
 
-        console.print("\n   [bold]Scan to pair:[/bold]")
-        # Print QR to terminal
+        console.print("\n   [bold]📱 Lecture Whisper — Pair Your Pixel 8a[/bold]")
+        console.print(f"   [dim]Scan with in-app camera or Pixel Camera • Valid for 2 minutes[/dim]\n")
         qr.print_ascii(out=sys.stdout)
-        console.print()
+        console.print(f"\n   [bold cyan]6-Digit Fallback Code:[/bold cyan] [bold white]{code_6digit}[/bold white]")
+        console.print(f"   [dim]Target Host: {candidates[0]}:{port} (Server: {hostname})[/dim]\n")
     except Exception as e:
         console.print(f"   [yellow]QR:[/yellow] could not generate ({e})")
 

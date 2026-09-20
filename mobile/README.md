@@ -24,37 +24,37 @@ adb install -r mobile/release/LectureWhisper-v1.0.0-release.apk
 
 ---
 
-## 📱 Android Client — Beta (Material 3 Dark)
+## 📱 Android Client — v2.0.0 (Instagram-Grade UI & Auto-Reconnection)
 
-The mobile client is engineered as a resilient academic companion with 4 dedicated views, a sliding navigation sidebar, timetable OCR, and automatic laptop synchronization:
+The mobile client is engineered as a resilient academic companion with a 5-tab Instagram-grade navigation shell, real-time waveform visualizer, one-tap QR camera pairing, timetable OCR, and automatic laptop synchronization:
 
-### 1. Dynamic Class Banner & Live Recorder (Tab 1)
-- **Schedule-Aware Auto-Tagging**: Detects current day of the week and active time slot from the timetable. Ongoing lectures are highlighted (`🟢 CURRENT CLASS IN PROGRESS`), automatically tagging audio sessions and chunk folders with the subject, room, and lecturer.
-- **Upcoming Lecture Alerts**: Shows upcoming lectures today with countdowns (e.g. `🟠 UPCOMING CLASS IN 25 MINS`).
-- **One-Tap Hero Record**: Circular stateful record button with high-contrast digital timer (`00:00:00`), rotating chunk counter, and manual subject overrides.
-- **Direct Local Sync**: Trigger instantaneous transfer of completed audio sessions to MacBook Pro.
+### 1. Today & Dynamic Class Banner (Tab 1)
+- **Schedule-Aware Auto-Tagging**: Detects current day of the week and active time slot from the timetable. Ongoing lectures are highlighted (`Current class in progress`), automatically tagging audio sessions and chunk folders with the subject, room, and lecturer.
+- **Upcoming Lecture Alerts**: Shows upcoming lectures today with countdowns (e.g. `Upcoming class in 25m`).
+- **Quick Action Cards**: Launch recording directly for today's scheduled classes or view agenda at a glance.
 
 ### 2. Timetable & Photo OCR Scanner (Tab 2)
 - **Host-Accelerated OCR**: Upload a photo of any university schedule or paper timetable. The app dispatches the photo to the MacBook Pro endpoint (`/api/timetable/extract`), parsing the grid with Tesseract OCR / ML vision and populating weekly classes (`weekday`, `start_time`, `end_time`, `subject`, `room`, `lecturer`).
 - **Weekly Schedule Deck**: 7-day selector (Mon–Sun) with today highlighted, class cards, and one-tap "Record This Class Now" triggers.
-- **Manual Class Editor**: Easily add, edit, or remove lecture slots.
+- **Manual Class Editor**: Add or customize class slots with subject, start/end time, and room details.
 
-### 3. Audio Library & Chunk Manager (Tab 3)
-- **Local Session Catalog**: Lists recorded lecture sessions organized by subject, date, chunk count, and total MB.
+### 3. Studio Record & Real-Time Waveform (Tab 3 - Hero Raised)
+- **Raised Hero Record Button**: Central elevated action button with haptic feedback and spring physics.
+- **7-Band Real-Time Audio Visualizer**: Live amplitude visualizer responding dynamically to the lecturer's voice.
+- **Digital Session Timer**: Monospace stopwatch (`00:00:00`) tracking active elapsed recording time.
+- **Subject Selector & Overrides**: Auto-populated from the active timetable slot with single-tap manual overrides.
+
+### 4. Audio Library & Chunk Manager (Tab 4)
+- **Local Session Catalog**: Lists recorded lecture sessions organized by subject, date, chunk count, and formatted size.
 - **Sync Status Badges**: Distinguishes between `✓ Synced` (confirmed on MacBook) and `▲ Local Only`.
-- **Audio Preview Playback**: Listen to audio previews directly on device before archiving or transferring.
+- **Direct Manual & Auto-Sync**: Background auto-sync pushes completed chunks to MacBook Pro via `/api/recordings/upload`.
 
-### 4. Real-Time Connection Diagnostics & How-to-Connect Guide (Tab 4)
-- **Live Status Chip**: Top header badge indicates connection state with ping latency (e.g. `🟢 Connected (14ms)` or `🟠 Offline (Tap)`).
-- **Interactive Connection Guide**:
-  1. **Wi-Fi LAN**: Connect both devices to the same router and enter Mac LAN IP.
-  2. **Personal Hotspot**: Bypass university network client isolation by connecting via mobile or Mac hotspot.
-  3. **Zero-Latency USB Cable**: Plug in USB-C cable, run `adb reverse tcp:8420 tcp:8420`, and connect via `127.0.0.1` without any network setup.
-
-### 5. Sliding Navigation Sidebar
-- **Live Storage Metrics**: Uses Android `StatFs` to report internal phone free space, app audio cache footprint in MB, and pending upload queues.
-- **One-Tap Space Reclamation**: "Clean Synced Chunks" button safely deletes local audio files that have already been confirmed uploaded to MacBook Pro, keeping metadata intact.
-- **Hardware Specifications**: Full readouts of the 16 kHz AAC beamforming engine, `FOREGROUND_SERVICE_MICROPHONE`, `PARTIAL_WAKE_LOCK`, and battery optimization settings.
+### 5. Settings, QR Pairing & Connection Diagnostics (Tab 5)
+- **One-Tap QR Camera Scanner**: Viewfinder with corner brackets, animated scan line, and camera flash toggle. Point at laptop QR code for instant pairing with SHA-256 fingerprint pinning and 2-minute expiring tokens.
+- **6-Digit Fallback Code**: Enter the numeric fallback code if camera access is restricted.
+- **ConnectionManager 5-State Engine**: Live state machine (`NOT_PAIRED`, `SEARCHING`, `CONNECTED`, `SYNCING`, `UNREACHABLE`) with parallel MRU ping (1.5s), mDNS discovery (4s), and automatic background reconnection.
+- **Live Storage Metrics & Cleaner**: Android `StatFs` metrics for free device space and audio cache footprint, with one-tap pruning of synced chunks.
+- **Theme Switcher**: Instant switching between System, Light, and Dark modes adhering to WCAG AA contrast.
 
 ---
 

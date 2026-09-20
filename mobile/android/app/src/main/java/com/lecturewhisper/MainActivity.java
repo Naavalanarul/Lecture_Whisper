@@ -14,8 +14,10 @@ import android.media.MediaPlayer;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Environment;
 import android.os.Handler;
 import android.os.Looper;
+import android.os.StatFs;
 import android.provider.Settings;
 import android.util.Log;
 import android.view.Gravity;
@@ -32,7 +34,9 @@ import android.widget.Toast;
 
 import com.lecturewhisper.model.RecordingSession;
 import com.lecturewhisper.model.TimetableSlot;
+import com.lecturewhisper.network.ConnectionManager;
 import com.lecturewhisper.network.LaptopSyncClient;
+import com.lecturewhisper.network.PairingPayload;
 import com.lecturewhisper.recorder.RecorderService;
 import com.lecturewhisper.store.RecordingStore;
 import com.lecturewhisper.store.TimetableStore;
@@ -50,60 +54,46 @@ public class MainActivity extends Activity {
     private static final int PERMISSION_REQUEST_CODE = 101;
     private static final int PICK_IMAGE_REQUEST_CODE = 102;
     private static final String PREFS_NAME = "lw_prefs";
-    private static final String KEY_HOST = "server_host";
-    private static final String KEY_PORT = "server_port";
     private static final String KEY_THEME = "app_theme";
 
-    // Stores
+    // Stores & Managers
     private TimetableStore timetableStore;
     private RecordingStore recordingStore;
+    private ConnectionManager connectionManager;
     private SharedPreferences prefs;
 
-    // UI — Shell & Drawer
-    private View drawerScrim;
-    private LinearLayout sidebarDrawer;
+    // UI — Top App Bar & Morphing Status Chip
+    private TextView textCurrentPageTitle;
+    private TextView textCurrentPageSubtitle;
     private LinearLayout chipConnectionStatus;
     private View viewConnectionDot;
     private TextView textConnectionBadge;
-    private TextView textCurrentPageTitle;
 
-    // 390px Mobile Bottom Sheet Navigation Items
-    private View btnSheetNavRecorder;
-    private View btnSheetNavTimetable;
-    private View btnSheetNavRecordings;
-    private View btnSheetNavConnection;
-    private ImageView iconSheetNavRecorder;
-    private ImageView iconSheetNavTimetable;
-    private ImageView iconSheetNavRecordings;
-    private ImageView iconSheetNavConnection;
-    private TextView textSheetNavRecorder;
-    private TextView textSheetNavTimetable;
-    private TextView textSheetNavRecordings;
-    private TextView textSheetNavConnection;
+    // 5-Tab Navigation Views
+    private View viewTabToday;
+    private View viewTabSchedule;
+    private View viewTabRecord;
+    private View viewTabLibrary;
+    private View viewTabSettings;
+
+    // 5 Bottom Navigation Bar Tabs
+    private View tabBtnToday;
+    private View tabBtnSchedule;
+    private View tabBtnRecord;
+    private View tabBtnLibrary;
+    private View tabBtnSettings;
+    private ImageView iconTabToday;
+    private ImageView iconTabSchedule;
+    private ImageView iconTabRecord;
+    private ImageView iconTabLibrary;
+    private ImageView iconTabSettings;
+    private TextView textTabToday;
+    private TextView textTabSchedule;
+    private TextView textTabLibrary;
+    private TextView textTabSettings;
     private int currentTab = 0;
 
-    // Drawer Views
-    private TextView textStorageAvailable;
-    private TextView textStorageAppUsage;
-    private TextView textStorageSyncedStatus;
-    private Button btnDrawerPruneCache;
-    private Button btnDrawerBatteryOpt;
-    private Button btnThemeSystem;
-    private Button btnThemeLight;
-    private Button btnThemeDark;
-
-    // Tabs
-    private View viewTabRecorder;
-    private View viewTabTimetable;
-    private View viewTabRecordings;
-    private View viewTabConnection;
-
-    private Button navBtnRecorder;
-    private Button navBtnTimetable;
-    private Button navBtnRecordings;
-    private Button navBtnConnection;
-
-    // Tab 1: Recorder Views
+    // Tab 0: Today Views
     private LinearLayout bannerTimetableSlot;
     private TextView textBannerType;
     private TextView textBannerSubject;
@@ -112,40 +102,61 @@ public class MainActivity extends Activity {
     private TextView textRecordingTimer;
     private Button btnHeroRecord;
     private TextView textChunkInfo;
-    private EditText editRecordingSubject;
     private TextView textSyncSummary;
     private Button btnSyncNow;
+    private LinearLayout containerTodayClasses;
+    private TextView textTodayEmptyState;
 
-    // Tab 2: Timetable Views
+    // Tab 1: Schedule Views
     private Button btnUploadTimetableOcr;
     private Button btnAddSlot;
     private LinearLayout layoutOcrProgress;
     private TextView textOcrProgressStatus;
     private LinearLayout containerTimetableSlots;
-    private Button[] dayButtons = new Button[7];
+    private final Button[] dayButtons = new Button[7];
     private int selectedDay = 0;
 
-    // Tab 3: Recordings Views
+    // Tab 2: Studio Record Views
+    private TextView textStudioTimer;
+    private EditText editRecordingSubject;
+    private Button btnStudioStop;
+    private Button btnLockGuard;
+    private boolean isScreenLocked = false;
+    private View[] waveBars = new View[7];
+
+    // Tab 3: Library Views
     private TextView textRecordingsStats;
     private Button btnSyncAllRecordings;
     private LinearLayout containerRecordingsList;
-
-    // Tab 4: Connection Views
-    private EditText editServerHost;
-    private EditText editServerPort;
-    private Button btnPresetUsb;
-    private Button btnPresetWifi;
-    private Button btnTestConnection;
-    private TextView textConnectionDiagnostic;
-
-    // State
-    private boolean isRecording = false;
-    private long recordingStartTime = 0;
-    private boolean isDrawerOpen = false;
-    private boolean isConnectedToLaptop = false;
-    private final Handler mainHandler = new Handler(Looper.getMainLooper());
     private MediaPlayer previewPlayer;
 
+    // Tab 4: Settings & Diagnostics Views
+    private TextView textSettingsMacName;
+    private TextView textSettingsServerId;
+    private Button btnSettingsPairQr;
+    private Button btnSettingsForgetMac;
+    private TextView textStorageAvailable;
+    private TextView textStorageAppUsage;
+    private Button btnCleanSyncedChunks;
+    private Button btnThemeSystem;
+    private Button btnThemeLight;
+    private Button btnThemeDark;
+    private TextView textConnectionDiagnostic;
+
+    // Layer 2: QR Scanner / Pairing Overlay Sheet
+    private View overlayQrScanner;
+    private EditText editFallbackCode;
+    private Button btnSubmitCode;
+    private TextView textToggleAdvancedHost;
+    private LinearLayout layoutAdvancedHost;
+    private EditText editServerHost;
+    private EditText editServerPort;
+    private Button btnManualConnect;
+
+    // Recording Runtime State
+    private boolean isRecording = false;
+    private long recordingStartTime = 0;
+    private final Handler mainHandler = new Handler(Looper.getMainLooper());
     private final Runnable timerRunnable = new Runnable() {
         @Override
         public void run() {
@@ -154,17 +165,11 @@ public class MainActivity extends Activity {
                 int seconds = (int) (elapsed / 1000) % 60;
                 int minutes = (int) ((elapsed / (1000 * 60)) % 60);
                 int hours = (int) (elapsed / (1000 * 60 * 60));
-                textRecordingTimer.setText(String.format(Locale.US, "%02d:%02d:%02d", hours, minutes, seconds));
+                String formatted = String.format(Locale.US, "%02d:%02d:%02d", hours, minutes, seconds);
+                if (textRecordingTimer != null) textRecordingTimer.setText(formatted);
+                if (textStudioTimer != null) textStudioTimer.setText(formatted);
                 mainHandler.postDelayed(this, 1000);
             }
-        }
-    };
-
-    private final Runnable pingRunnable = new Runnable() {
-        @Override
-        public void run() {
-            probeLaptopConnection(false);
-            mainHandler.postDelayed(this, 12000); // Probe every 12 seconds
         }
     };
 
@@ -194,7 +199,7 @@ public class MainActivity extends Activity {
         String savedTheme = prefs.getString(KEY_THEME, "system");
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            getWindow().setStatusBarColor(getColor(R.color.surface));
+            getWindow().setStatusBarColor(getColor(R.color.background));
             getWindow().setNavigationBarColor(getColor(R.color.tab_bar_bg));
         }
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
@@ -205,40 +210,73 @@ public class MainActivity extends Activity {
 
         timetableStore = new TimetableStore(this);
         recordingStore = new RecordingStore(this);
+        connectionManager = new ConnectionManager(this);
 
-        // Determine initial selected day (today)
+        // Determine current day of week (Mon=0 .. Sun=6)
         Calendar cal = Calendar.getInstance();
         int dayOfWeek = cal.get(Calendar.DAY_OF_WEEK);
-        selectedDay = (dayOfWeek + 5) % 7; // Mon=0, ..., Sun=6
+        selectedDay = (dayOfWeek + 5) % 7;
 
         bindViews();
         setupWindowInsets();
         setupListeners();
         setupDaySelector();
         updateThemeButtons(savedTheme);
-        checkPreviousCrashLog();
-
-        // Restore host settings (default to 127.0.0.1:8420 for zero-config USB reverse tethering)
-        String savedHost = prefs.getString(KEY_HOST, "127.0.0.1");
-        int savedPort = prefs.getInt(KEY_PORT, 8420);
-        editServerHost.setText(savedHost);
-        editServerPort.setText(String.valueOf(savedPort));
+        setupConnectionManagerListener();
+        setupWaveformListener();
 
         updateActiveSlotBanner();
         updateTimetableSlotsList();
         updateRecordingsList();
-        updateStorageDrawer();
+        updateSettingsView();
 
         requestAppPermissions();
-        mainHandler.post(pingRunnable);
+        selectTab(0);
+
+        handleDeepLink(getIntent());
         handleAdbIntent(getIntent());
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        if (connectionManager != null) {
+            connectionManager.onAppForeground();
+        }
+        updateSettingsView();
+        updateActiveSlotBanner();
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        if (connectionManager != null) {
+            connectionManager.onAppBackground();
+        }
+        if (previewPlayer != null && previewPlayer.isPlaying()) {
+            previewPlayer.stop();
+            previewPlayer.release();
+            previewPlayer = null;
+        }
     }
 
     @Override
     protected void onNewIntent(Intent intent) {
         super.onNewIntent(intent);
         setIntent(intent);
+        handleDeepLink(intent);
         handleAdbIntent(intent);
+    }
+
+    private void handleDeepLink(Intent intent) {
+        if (intent == null || intent.getData() == null) return;
+        Uri uri = intent.getData();
+        if ("lecturewhisper".equalsIgnoreCase(uri.getScheme()) && "pair".equalsIgnoreCase(uri.getHost())) {
+            PairingPayload payload = PairingPayload.parse(uri.toString());
+            if (payload != null) {
+                promptPairingConfirmation(payload);
+            }
+        }
     }
 
     private void handleAdbIntent(Intent intent) {
@@ -262,14 +300,10 @@ public class MainActivity extends Activity {
         }
     }
 
-
     private void setupWindowInsets() {
         View rootLayout = findViewById(R.id.root_layout);
         final View topAppBar = findViewById(R.id.top_app_bar);
-        final View bottomNavBar = findViewById(R.id.bottom_nav_bar);
-        final View sidebarDrawer = findViewById(R.id.sidebar_drawer);
-
-        updateSystemBarsAppearance();
+        final View bottomNavBar = findViewById(R.id.bottom_navigation_bar);
 
         if (rootLayout == null) return;
 
@@ -279,10 +313,10 @@ public class MainActivity extends Activity {
 
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
                 android.graphics.Insets sb = insets.getInsets(
-                    WindowInsets.Type.statusBars() | WindowInsets.Type.displayCutout()
+                        WindowInsets.Type.statusBars() | WindowInsets.Type.displayCutout()
                 );
                 android.graphics.Insets nb = insets.getInsets(
-                    WindowInsets.Type.navigationBars()
+                        WindowInsets.Type.navigationBars()
                 );
                 statusBarTop = sb.top;
                 navBarBottom = nb.bottom;
@@ -291,35 +325,18 @@ public class MainActivity extends Activity {
                 navBarBottom = insets.getSystemWindowInsetBottom();
             }
 
-            // Ensure ample padding for mobile status bar and camera punch-hole
             int safeTopPadding = Math.max(statusBarTop, dpToPx(38));
             if (topAppBar != null) {
-                topAppBar.setPadding(
-                    dpToPx(16),
-                    safeTopPadding + dpToPx(6),
-                    dpToPx(16),
-                    dpToPx(8)
-                );
+                topAppBar.setPadding(dpToPx(16), safeTopPadding, dpToPx(16), dpToPx(6));
             }
 
-            // Ensure ample padding for mobile gesture navigation handle in bottom sheet
-            int safeBottomPadding = Math.max(navBarBottom, dpToPx(16));
-            if (sidebarDrawer != null) {
-                sidebarDrawer.setPadding(
-                    dpToPx(20),
-                    dpToPx(12),
-                    dpToPx(20),
-                    safeBottomPadding + dpToPx(12)
-                );
-            }
-
-            // Ensure ample padding for mobile gesture navigation handle
+            int safeBottomPadding = Math.max(navBarBottom, dpToPx(8));
             if (bottomNavBar != null) {
                 bottomNavBar.setPadding(
-                    bottomNavBar.getPaddingLeft(),
-                    dpToPx(6),
-                    bottomNavBar.getPaddingRight(),
-                    safeBottomPadding + dpToPx(6)
+                        bottomNavBar.getPaddingLeft(),
+                        dpToPx(4),
+                        bottomNavBar.getPaddingRight(),
+                        safeBottomPadding + dpToPx(4)
                 );
             }
 
@@ -330,31 +347,36 @@ public class MainActivity extends Activity {
     }
 
     private void bindViews() {
-        drawerScrim = findViewById(R.id.drawer_scrim);
-        sidebarDrawer = findViewById(R.id.sidebar_drawer);
+        textCurrentPageTitle = findViewById(R.id.text_current_page_title);
+        textCurrentPageSubtitle = findViewById(R.id.text_current_page_subtitle);
         chipConnectionStatus = findViewById(R.id.chip_connection_status);
         viewConnectionDot = findViewById(R.id.view_connection_dot);
         textConnectionBadge = findViewById(R.id.text_connection_badge);
 
-        textStorageAvailable = findViewById(R.id.text_storage_available);
-        textStorageAppUsage = findViewById(R.id.text_storage_app_usage);
-        textStorageSyncedStatus = findViewById(R.id.text_storage_synced_status);
-        btnDrawerPruneCache = findViewById(R.id.btn_drawer_prune_cache);
-        btnDrawerBatteryOpt = findViewById(R.id.btn_drawer_battery_opt);
-        btnThemeSystem = findViewById(R.id.btn_theme_system);
-        btnThemeLight = findViewById(R.id.btn_theme_light);
-        btnThemeDark = findViewById(R.id.btn_theme_dark);
+        viewTabToday = findViewById(R.id.view_tab_today);
+        viewTabSchedule = findViewById(R.id.view_tab_schedule);
+        viewTabRecord = findViewById(R.id.view_tab_record);
+        viewTabLibrary = findViewById(R.id.view_tab_library);
+        viewTabSettings = findViewById(R.id.view_tab_settings);
 
-        viewTabRecorder = findViewById(R.id.view_tab_recorder);
-        viewTabTimetable = findViewById(R.id.view_tab_timetable);
-        viewTabRecordings = findViewById(R.id.view_tab_recordings);
-        viewTabConnection = findViewById(R.id.view_tab_connection);
+        tabBtnToday = findViewById(R.id.tab_btn_today);
+        tabBtnSchedule = findViewById(R.id.tab_btn_schedule);
+        tabBtnRecord = findViewById(R.id.tab_btn_record);
+        tabBtnLibrary = findViewById(R.id.tab_btn_library);
+        tabBtnSettings = findViewById(R.id.tab_btn_settings);
 
-        navBtnRecorder = findViewById(R.id.nav_btn_recorder);
-        navBtnTimetable = findViewById(R.id.nav_btn_timetable);
-        navBtnRecordings = findViewById(R.id.nav_btn_recordings);
-        navBtnConnection = findViewById(R.id.nav_btn_connection);
+        iconTabToday = findViewById(R.id.icon_tab_today);
+        iconTabSchedule = findViewById(R.id.icon_tab_schedule);
+        iconTabRecord = findViewById(R.id.icon_tab_record);
+        iconTabLibrary = findViewById(R.id.icon_tab_library);
+        iconTabSettings = findViewById(R.id.icon_tab_settings);
 
+        textTabToday = findViewById(R.id.text_tab_today);
+        textTabSchedule = findViewById(R.id.text_tab_schedule);
+        textTabLibrary = findViewById(R.id.text_tab_library);
+        textTabSettings = findViewById(R.id.text_tab_settings);
+
+        // Tab 0 Views
         bannerTimetableSlot = findViewById(R.id.banner_timetable_slot);
         textBannerType = findViewById(R.id.text_banner_type);
         textBannerSubject = findViewById(R.id.text_banner_subject);
@@ -363,16 +385,17 @@ public class MainActivity extends Activity {
         textRecordingTimer = findViewById(R.id.text_recording_timer);
         btnHeroRecord = findViewById(R.id.btn_hero_record);
         textChunkInfo = findViewById(R.id.text_chunk_info);
-        editRecordingSubject = findViewById(R.id.edit_recording_subject);
         textSyncSummary = findViewById(R.id.text_sync_summary);
         btnSyncNow = findViewById(R.id.btn_sync_now);
+        containerTodayClasses = findViewById(R.id.container_today_classes);
+        textTodayEmptyState = findViewById(R.id.text_today_empty_state);
 
+        // Tab 1 Views
         btnUploadTimetableOcr = findViewById(R.id.btn_upload_timetable_ocr);
         btnAddSlot = findViewById(R.id.btn_add_slot);
         layoutOcrProgress = findViewById(R.id.layout_ocr_progress);
         textOcrProgressStatus = findViewById(R.id.text_ocr_progress_status);
         containerTimetableSlots = findViewById(R.id.container_timetable_slots);
-
         dayButtons[0] = findViewById(R.id.btn_day_mon);
         dayButtons[1] = findViewById(R.id.btn_day_tue);
         dayButtons[2] = findViewById(R.id.btn_day_wed);
@@ -381,74 +404,64 @@ public class MainActivity extends Activity {
         dayButtons[5] = findViewById(R.id.btn_day_sat);
         dayButtons[6] = findViewById(R.id.btn_day_sun);
 
+        // Tab 2 Views
+        textStudioTimer = findViewById(R.id.text_studio_timer);
+        editRecordingSubject = findViewById(R.id.edit_recording_subject);
+        btnStudioStop = findViewById(R.id.btn_studio_stop);
+        btnLockGuard = findViewById(R.id.btn_lock_guard);
+        waveBars[0] = findViewById(R.id.wave_bar_1);
+        waveBars[1] = findViewById(R.id.wave_bar_2);
+        waveBars[2] = findViewById(R.id.wave_bar_3);
+        waveBars[3] = findViewById(R.id.wave_bar_4);
+        waveBars[4] = findViewById(R.id.wave_bar_5);
+        waveBars[5] = findViewById(R.id.wave_bar_6);
+        waveBars[6] = findViewById(R.id.wave_bar_7);
+
+        // Tab 3 Views
         textRecordingsStats = findViewById(R.id.text_recordings_stats);
         btnSyncAllRecordings = findViewById(R.id.btn_sync_all_recordings);
         containerRecordingsList = findViewById(R.id.container_recordings_list);
 
-        editServerHost = findViewById(R.id.edit_server_host);
-        editServerPort = findViewById(R.id.edit_server_port);
-        btnPresetUsb = findViewById(R.id.btn_preset_usb);
-        btnPresetWifi = findViewById(R.id.btn_preset_wifi);
-        btnTestConnection = findViewById(R.id.btn_test_connection);
+        // Tab 4 Views
+        textSettingsMacName = findViewById(R.id.text_settings_mac_name);
+        textSettingsServerId = findViewById(R.id.text_settings_server_id);
+        btnSettingsPairQr = findViewById(R.id.btn_settings_pair_qr);
+        btnSettingsForgetMac = findViewById(R.id.btn_settings_forget_mac);
+        textStorageAvailable = findViewById(R.id.text_storage_available);
+        textStorageAppUsage = findViewById(R.id.text_storage_app_usage);
+        btnCleanSyncedChunks = findViewById(R.id.btn_clean_synced_chunks);
+        btnThemeSystem = findViewById(R.id.btn_theme_system);
+        btnThemeLight = findViewById(R.id.btn_theme_light);
+        btnThemeDark = findViewById(R.id.btn_theme_dark);
         textConnectionDiagnostic = findViewById(R.id.text_connection_diagnostic);
 
-        textCurrentPageTitle = findViewById(R.id.text_current_page_title);
-        btnSheetNavRecorder = findViewById(R.id.btn_sheet_nav_recorder);
-        btnSheetNavTimetable = findViewById(R.id.btn_sheet_nav_timetable);
-        btnSheetNavRecordings = findViewById(R.id.btn_sheet_nav_recordings);
-        btnSheetNavConnection = findViewById(R.id.btn_sheet_nav_connection);
-        iconSheetNavRecorder = findViewById(R.id.icon_sheet_nav_recorder);
-        iconSheetNavTimetable = findViewById(R.id.icon_sheet_nav_timetable);
-        iconSheetNavRecordings = findViewById(R.id.icon_sheet_nav_recordings);
-        iconSheetNavConnection = findViewById(R.id.icon_sheet_nav_connection);
-        textSheetNavRecorder = findViewById(R.id.text_sheet_nav_recorder);
-        textSheetNavTimetable = findViewById(R.id.text_sheet_nav_timetable);
-        textSheetNavRecordings = findViewById(R.id.text_sheet_nav_recordings);
-        textSheetNavConnection = findViewById(R.id.text_sheet_nav_connection);
+        // Overlay Views
+        overlayQrScanner = findViewById(R.id.overlay_qr_scanner);
+        editFallbackCode = findViewById(R.id.edit_fallback_code);
+        btnSubmitCode = findViewById(R.id.btn_submit_code);
+        textToggleAdvancedHost = findViewById(R.id.text_toggle_advanced_host);
+        layoutAdvancedHost = findViewById(R.id.layout_advanced_host);
+        editServerHost = findViewById(R.id.edit_server_host);
+        editServerPort = findViewById(R.id.edit_server_port);
+        btnManualConnect = findViewById(R.id.btn_manual_connect);
     }
 
     private void setupListeners() {
-        // Drawer toggle
-        findViewById(R.id.btn_open_drawer).setOnClickListener(v -> openDrawer());
-        findViewById(R.id.btn_close_drawer).setOnClickListener(v -> closeDrawer());
-        drawerScrim.setOnClickListener(v -> closeDrawer());
+        // Tab Navigation
+        tabBtnToday.setOnClickListener(v -> selectTab(0));
+        tabBtnSchedule.setOnClickListener(v -> selectTab(1));
+        tabBtnRecord.setOnClickListener(v -> {
+            if (!isRecording) {
+                startRecordingSession();
+            }
+            selectTab(2);
+        });
+        tabBtnLibrary.setOnClickListener(v -> selectTab(3));
+        tabBtnSettings.setOnClickListener(v -> selectTab(4));
 
-        // 390px Mobile Bottom Sheet navigation listeners
-        if (btnSheetNavRecorder != null) btnSheetNavRecorder.setOnClickListener(v -> { selectTab(0); closeDrawer(); });
-        if (btnSheetNavTimetable != null) btnSheetNavTimetable.setOnClickListener(v -> { selectTab(1); closeDrawer(); });
-        if (btnSheetNavRecordings != null) btnSheetNavRecordings.setOnClickListener(v -> { selectTab(2); closeDrawer(); });
-        if (btnSheetNavConnection != null) btnSheetNavConnection.setOnClickListener(v -> { selectTab(3); closeDrawer(); });
+        chipConnectionStatus.setOnClickListener(v -> showQrScannerOverlay());
 
-        if (btnThemeSystem != null) btnThemeSystem.setOnClickListener(v -> setAppTheme("system"));
-        if (btnThemeLight != null) btnThemeLight.setOnClickListener(v -> setAppTheme("light"));
-        if (btnThemeDark != null) btnThemeDark.setOnClickListener(v -> setAppTheme("dark"));
-
-        // Nav tabs
-        navBtnRecorder.setOnClickListener(v -> selectTab(0));
-        navBtnTimetable.setOnClickListener(v -> selectTab(1));
-        navBtnRecordings.setOnClickListener(v -> selectTab(2));
-        navBtnConnection.setOnClickListener(v -> selectTab(3));
-        chipConnectionStatus.setOnClickListener(v -> selectTab(3));
-
-        // Quick host presets
-        if (btnPresetUsb != null) {
-            btnPresetUsb.setOnClickListener(v -> {
-                editServerHost.setText("127.0.0.1");
-                editServerPort.setText("8420");
-                saveHostConfig();
-                probeLaptopConnection(true);
-            });
-        }
-        if (btnPresetWifi != null) {
-            btnPresetWifi.setOnClickListener(v -> {
-                editServerHost.setText("172.17.180.61");
-                editServerPort.setText("8420");
-                saveHostConfig();
-                probeLaptopConnection(true);
-            });
-        }
-
-        // Recorder actions
+        // Tab 0 Actions
         btnHeroRecord.setOnClickListener(v -> {
             if (!hasPermissions()) {
                 requestAppPermissions();
@@ -456,204 +469,428 @@ public class MainActivity extends Activity {
             }
             if (!isRecording) {
                 startRecordingSession();
+                selectTab(2);
             } else {
                 stopRecordingSession();
             }
         });
 
         btnSyncNow.setOnClickListener(v -> syncAllUnsyncedAudio());
-        btnSyncAllRecordings.setOnClickListener(v -> syncAllUnsyncedAudio());
 
-        // Timetable actions
+        // Tab 1 Actions
         btnUploadTimetableOcr.setOnClickListener(v -> pickTimetableImage());
         btnAddSlot.setOnClickListener(v -> showAddSlotDialog());
 
-        // Connection testing
-        btnTestConnection.setOnClickListener(v -> {
-            saveHostConfig();
-            probeLaptopConnection(true);
+        // Tab 2 Actions
+        btnStudioStop.setOnClickListener(v -> {
+            if (isScreenLocked) {
+                Toast.makeText(this, "Screen is locked. Tap 🔒 to unlock first.", Toast.LENGTH_SHORT).show();
+                return;
+            }
+            stopRecordingSession();
+            selectTab(0);
         });
 
-        // Drawer cache pruning
-        btnDrawerPruneCache.setOnClickListener(v -> {
+        btnLockGuard.setOnClickListener(v -> {
+            isScreenLocked = !isScreenLocked;
+            btnLockGuard.setText(isScreenLocked ? "🔓" : "🔒");
+            Toast.makeText(this, isScreenLocked ? "Screen Locked (Accidental taps guarded)" : "Screen Unlocked", Toast.LENGTH_SHORT).show();
+        });
+
+        // Tab 3 Actions
+        btnSyncAllRecordings.setOnClickListener(v -> syncAllUnsyncedAudio());
+
+        // Tab 4 Actions
+        btnSettingsPairQr.setOnClickListener(v -> showQrScannerOverlay());
+        btnSettingsForgetMac.setOnClickListener(v -> {
+            new AlertDialog.Builder(this)
+                    .setTitle("Forget Paired Mac")
+                    .setMessage("This will disconnect from your current Mac and require scanning a new QR code.")
+                    .setPositiveButton("Forget", (d, w) -> {
+                        connectionManager.forgetPairing();
+                        updateSettingsView();
+                        Toast.makeText(this, "Paired Mac forgotten", Toast.LENGTH_SHORT).show();
+                    })
+                    .setNegativeButton("Cancel", null)
+                    .show();
+        });
+
+        btnCleanSyncedChunks.setOnClickListener(v -> {
             int pruned = recordingStore.pruneSyncedChunks();
-            Toast.makeText(this, "Cleaned up " + pruned + " synced audio chunks", Toast.LENGTH_SHORT).show();
-            updateStorageDrawer();
+            Toast.makeText(this, "Cleaned up " + pruned + " synced audio files", Toast.LENGTH_SHORT).show();
+            updateSettingsView();
             updateRecordingsList();
         });
 
-        // Battery optimization intent
-        btnDrawerBatteryOpt.setOnClickListener(v -> {
-            try {
-                Intent intent = new Intent(Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS);
-                startActivity(intent);
-            } catch (Exception e) {
-                Toast.makeText(this, "Please allow unrestricted background battery in System Settings", Toast.LENGTH_LONG).show();
+        btnThemeSystem.setOnClickListener(v -> setAppTheme("system"));
+        btnThemeLight.setOnClickListener(v -> setAppTheme("light"));
+        btnThemeDark.setOnClickListener(v -> setAppTheme("dark"));
+
+        // QR Sheet Actions
+        findViewById(R.id.btn_close_qr_scanner).setOnClickListener(v -> hideQrScannerOverlay());
+        btnSubmitCode.setOnClickListener(v -> {
+            String code = editFallbackCode.getText().toString().trim();
+            if (code.isEmpty()) {
+                Toast.makeText(this, "Please enter the 6-digit code or paste QR URL", Toast.LENGTH_SHORT).show();
+                return;
+            }
+            processPairingInput(code);
+        });
+
+        textToggleAdvancedHost.setOnClickListener(v -> {
+            if (layoutAdvancedHost.getVisibility() == View.VISIBLE) {
+                layoutAdvancedHost.setVisibility(View.GONE);
+                textToggleAdvancedHost.setText("Advanced Host Settings ▼");
+            } else {
+                layoutAdvancedHost.setVisibility(View.VISIBLE);
+                textToggleAdvancedHost.setText("Advanced Host Settings ▲");
+            }
+        });
+
+        btnManualConnect.setOnClickListener(v -> {
+            String host = editServerHost.getText().toString().trim();
+            String portStr = editServerPort.getText().toString().trim();
+            int port = portStr.isEmpty() ? 8420 : Integer.parseInt(portStr);
+            if (!host.isEmpty()) {
+                connectionManager.savePairingData(
+                        "manual_dev_token",
+                        "Manual Host",
+                        host,
+                        null,
+                        List.of(host),
+                        port
+                );
+                hideQrScannerOverlay();
+                connectionManager.refreshConnection();
+                Toast.makeText(this, "Saved manual host: " + host + ":" + port, Toast.LENGTH_SHORT).show();
             }
         });
     }
 
     private void selectTab(int tabIndex) {
         currentTab = tabIndex;
-        viewTabRecorder.setVisibility(tabIndex == 0 ? View.VISIBLE : View.GONE);
-        viewTabTimetable.setVisibility(tabIndex == 1 ? View.VISIBLE : View.GONE);
-        viewTabRecordings.setVisibility(tabIndex == 2 ? View.VISIBLE : View.GONE);
-        viewTabConnection.setVisibility(tabIndex == 3 ? View.VISIBLE : View.GONE);
+        viewTabToday.setVisibility(tabIndex == 0 ? View.VISIBLE : View.GONE);
+        viewTabSchedule.setVisibility(tabIndex == 1 ? View.VISIBLE : View.GONE);
+        viewTabRecord.setVisibility(tabIndex == 2 ? View.VISIBLE : View.GONE);
+        viewTabLibrary.setVisibility(tabIndex == 3 ? View.VISIBLE : View.GONE);
+        viewTabSettings.setVisibility(tabIndex == 4 ? View.VISIBLE : View.GONE);
 
-        String[] titles = {"Live Recorder", "Class Schedule", "Audio Library", "MacBook Sync"};
-        if (textCurrentPageTitle != null && tabIndex >= 0 && tabIndex < titles.length) {
-            textCurrentPageTitle.setText(titles[tabIndex]);
-        }
+        updateTabAppearance(tabBtnToday, iconTabToday, textTabToday, tabIndex == 0);
+        updateTabAppearance(tabBtnSchedule, iconTabSchedule, textTabSchedule, tabIndex == 1);
+        updateTabAppearance(tabBtnLibrary, iconTabLibrary, textTabLibrary, tabIndex == 3);
+        updateTabAppearance(tabBtnSettings, iconTabSettings, textTabSettings, tabIndex == 4);
 
-        int activeColor = getColor(R.color.primary);
-        int inactiveColor = getColor(R.color.text_muted);
-        ColorStateList activeTint = ColorStateList.valueOf(activeColor);
-        ColorStateList inactiveTint = ColorStateList.valueOf(inactiveColor);
-
-        navBtnRecorder.setTextColor(tabIndex == 0 ? activeColor : inactiveColor);
-        navBtnRecorder.setCompoundDrawableTintList(tabIndex == 0 ? activeTint : inactiveTint);
-
-        navBtnTimetable.setTextColor(tabIndex == 1 ? activeColor : inactiveColor);
-        navBtnTimetable.setCompoundDrawableTintList(tabIndex == 1 ? activeTint : inactiveTint);
-
-        navBtnRecordings.setTextColor(tabIndex == 2 ? activeColor : inactiveColor);
-        navBtnRecordings.setCompoundDrawableTintList(tabIndex == 2 ? activeTint : inactiveTint);
-
-        navBtnConnection.setTextColor(tabIndex == 3 ? activeColor : inactiveColor);
-        navBtnConnection.setCompoundDrawableTintList(tabIndex == 3 ? activeTint : inactiveTint);
-
-        updateSheetNavHighlights(tabIndex);
-
-        if (tabIndex == 1) updateTimetableSlotsList();
-        if (tabIndex == 2) updateRecordingsList();
-    }
-
-    private void updateSheetNavHighlights(int tabIndex) {
-        int activeBg = R.drawable.bg_sheet_nav_item_active;
-        int idleBg = R.drawable.bg_sheet_nav_item_idle;
-        int activeColor = getColor(R.color.primary);
-        int idleColor = getColor(R.color.text_primary);
-        int iconIdleColor = getColor(R.color.text_muted);
-
-        if (btnSheetNavRecorder != null) {
-            btnSheetNavRecorder.setBackgroundResource(tabIndex == 0 ? activeBg : idleBg);
-            if (iconSheetNavRecorder != null) iconSheetNavRecorder.setColorFilter(tabIndex == 0 ? activeColor : iconIdleColor);
-            if (textSheetNavRecorder != null) textSheetNavRecorder.setTextColor(tabIndex == 0 ? activeColor : idleColor);
-        }
-        if (btnSheetNavTimetable != null) {
-            btnSheetNavTimetable.setBackgroundResource(tabIndex == 1 ? activeBg : idleBg);
-            if (iconSheetNavTimetable != null) iconSheetNavTimetable.setColorFilter(tabIndex == 1 ? activeColor : iconIdleColor);
-            if (textSheetNavTimetable != null) textSheetNavTimetable.setTextColor(tabIndex == 1 ? activeColor : idleColor);
-        }
-        if (btnSheetNavRecordings != null) {
-            btnSheetNavRecordings.setBackgroundResource(tabIndex == 2 ? activeBg : idleBg);
-            if (iconSheetNavRecordings != null) iconSheetNavRecordings.setColorFilter(tabIndex == 2 ? activeColor : iconIdleColor);
-            if (textSheetNavRecordings != null) textSheetNavRecordings.setTextColor(tabIndex == 2 ? activeColor : idleColor);
-        }
-        if (btnSheetNavConnection != null) {
-            btnSheetNavConnection.setBackgroundResource(tabIndex == 3 ? activeBg : idleBg);
-            if (iconSheetNavConnection != null) iconSheetNavConnection.setColorFilter(tabIndex == 3 ? activeColor : iconIdleColor);
-            if (textSheetNavConnection != null) textSheetNavConnection.setTextColor(tabIndex == 3 ? activeColor : idleColor);
+        switch (tabIndex) {
+            case 0:
+                textCurrentPageTitle.setText("Today");
+                textCurrentPageSubtitle.setText("Pixel 8a");
+                updateActiveSlotBanner();
+                break;
+            case 1:
+                textCurrentPageTitle.setText("Schedule");
+                textCurrentPageSubtitle.setText("Weekly Timetable");
+                updateTimetableSlotsList();
+                break;
+            case 2:
+                textCurrentPageTitle.setText("Record Studio");
+                textCurrentPageSubtitle.setText(isRecording ? "Active Session" : "Standby");
+                break;
+            case 3:
+                textCurrentPageTitle.setText("Library");
+                textCurrentPageSubtitle.setText("Audio Recordings");
+                updateRecordingsList();
+                break;
+            case 4:
+                textCurrentPageTitle.setText("Settings");
+                textCurrentPageSubtitle.setText("Mac Sync & Preferences");
+                updateSettingsView();
+                break;
         }
     }
 
-    private void openDrawer() {
-        if (isDrawerOpen) return;
-        isDrawerOpen = true;
-        updateStorageDrawer();
-        updateSheetNavHighlights(currentTab);
-        drawerScrim.setVisibility(View.VISIBLE);
-        drawerScrim.setAlpha(0f);
-        drawerScrim.animate().alpha(1f).setDuration(240).start();
+    private void updateTabAppearance(View tabBtn, ImageView icon, TextView text, boolean isActive) {
+        int colorActive = getColor(R.color.tab_icon_active);
+        int colorInactive = getColor(R.color.tab_icon_inactive);
 
-        sidebarDrawer.setVisibility(View.VISIBLE);
-        sidebarDrawer.post(() -> {
-            int h = sidebarDrawer.getHeight();
-            if (h <= 0) h = dpToPx(600);
-            sidebarDrawer.setTranslationY(h);
-            sidebarDrawer.animate()
-                .translationY(0)
-                .setDuration(260)
-                .setInterpolator(new android.view.animation.DecelerateInterpolator())
-                .start();
+        if (icon != null) {
+            icon.setImageTintList(ColorStateList.valueOf(isActive ? colorActive : colorInactive));
+        }
+        if (text != null) {
+            text.setTextColor(isActive ? colorActive : colorInactive);
+            text.setTypeface(null, isActive ? android.graphics.Typeface.BOLD : android.graphics.Typeface.NORMAL);
+        }
+    }
+
+    private void setupConnectionManagerListener() {
+        connectionManager.setStateListener((state, message, pingMs) -> {
+            switch (state) {
+                case CONNECTED:
+                    chipConnectionStatus.setBackgroundResource(R.drawable.bg_pill_connected);
+                    viewConnectionDot.setBackgroundTintList(ColorStateList.valueOf(getColor(R.color.status_connected_text)));
+                    textConnectionBadge.setTextColor(getColor(R.color.status_connected_text));
+                    textConnectionBadge.setText(pingMs > 0 ? "Connected (" + pingMs + "ms)" : "Connected");
+                    break;
+                case SEARCHING:
+                    chipConnectionStatus.setBackgroundResource(R.drawable.bg_pill_disconnected);
+                    viewConnectionDot.setBackgroundTintList(ColorStateList.valueOf(getColor(R.color.warning)));
+                    textConnectionBadge.setTextColor(getColor(R.color.status_searching_text));
+                    textConnectionBadge.setText("Searching...");
+                    break;
+                case SYNCING:
+                    chipConnectionStatus.setBackgroundResource(R.drawable.bg_pill_connected);
+                    viewConnectionDot.setBackgroundTintList(ColorStateList.valueOf(getColor(R.color.primary)));
+                    textConnectionBadge.setTextColor(getColor(R.color.primary));
+                    textConnectionBadge.setText("Syncing...");
+                    break;
+                case UNREACHABLE:
+                case NOT_PAIRED:
+                default:
+                    chipConnectionStatus.setBackgroundResource(R.drawable.bg_pill_disconnected);
+                    viewConnectionDot.setBackgroundTintList(ColorStateList.valueOf(getColor(R.color.text_muted)));
+                    textConnectionBadge.setTextColor(getColor(R.color.text_secondary));
+                    textConnectionBadge.setText(state == ConnectionManager.State.NOT_PAIRED ? "Pair Mac" : "Offline");
+                    break;
+            }
+            if (textConnectionDiagnostic != null) {
+                textConnectionDiagnostic.setText(message);
+            }
         });
     }
 
-    private void closeDrawer() {
-        if (!isDrawerOpen && (sidebarDrawer == null || sidebarDrawer.getVisibility() != View.VISIBLE)) return;
-        isDrawerOpen = false;
-        drawerScrim.animate().alpha(0f).setDuration(200).withEndAction(() -> drawerScrim.setVisibility(View.GONE)).start();
-        int h = sidebarDrawer != null ? sidebarDrawer.getHeight() : 0;
-        if (h <= 0) h = dpToPx(600);
-        if (sidebarDrawer != null) {
-            sidebarDrawer.animate()
-                .translationY(h)
-                .setDuration(200)
-                .setInterpolator(new android.view.animation.AccelerateInterpolator())
-                .withEndAction(() -> sidebarDrawer.setVisibility(View.GONE))
-                .start();
+    private void setupWaveformListener() {
+        RecorderService.amplitudeListener = amp -> runOnUiThread(() -> {
+            if (!isRecording) return;
+            // Map amp (0..32767) to bar heights (8dp .. 54dp)
+            float norm = Math.min(1.0f, amp / 24000.0f);
+            int baseDp = 10;
+            int maxDp = 52;
+            int centerHeight = (int) (baseDp + (maxDp - baseDp) * norm);
+
+            int h0 = Math.max(dpToPx(8), (int) (centerHeight * 0.35));
+            int h1 = Math.max(dpToPx(12), (int) (centerHeight * 0.60));
+            int h2 = Math.max(dpToPx(16), (int) (centerHeight * 0.85));
+            int h3 = Math.max(dpToPx(20), centerHeight);
+            int h4 = h2;
+            int h5 = h1;
+            int h6 = h0;
+
+            setBarHeight(waveBars[0], h0);
+            setBarHeight(waveBars[1], h1);
+            setBarHeight(waveBars[2], h2);
+            setBarHeight(waveBars[3], h3);
+            setBarHeight(waveBars[4], h4);
+            setBarHeight(waveBars[5], h5);
+            setBarHeight(waveBars[6], h6);
+        });
+    }
+
+    private void setBarHeight(View bar, int px) {
+        if (bar != null) {
+            ViewGroup.LayoutParams lp = bar.getLayoutParams();
+            if (lp != null) {
+                lp.height = px;
+                bar.setLayoutParams(lp);
+            }
         }
     }
 
-    @Override
-    public void onBackPressed() {
-        if (isDrawerOpen) {
-            closeDrawer();
+    private void showQrScannerOverlay() {
+        overlayQrScanner.setVisibility(View.VISIBLE);
+        editFallbackCode.setText("");
+        editServerHost.setText(connectionManager.getActiveHost() != null ? connectionManager.getActiveHost() : "127.0.0.1");
+        editServerPort.setText(String.valueOf(connectionManager.getActivePort()));
+    }
+
+    private void hideQrScannerOverlay() {
+        overlayQrScanner.setVisibility(View.GONE);
+    }
+
+    private void promptPairingConfirmation(PairingPayload payload) {
+        new AlertDialog.Builder(this)
+                .setTitle("Pair with " + payload.macName + "?")
+                .setMessage("Mac Host: " + (payload.addressCandidates.isEmpty() ? "127.0.0.1" : payload.addressCandidates.get(0)) + "\n"
+                        + "Port: " + payload.port + "\n"
+                        + (payload.certFingerprint != null ? "Certificate Fingerprint:\n" + payload.certFingerprint.substring(0, Math.min(24, payload.certFingerprint.length())) + "..." : ""))
+                .setPositiveButton("Pair Now", (d, w) -> {
+                    completePairingWithPayload(payload);
+                })
+                .setNegativeButton("Cancel", null)
+                .show();
+    }
+
+    private void processPairingInput(String input) {
+        PairingPayload payload = PairingPayload.parse(input);
+        if (payload == null) {
+            Toast.makeText(this, "Could not parse code or QR. Please check format.", Toast.LENGTH_SHORT).show();
             return;
         }
-        super.onBackPressed();
+        completePairingWithPayload(payload);
+    }
+
+    private void completePairingWithPayload(PairingPayload payload) {
+        Toast.makeText(this, "Pairing with " + payload.macName + "...", Toast.LENGTH_SHORT).show();
+
+        new Thread(() -> {
+            String targetHost = payload.addressCandidates.isEmpty() ? "127.0.0.1" : payload.addressCandidates.get(0);
+            LaptopSyncClient.PairResult res = LaptopSyncClient.completePairing(
+                    targetHost,
+                    payload.port,
+                    payload.oneTimeToken,
+                    Settings.Secure.getString(getContentResolver(), Settings.Secure.ANDROID_ID),
+                    Build.MODEL
+            );
+
+            runOnUiThread(() -> {
+                if (res.ok) {
+                    connectionManager.savePairingData(
+                            res.deviceToken,
+                            res.serverId,
+                            res.macName,
+                            payload.certFingerprint,
+                            res.candidates,
+                            payload.port
+                    );
+                    hideQrScannerOverlay();
+                    Toast.makeText(this, "Successfully paired with " + res.macName + "!", Toast.LENGTH_LONG).show();
+                    updateSettingsView();
+                    syncAllUnsyncedAudio();
+                } else {
+                    Toast.makeText(this, "Pairing failed: " + res.error, Toast.LENGTH_LONG).show();
+                }
+            });
+        }).start();
+    }
+
+    private void startRecordingSession() {
+        isRecording = true;
+        recordingStartTime = System.currentTimeMillis();
+
+        String subject = "Lecture";
+        if (editRecordingSubject != null && !editRecordingSubject.getText().toString().trim().isEmpty()) {
+            subject = editRecordingSubject.getText().toString().trim();
+        }
+
+        Intent intent = new Intent(this, RecorderService.class);
+        intent.setAction(RecorderService.ACTION_START);
+        intent.putExtra(RecorderService.EXTRA_SUBJECT, subject);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            startForegroundService(intent);
+        } else {
+            startService(intent);
+        }
+
+        btnHeroRecord.setText("Stop recording");
+        btnHeroRecord.setBackgroundResource(R.drawable.bg_btn_recording);
+        textRecordingStatus.setText("Recording in progress...");
+        mainHandler.post(timerRunnable);
+    }
+
+    private void stopRecordingSession() {
+        isRecording = false;
+        mainHandler.removeCallbacks(timerRunnable);
+
+        Intent intent = new Intent(this, RecorderService.class);
+        intent.setAction(RecorderService.ACTION_STOP);
+        startService(intent);
+
+        btnHeroRecord.setText("Record now");
+        btnHeroRecord.setBackgroundResource(R.drawable.bg_btn_primary);
+        textRecordingStatus.setText("Ready to record");
+
+        Toast.makeText(this, "Recording saved! Syncing with Mac...", Toast.LENGTH_SHORT).show();
+        updateRecordingsList();
+        syncAllUnsyncedAudio();
+    }
+
+    private void syncAllUnsyncedAudio() {
+        if (!connectionManager.isPaired()) {
+            Toast.makeText(this, "Please pair with your Mac to sync recordings", Toast.LENGTH_SHORT).show();
+            showQrScannerOverlay();
+            return;
+        }
+
+        connectionManager.setSyncingState(true);
+        new Thread(() -> {
+            List<RecordingSession> unfinalized = recordingStore.getAllSessions();
+            String host = connectionManager.getActiveHost() != null ? connectionManager.getActiveHost() : "127.0.0.1";
+            int port = connectionManager.getActivePort();
+            String devId = Settings.Secure.getString(getContentResolver(), Settings.Secure.ANDROID_ID);
+
+            for (RecordingSession s : unfinalized) {
+                if (!s.isSynced() && s.getChunkCount() > 0) {
+                    File dir = new File(s.getDirectoryPath());
+                    File[] files = dir.listFiles((d, n) -> n.endsWith(".m4a"));
+                    if (files != null) {
+                        for (File f : files) {
+                            try {
+                                LaptopSyncClient.uploadAudioChunk(host, port, f, s.getSubject(), s.getTimetableSlotId(), devId, 0);
+                            } catch (Exception ignored) {}
+                        }
+                    }
+                    s.setSynced(true);
+                    s.saveMetadata();
+                }
+            }
+
+            runOnUiThread(() -> {
+                connectionManager.setSyncingState(false);
+                updateRecordingsList();
+                Toast.makeText(this, "Synchronization complete", Toast.LENGTH_SHORT).show();
+            });
+        }).start();
     }
 
     private void setupDaySelector() {
         for (int i = 0; i < 7; i++) {
             final int dayIndex = i;
-            dayButtons[i].setOnClickListener(v -> {
-                selectedDay = dayIndex;
-                highlightSelectedDayButton();
-                updateTimetableSlotsList();
-            });
+            if (dayButtons[i] != null) {
+                dayButtons[i].setOnClickListener(v -> {
+                    selectedDay = dayIndex;
+                    updateDaySelectorHighlight();
+                    updateTimetableSlotsList();
+                });
+            }
         }
-        highlightSelectedDayButton();
+        updateDaySelectorHighlight();
     }
 
-    private void highlightSelectedDayButton() {
+    private void updateDaySelectorHighlight() {
         for (int i = 0; i < 7; i++) {
-            if (i == selectedDay) {
-                dayButtons[i].setBackgroundResource(R.drawable.bg_btn_primary);
-                dayButtons[i].setTextColor(0xFFF8FAFC);
-            } else {
-                dayButtons[i].setBackgroundResource(R.drawable.bg_input_field);
-                dayButtons[i].setTextColor(0xFF64748B);
+            if (dayButtons[i] != null) {
+                if (i == selectedDay) {
+                    dayButtons[i].setBackgroundResource(R.drawable.bg_btn_primary);
+                    dayButtons[i].setTextColor(getColor(R.color.on_primary));
+                } else {
+                    dayButtons[i].setBackgroundResource(R.drawable.bg_input_field);
+                    dayButtons[i].setTextColor(getColor(R.color.text_primary));
+                }
             }
         }
     }
 
     private void updateActiveSlotBanner() {
-        TimetableStore.ActiveSlotInfo info = timetableStore.getCurrentOrNextSlot();
-        if (info.type == TimetableStore.ActiveSlotInfo.TYPE_CURRENT) {
+        TimetableStore.ActiveSlotInfo activeInfo = timetableStore.getCurrentOrNextSlot();
+        if (activeInfo.type == TimetableStore.ActiveSlotInfo.TYPE_CURRENT && activeInfo.slot != null) {
+            TimetableSlot active = activeInfo.slot;
+            bannerTimetableSlot.setVisibility(View.VISIBLE);
             bannerTimetableSlot.setBackgroundResource(R.drawable.bg_banner_active_class);
-            textBannerType.setText("🟢 CURRENT CLASS IN PROGRESS");
-            textBannerType.setTextColor(0xFF34D399);
-            textBannerSubject.setText(info.slot.getSubject());
-            textBannerDetails.setText(info.slot.getTimeRangeFormatted() + " • " + info.slot.getRoom() + " • " + info.slot.getLecturer());
-            if (!isRecording) {
-                editRecordingSubject.setText(info.slot.getSubject());
+            textBannerType.setText("Current class in progress");
+            textBannerType.setTextColor(getColor(R.color.status_connected_text));
+            textBannerSubject.setText(active.getSubject());
+            textBannerDetails.setText(active.getTimeRangeFormatted() + (!active.getRoom().isEmpty() ? " • " + active.getRoom() : "") + (!active.getLecturer().isEmpty() ? " • " + active.getLecturer() : ""));
+            if (editRecordingSubject != null && !isRecording) {
+                editRecordingSubject.setText(active.getSubject());
             }
-        } else if (info.type == TimetableStore.ActiveSlotInfo.TYPE_UPCOMING) {
+        } else if (activeInfo.type == TimetableStore.ActiveSlotInfo.TYPE_UPCOMING && activeInfo.slot != null) {
+            TimetableSlot next = activeInfo.slot;
+            bannerTimetableSlot.setVisibility(View.VISIBLE);
             bannerTimetableSlot.setBackgroundResource(R.drawable.bg_banner_upcoming_class);
-            textBannerType.setText("🟠 UPCOMING CLASS IN " + info.minutesUntil + " MINS");
-            textBannerType.setTextColor(0xFFF59E0B);
-            textBannerSubject.setText(info.slot.getSubject());
-            textBannerDetails.setText(info.slot.getTimeRangeFormatted() + " • " + info.slot.getRoom() + " • " + info.slot.getLecturer());
-            if (!isRecording) {
-                editRecordingSubject.setText(info.slot.getSubject());
-            }
+            textBannerType.setText("Upcoming class in " + activeInfo.minutesUntil + "m");
+            textBannerType.setTextColor(getColor(R.color.warning));
+            textBannerSubject.setText(next.getSubject());
+            textBannerDetails.setText("Starts at " + next.getStartTime() + (!next.getRoom().isEmpty() ? " • " + next.getRoom() : ""));
         } else {
-            bannerTimetableSlot.setBackgroundResource(R.drawable.bg_card);
-            textBannerType.setText("⚪ NO SCHEDULED CLASS RIGHT NOW");
-            textBannerType.setTextColor(0xFF94A3B8);
-            textBannerSubject.setText("Free Study / Manual Lecture");
-            textBannerDetails.setText("Type custom lecture subject below or select from timetable");
+            bannerTimetableSlot.setVisibility(View.GONE);
         }
     }
 
@@ -662,89 +899,40 @@ public class MainActivity extends Activity {
         List<TimetableSlot> slots = timetableStore.getSlotsForDay(selectedDay);
 
         if (slots.isEmpty()) {
-            TextView emptyText = new TextView(this);
-            emptyText.setText("No classes scheduled for this day.\nTap 'Upload Photo' to scan your schedule or '+ Add Class'.");
-            emptyText.setTextColor(0xFF64748B);
-            emptyText.setTextSize(13);
-            emptyText.setPadding(16, 32, 16, 32);
-            emptyText.setGravity(Gravity.CENTER);
-            containerTimetableSlots.addView(emptyText);
+            TextView empty = new TextView(this);
+            empty.setText("No classes scheduled for this day");
+            empty.setTextColor(getColor(R.color.text_muted));
+            empty.setGravity(Gravity.CENTER);
+            empty.setPadding(0, dpToPx(24), 0, 0);
+            containerTimetableSlots.addView(empty);
             return;
         }
 
-        for (TimetableSlot s : slots) {
+        for (TimetableSlot slot : slots) {
             LinearLayout card = new LinearLayout(this);
             card.setOrientation(LinearLayout.VERTICAL);
             card.setBackgroundResource(R.drawable.bg_card);
-            card.setPadding(24, 24, 24, 24);
+            card.setPadding(dpToPx(14), dpToPx(12), dpToPx(14), dpToPx(12));
 
             LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(
-                    ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
-            lp.setMargins(0, 0, 0, 20);
+                    ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT
+            );
+            lp.bottomMargin = dpToPx(8);
             card.setLayoutParams(lp);
 
-            TextView timeTv = new TextView(this);
-            timeTv.setText(s.getTimeRangeFormatted());
-            timeTv.setTextColor(0xFF06B6D4);
-            timeTv.setTextSize(12);
-            timeTv.setTypeface(null, android.graphics.Typeface.BOLD);
-            card.addView(timeTv);
+            TextView title = new TextView(this);
+            title.setText(slot.getSubject());
+            title.setTextSize(15);
+            title.setTypeface(null, android.graphics.Typeface.BOLD);
+            title.setTextColor(getColor(R.color.text_primary));
+            card.addView(title);
 
-            TextView subjTv = new TextView(this);
-            subjTv.setText(s.getSubject());
-            subjTv.setTextColor(0xFFF8FAFC);
-            subjTv.setTextSize(16);
-            subjTv.setTypeface(null, android.graphics.Typeface.BOLD);
-            subjTv.setPadding(0, 4, 0, 4);
-            card.addView(subjTv);
+            TextView time = new TextView(this);
+            time.setText(slot.getTimeRangeFormatted() + (!slot.getRoom().isEmpty() ? " • " + slot.getRoom() : ""));
+            time.setTextSize(12);
+            time.setTextColor(getColor(R.color.text_secondary));
+            card.addView(time);
 
-            if (!s.getRoom().isEmpty() || !s.getLecturer().isEmpty()) {
-                TextView detTv = new TextView(this);
-                String det = (s.getRoom().isEmpty() ? "" : s.getRoom() + " ") +
-                             (s.getLecturer().isEmpty() ? "" : "• " + s.getLecturer());
-                detTv.setText(det);
-                detTv.setTextColor(0xFF94A3B8);
-                detTv.setTextSize(12);
-                card.addView(detTv);
-            }
-
-            LinearLayout actions = new LinearLayout(this);
-            actions.setOrientation(LinearLayout.HORIZONTAL);
-            actions.setPadding(0, 16, 0, 0);
-
-            Button recBtn = new Button(this);
-            recBtn.setText("🎙️ Record Now");
-            recBtn.setTextColor(0xFFF8FAFC);
-            recBtn.setTextSize(11);
-            recBtn.setBackgroundResource(R.drawable.bg_btn_primary);
-            recBtn.setPadding(24, 0, 24, 0);
-            recBtn.setLayoutParams(new LinearLayout.LayoutParams(
-                    ViewGroup.LayoutParams.WRAP_CONTENT, dpToPx(36)));
-            recBtn.setOnClickListener(v -> {
-                editRecordingSubject.setText(s.getSubject());
-                selectTab(0);
-                if (!isRecording) startRecordingSession();
-            });
-            actions.addView(recBtn);
-
-            Button delBtn = new Button(this);
-            delBtn.setText("Delete");
-            delBtn.setTextColor(0xFFF43F5E);
-            delBtn.setTextSize(11);
-            delBtn.setBackgroundResource(R.drawable.bg_input_field);
-            LinearLayout.LayoutParams delLp = new LinearLayout.LayoutParams(
-                    ViewGroup.LayoutParams.WRAP_CONTENT, dpToPx(36));
-            delLp.setMarginStart(dpToPx(8));
-            delBtn.setLayoutParams(delLp);
-            delBtn.setOnClickListener(v -> {
-                timetableStore.deleteSlot(s.getId());
-                updateTimetableSlotsList();
-                updateActiveSlotBanner();
-                syncTimetableWithLaptop();
-            });
-            actions.addView(delBtn);
-
-            card.addView(actions);
             containerTimetableSlots.addView(card);
         }
     }
@@ -752,19 +940,30 @@ public class MainActivity extends Activity {
     private void updateRecordingsList() {
         containerRecordingsList.removeAllViews();
         List<RecordingSession> sessions = recordingStore.getAllSessions();
-        RecordingStore.StorageInfo storage = recordingStore.getStorageInfo();
 
-        textRecordingsStats.setText(String.format(Locale.US, "%d sessions recorded • %s audio cached",
-                sessions.size(), storage.getFormattedAppUsage()));
+        long totalBytes = 0;
+        int totalChunks = 0;
+        int syncedCount = 0;
+
+        for (RecordingSession s : sessions) {
+            totalBytes += s.getTotalBytes();
+            totalChunks += s.getChunkCount();
+            if (s.isSynced()) syncedCount++;
+        }
+
+        long mb = totalBytes / (1024 * 1024);
+        textRecordingsStats.setText(sessions.size() + " sessions • " + mb + " MB (" + syncedCount + " synced)");
+        if (textSyncSummary != null) {
+            textSyncSummary.setText(syncedCount + "/" + sessions.size() + " sessions backed up to Mac");
+        }
 
         if (sessions.isEmpty()) {
-            TextView emptyText = new TextView(this);
-            emptyText.setText("No recorded lectures on device yet.\nTap the Record tab to start capturing lectures.");
-            emptyText.setTextColor(0xFF64748B);
-            emptyText.setTextSize(13);
-            emptyText.setPadding(16, 32, 16, 32);
-            emptyText.setGravity(Gravity.CENTER);
-            containerRecordingsList.addView(emptyText);
+            TextView empty = new TextView(this);
+            empty.setText("No audio recordings yet\nTap Record on the center tab to begin.");
+            empty.setTextColor(getColor(R.color.text_muted));
+            empty.setGravity(Gravity.CENTER);
+            empty.setPadding(0, dpToPx(32), 0, 0);
+            containerRecordingsList.addView(empty);
             return;
         }
 
@@ -772,497 +971,203 @@ public class MainActivity extends Activity {
             LinearLayout card = new LinearLayout(this);
             card.setOrientation(LinearLayout.VERTICAL);
             card.setBackgroundResource(R.drawable.bg_card);
-            card.setPadding(24, 24, 24, 24);
+            card.setPadding(dpToPx(14), dpToPx(12), dpToPx(14), dpToPx(12));
 
             LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(
-                    ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
-            lp.setMargins(0, 0, 0, 20);
+                    ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT
+            );
+            lp.bottomMargin = dpToPx(8);
             card.setLayoutParams(lp);
 
-            LinearLayout header = new LinearLayout(this);
-            header.setOrientation(LinearLayout.HORIZONTAL);
-            header.setGravity(Gravity.CENTER_VERTICAL);
+            TextView sub = new TextView(this);
+            sub.setText(session.getSubject());
+            sub.setTextSize(15);
+            sub.setTypeface(null, android.graphics.Typeface.BOLD);
+            sub.setTextColor(getColor(R.color.text_primary));
+            card.addView(sub);
 
-            TextView subjTv = new TextView(this);
-            subjTv.setText(session.getSubject());
-            subjTv.setTextColor(0xFFF8FAFC);
-            subjTv.setTextSize(15);
-            subjTv.setTypeface(null, android.graphics.Typeface.BOLD);
-            subjTv.setLayoutParams(new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1));
-            header.addView(subjTv);
+            TextView info = new TextView(this);
+            info.setText(session.getChunkCount() + " chunks • " + session.getFormattedSize() + " • " + (session.isSynced() ? "✓ Synced" : "▲ Local Only"));
+            info.setTextSize(12);
+            info.setTextColor(session.isSynced() ? getColor(R.color.status_connected_text) : getColor(R.color.warning));
+            card.addView(info);
 
-            TextView badge = new TextView(this);
-            if (session.isSynced()) {
-                badge.setText("✓ Synced");
-                badge.setBackgroundResource(R.drawable.bg_pill_connected);
-                badge.setTextColor(0xFF34D399);
-            } else {
-                badge.setText("▲ Local Only");
-                badge.setBackgroundResource(R.drawable.bg_pill_disconnected);
-                badge.setTextColor(0xFFFBBF24);
-            }
-            badge.setTextSize(10);
-            badge.setTypeface(null, android.graphics.Typeface.BOLD);
-            badge.setPadding(dpToPx(8), dpToPx(3), dpToPx(8), dpToPx(3));
-            header.addView(badge);
-            card.addView(header);
-
-            TextView dateTv = new TextView(this);
-            dateTv.setText(session.getFormattedDate() + " • " + session.getChunkCount() + " Chunks (" + session.getFormattedSize() + ")");
-            dateTv.setTextColor(0xFF94A3B8);
-            dateTv.setTextSize(12);
-            dateTv.setPadding(0, 6, 0, 10);
-            card.addView(dateTv);
-
-            LinearLayout actionRow = new LinearLayout(this);
-            actionRow.setOrientation(LinearLayout.HORIZONTAL);
-
-            Button syncBtn = new Button(this);
-            syncBtn.setText(session.isSynced() ? "Re-sync" : "Sync to MacBook");
-            syncBtn.setTextColor(0xFFF8FAFC);
-            syncBtn.setTextSize(11);
-            syncBtn.setBackgroundResource(R.drawable.bg_btn_primary);
-            syncBtn.setLayoutParams(new LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, dpToPx(36)));
-            syncBtn.setOnClickListener(v -> syncSessionAudio(session));
-            actionRow.addView(syncBtn);
-
-            Button playBtn = new Button(this);
-            playBtn.setText("▶ Play Preview");
-            playBtn.setTextColor(0xFFF8FAFC);
-            playBtn.setTextSize(11);
-            playBtn.setBackgroundResource(R.drawable.bg_input_field);
-            LinearLayout.LayoutParams playLp = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, dpToPx(36));
-            playLp.setMarginStart(dpToPx(8));
-            playBtn.setLayoutParams(playLp);
-            playBtn.setOnClickListener(v -> playSessionPreview(session));
-            actionRow.addView(playBtn);
-
-            card.addView(actionRow);
             containerRecordingsList.addView(card);
         }
     }
 
-    private void updateStorageDrawer() {
-        RecordingStore.StorageInfo storage = recordingStore.getStorageInfo();
-        textStorageAvailable.setText("Device Free Space: " + storage.getFormattedAvailable() + " / " + storage.getFormattedTotal());
-        textStorageAppUsage.setText("Lecture Whisper Audio Cache: " + storage.getFormattedAppUsage());
-        textStorageSyncedStatus.setText("Synced to MacBook: " + storage.syncedCount + " • Local Pending: " + storage.unsyncedCount);
-    }
-
-    private void startRecordingSession() {
-        String subject = editRecordingSubject.getText().toString().trim();
-        if (subject.isEmpty()) subject = "Lecture Session";
-
-        Intent intent = new Intent(this, RecorderService.class);
-        intent.setAction(RecorderService.ACTION_START);
-        intent.putExtra(RecorderService.EXTRA_SUBJECT, subject);
-
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            startForegroundService(intent);
-        } else {
-            startService(intent);
+    private void updateSettingsView() {
+        if (textSettingsMacName != null) {
+            textSettingsMacName.setText(connectionManager.getPairedMacName());
+        }
+        if (textSettingsServerId != null) {
+            String sid = connectionManager.getPairedServerId();
+            textSettingsServerId.setText(sid != null ? "Server ID: " + sid : "Not paired with any Mac");
         }
 
-        isRecording = true;
-        recordingStartTime = System.currentTimeMillis();
-        mainHandler.post(timerRunnable);
-
-        textRecordingStatus.setText("Recording in progress (16 kHz Mono AAC Beamforming)");
-        btnHeroRecord.setText("STOP");
-        btnHeroRecord.setBackgroundResource(R.drawable.bg_hero_record_active);
-        textChunkInfo.setText("Rotating chunks every 10 mins • Auto-upload active");
-        Toast.makeText(this, "Lecture recording started: " + subject, Toast.LENGTH_SHORT).show();
-    }
-
-    private void stopRecordingSession() {
-        Intent intent = new Intent(this, RecorderService.class);
-        intent.setAction(RecorderService.ACTION_STOP);
-        startService(intent);
-
-        isRecording = false;
-        mainHandler.removeCallbacks(timerRunnable);
-
-        textRecordingStatus.setText(R.string.status_ready);
-        textRecordingTimer.setText("00:00:00");
-        btnHeroRecord.setText("REC");
-        btnHeroRecord.setBackgroundResource(R.drawable.bg_hero_record_idle);
-        textChunkInfo.setText("10-Minute Rotating AAC Chunks • tus v1.0.0 auto-sync");
-
-        Toast.makeText(this, "Recording stopped. Saved to local storage.", Toast.LENGTH_SHORT).show();
-
-        updateRecordingsList();
-        updateStorageDrawer();
-
-        if (isConnectedToLaptop) {
-            syncAllUnsyncedAudio();
+        // Storage metrics
+        RecordingStore.StorageInfo storageInfo = recordingStore.getStorageInfo();
+        if (textStorageAvailable != null) {
+            textStorageAvailable.setText("Free Device Space: " + storageInfo.getFormattedAvailable());
+        }
+        if (textStorageAppUsage != null) {
+            textStorageAppUsage.setText("Lecture Whisper Audio Cache: " + storageInfo.getFormattedAppUsage());
         }
     }
 
-    private void probeLaptopConnection(boolean userInitiated) {
-        String host = editServerHost.getText().toString().trim();
-        int port;
-        try {
-            port = Integer.parseInt(editServerPort.getText().toString().trim());
-        } catch (Exception e) {
-            port = 8420;
-        }
+    private void showAddSlotDialog() {
+        AlertDialog.Builder b = new AlertDialog.Builder(this);
+        b.setTitle("Add Class to Schedule");
 
-        final int finalPort = port;
-        final String finalHost = host;
+        LinearLayout layout = new LinearLayout(this);
+        layout.setOrientation(LinearLayout.VERTICAL);
+        layout.setPadding(dpToPx(20), dpToPx(10), dpToPx(20), dpToPx(10));
 
-        new Thread(() -> {
-            LaptopSyncClient.PingResult res = LaptopSyncClient.ping(finalHost, finalPort);
-            mainHandler.post(() -> {
-                isConnectedToLaptop = res.ok;
-                if (res.ok) {
-                    chipConnectionStatus.setBackgroundResource(R.drawable.bg_pill_connected);
-                    viewConnectionDot.setBackgroundTintList(android.content.res.ColorStateList.valueOf(0xFF34D399));
-                    textConnectionBadge.setText("Connected (" + res.latencyMs + "ms)");
-                    textConnectionBadge.setTextColor(0xFF34D399);
-                    textConnectionDiagnostic.setText("Status: " + res.message);
-                    textConnectionDiagnostic.setTextColor(0xFF34D399);
+        final EditText editSub = new EditText(this);
+        editSub.setHint("Subject (e.g. Physics 101)");
+        layout.addView(editSub);
 
-                    // Auto-sync timetable if previously unsynced
-                    syncTimetableWithLaptop();
-                } else {
-                    chipConnectionStatus.setBackgroundResource(R.drawable.bg_pill_disconnected);
-                    viewConnectionDot.setBackgroundTintList(android.content.res.ColorStateList.valueOf(0xFFFBBF24));
-                    textConnectionBadge.setText("Offline (Tap)");
-                    textConnectionBadge.setTextColor(0xFFFBBF24);
-                    textConnectionDiagnostic.setText("Status: Unreachable. " + res.message);
-                    textConnectionDiagnostic.setTextColor(0xFFFBBF24);
-                }
+        final EditText editStart = new EditText(this);
+        editStart.setHint("Start Time (e.g. 10:00)");
+        layout.addView(editStart);
 
-                if (userInitiated) {
-                    Toast.makeText(MainActivity.this, res.message, Toast.LENGTH_SHORT).show();
-                }
-            });
-        }).start();
-    }
+        final EditText editEnd = new EditText(this);
+        editEnd.setHint("End Time (e.g. 11:30)");
+        layout.addView(editEnd);
 
-    private void saveHostConfig() {
-        String host = editServerHost.getText().toString().trim();
-        int port = 8420;
-        try {
-            port = Integer.parseInt(editServerPort.getText().toString().trim());
-        } catch (Exception ignored) {}
+        final EditText editRoom = new EditText(this);
+        editRoom.setHint("Room / Hall (Optional)");
+        layout.addView(editRoom);
 
-        prefs.edit().putString(KEY_HOST, host).putInt(KEY_PORT, port).apply();
+        b.setView(layout);
+        b.setPositiveButton("Add", (d, w) -> {
+            String s = editSub.getText().toString().trim();
+            String st = editStart.getText().toString().trim();
+            String et = editEnd.getText().toString().trim();
+            String rm = editRoom.getText().toString().trim();
+
+            if (!s.isEmpty() && !st.isEmpty() && !et.isEmpty()) {
+                TimetableSlot slot = new TimetableSlot(
+                        "slot_" + System.currentTimeMillis(),
+                        selectedDay,
+                        st,
+                        et,
+                        s,
+                        rm.isEmpty() ? null : rm,
+                        null,
+                        "default_group"
+                );
+                timetableStore.addSlot(slot);
+                updateTimetableSlotsList();
+                updateActiveSlotBanner();
+            }
+        });
+        b.setNegativeButton("Cancel", null);
+        b.show();
     }
 
     private void pickTimetableImage() {
         Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
         intent.setType("image/*");
-        startActivityForResult(Intent.createChooser(intent, "Select Timetable Schedule Photo"), PICK_IMAGE_REQUEST_CODE);
+        startActivityForResult(intent, PICK_IMAGE_REQUEST_CODE);
     }
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
         if (requestCode == PICK_IMAGE_REQUEST_CODE && resultCode == RESULT_OK && data != null && data.getData() != null) {
-            handleTimetablePhotoUpload(data.getData());
+            handleTimetableImageUpload(data.getData());
         }
     }
 
-    private void handleTimetablePhotoUpload(Uri imageUri) {
+    private void handleTimetableImageUpload(Uri imageUri) {
         layoutOcrProgress.setVisibility(View.VISIBLE);
-        textOcrProgressStatus.setText("Extracting timetable schedule photo via host OCR...");
-
-        String host = editServerHost.getText().toString().trim();
-        int port = 8420;
-        try { port = Integer.parseInt(editServerPort.getText().toString().trim()); } catch (Exception ignored) {}
-        final String finalHost = host;
-        final int finalPort = port;
+        textOcrProgressStatus.setText("Extracting timetable grid via Mac OCR...");
 
         new Thread(() -> {
             try {
-                // Copy URI stream to temp file
-                File tempFile = new File(getCacheDir(), "uploaded_timetable_" + System.currentTimeMillis() + ".png");
-                try (InputStream is = getContentResolver().openInputStream(imageUri);
-                     FileOutputStream fos = new FileOutputStream(tempFile)) {
-                    byte[] buffer = new byte[8192];
-                    int len;
-                    while ((len = is.read(buffer)) != -1) {
-                        fos.write(buffer, 0, len);
-                    }
+                InputStream is = getContentResolver().openInputStream(imageUri);
+                File tempFile = new File(getCacheDir(), "timetable_upload.png");
+                FileOutputStream fos = new FileOutputStream(tempFile);
+                byte[] buf = new byte[8192];
+                int len;
+                while ((len = is.read(buf)) != -1) {
+                    fos.write(buf, 0, len);
+                }
+                fos.close();
+                is.close();
+
+                String host = connectionManager.getActiveHost() != null ? connectionManager.getActiveHost() : "127.0.0.1";
+                int port = connectionManager.getActivePort();
+                List<TimetableSlot> slots = LaptopSyncClient.uploadTimetablePhoto(host, port, tempFile);
+
+                for (TimetableSlot s : slots) {
+                    timetableStore.addSlot(s);
                 }
 
-                List<TimetableSlot> extracted = LaptopSyncClient.uploadTimetablePhoto(finalHost, finalPort, tempFile);
-                mainHandler.post(() -> {
+                runOnUiThread(() -> {
                     layoutOcrProgress.setVisibility(View.GONE);
-                    if (extracted != null && !extracted.isEmpty()) {
-                        timetableStore.setSlots(extracted);
-                        updateTimetableSlotsList();
-                        updateActiveSlotBanner();
-                        Toast.makeText(MainActivity.this, "Successfully extracted " + extracted.size() + " classes!", Toast.LENGTH_LONG).show();
-                    } else {
-                        Toast.makeText(MainActivity.this, "No classes detected in photo. Check lighting or add manually.", Toast.LENGTH_LONG).show();
-                    }
+                    Toast.makeText(this, "Extracted " + slots.size() + " classes from timetable photo!", Toast.LENGTH_LONG).show();
+                    updateTimetableSlotsList();
+                    updateActiveSlotBanner();
                 });
             } catch (Exception e) {
-                mainHandler.post(() -> {
+                runOnUiThread(() -> {
                     layoutOcrProgress.setVisibility(View.GONE);
-                    Toast.makeText(MainActivity.this, "OCR Upload Failed: Ensure MacBook server is running (" + e.getMessage() + ")", Toast.LENGTH_LONG).show();
+                    Toast.makeText(this, "OCR Upload Error: " + e.getMessage(), Toast.LENGTH_LONG).show();
                 });
             }
         }).start();
     }
 
-    private void showAddSlotDialog() {
-        AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        builder.setTitle("Add Class to Timetable");
-
-        LinearLayout layout = new LinearLayout(this);
-        layout.setOrientation(LinearLayout.VERTICAL);
-        layout.setPadding(dpToPx(20), dpToPx(12), dpToPx(20), dpToPx(8));
-
-        final EditText subjEt = createStyledDialogEditText("Subject (e.g. CS 101: Data Structures)", "");
-        layout.addView(subjEt);
-
-        final EditText startEt = createStyledDialogEditText("Start Time (HH:MM, e.g. 09:00)", "09:00");
-        layout.addView(startEt);
-
-        final EditText endEt = createStyledDialogEditText("End Time (HH:MM, e.g. 10:30)", "10:30");
-        layout.addView(endEt);
-
-        final EditText roomEt = createStyledDialogEditText("Room / Hall (optional)", "");
-        layout.addView(roomEt);
-
-        final EditText profEt = createStyledDialogEditText("Lecturer (optional)", "");
-        layout.addView(profEt);
-
-        builder.setView(layout);
-        builder.setPositiveButton("Add", (dialog, which) -> {
-            String subject = subjEt.getText().toString().trim();
-            String start = startEt.getText().toString().trim();
-            String end = endEt.getText().toString().trim();
-            String room = roomEt.getText().toString().trim();
-            String prof = profEt.getText().toString().trim();
-
-            if (!subject.isEmpty()) {
-                TimetableSlot newSlot = new TimetableSlot(null, selectedDay, start, end, subject, room, prof, "default");
-                timetableStore.addSlot(newSlot);
-                updateTimetableSlotsList();
-                updateActiveSlotBanner();
-                syncTimetableWithLaptop();
-                Toast.makeText(this, "Class added to schedule", Toast.LENGTH_SHORT).show();
-            }
-        });
-        builder.setNegativeButton("Cancel", null);
-        builder.show();
+    private void setAppTheme(String theme) {
+        prefs.edit().putString(KEY_THEME, theme).apply();
+        recreate();
     }
 
-    private EditText createStyledDialogEditText(String hint, String defaultText) {
-        EditText et = new EditText(this);
-        et.setHint(hint);
-        if (!defaultText.isEmpty()) et.setText(defaultText);
-        et.setTextColor(0xFFF8FAFC);
-        et.setHintTextColor(0xFF64748B);
-        et.setTextSize(13);
-        et.setBackgroundResource(R.drawable.bg_input_field);
-        et.setPadding(dpToPx(12), dpToPx(10), dpToPx(12), dpToPx(10));
-        LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(
-            ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT
-        );
-        lp.setMargins(0, dpToPx(4), 0, dpToPx(6));
-        et.setLayoutParams(lp);
-        return et;
-    }
+    private void updateThemeButtons(String current) {
+        int activeBg = R.drawable.bg_btn_primary;
+        int idleBg = R.drawable.bg_input_field;
+        int activeText = getColor(R.color.on_primary);
+        int idleText = getColor(R.color.text_primary);
 
-    private void syncTimetableWithLaptop() {
-        String host = editServerHost.getText().toString().trim();
-        int port = 8420;
-        try { port = Integer.parseInt(editServerPort.getText().toString().trim()); } catch (Exception ignored) {}
-        final String finalHost = host;
-        final int finalPort = port;
+        btnThemeSystem.setBackgroundResource("system".equals(current) ? activeBg : idleBg);
+        btnThemeSystem.setTextColor("system".equals(current) ? activeText : idleText);
 
-        List<TimetableSlot> slots = timetableStore.getSlots();
-        new Thread(() -> {
-            try {
-                LaptopSyncClient.syncTimetable(finalHost, finalPort, slots);
-            } catch (Exception ignored) {}
-        }).start();
-    }
+        btnThemeLight.setBackgroundResource("light".equals(current) ? activeBg : idleBg);
+        btnThemeLight.setTextColor("light".equals(current) ? activeText : idleText);
 
-    private void syncAllUnsyncedAudio() {
-        List<RecordingSession> sessions = recordingStore.getAllSessions();
-        int pending = 0;
-        for (RecordingSession s : sessions) {
-            if (!s.isSynced()) {
-                pending++;
-                syncSessionAudio(s);
-            }
-        }
-        if (pending == 0) {
-            Toast.makeText(this, "All audio sessions are already synced!", Toast.LENGTH_SHORT).show();
-        } else {
-            Toast.makeText(this, "Syncing " + pending + " sessions to MacBook Pro...", Toast.LENGTH_SHORT).show();
-        }
-    }
-
-    private void syncSessionAudio(RecordingSession session) {
-        String host = editServerHost.getText().toString().trim();
-        int port = 8420;
-        try { port = Integer.parseInt(editServerPort.getText().toString().trim()); } catch (Exception ignored) {}
-        final String finalHost = host;
-        final int finalPort = port;
-
-        new Thread(() -> {
-            File dir = new File(session.getDirectoryPath());
-            File[] audioFiles = dir.listFiles((d, name) -> name.endsWith(".m4a") || name.endsWith(".wav"));
-            if (audioFiles == null || audioFiles.length == 0) return;
-
-            boolean allChunksSuccess = true;
-            for (int i = 0; i < audioFiles.length; i++) {
-                File chunk = audioFiles[i];
-                try {
-                    boolean ok = LaptopSyncClient.uploadAudioChunk(
-                            finalHost, finalPort, chunk, session.getSubject(),
-                            session.getTimetableSlotId(), "pixel-8a", i
-                    );
-                    if (!ok) allChunksSuccess = false;
-                } catch (Exception e) {
-                    allChunksSuccess = false;
-                    Log.e(TAG, "Failed uploading chunk: " + chunk.getName(), e);
-                }
-            }
-
-            if (allChunksSuccess) {
-                session.setSynced(true);
-                session.saveMetadata();
-                mainHandler.post(() -> {
-                    Toast.makeText(MainActivity.this, "✓ Synced: " + session.getSubject(), Toast.LENGTH_SHORT).show();
-                    updateRecordingsList();
-                    updateStorageDrawer();
-                });
-            }
-        }).start();
-    }
-
-    private void playSessionPreview(RecordingSession session) {
-        if (previewPlayer != null) {
-            previewPlayer.release();
-            previewPlayer = null;
-        }
-
-        File dir = new File(session.getDirectoryPath());
-        File[] audioFiles = dir.listFiles((d, name) -> name.endsWith(".m4a") || name.endsWith(".wav"));
-        if (audioFiles == null || audioFiles.length == 0) {
-            Toast.makeText(this, "Audio file has been pruned to save storage", Toast.LENGTH_SHORT).show();
-            return;
-        }
-
-        try {
-            previewPlayer = new MediaPlayer();
-            previewPlayer.setDataSource(audioFiles[0].getAbsolutePath());
-            previewPlayer.prepare();
-            previewPlayer.start();
-            Toast.makeText(this, "Playing preview: " + audioFiles[0].getName(), Toast.LENGTH_SHORT).show();
-        } catch (Exception e) {
-            Toast.makeText(this, "Playback error: " + e.getMessage(), Toast.LENGTH_SHORT).show();
-        }
+        btnThemeDark.setBackgroundResource("dark".equals(current) ? activeBg : idleBg);
+        btnThemeDark.setTextColor("dark".equals(current) ? activeText : idleText);
     }
 
     private boolean hasPermissions() {
-        boolean mic = checkSelfPermission(Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED;
-        boolean postNotif = true;
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            postNotif = checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_GRANTED;
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            return checkSelfPermission(Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED;
         }
-        return mic && postNotif;
+        return true;
     }
 
     private void requestAppPermissions() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            requestPermissions(new String[]{
-                    Manifest.permission.RECORD_AUDIO,
-                    Manifest.permission.POST_NOTIFICATIONS
-            }, PERMISSION_REQUEST_CODE);
-        } else {
-            requestPermissions(new String[]{
-                    Manifest.permission.RECORD_AUDIO
-            }, PERMISSION_REQUEST_CODE);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            String[] perms;
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                perms = new String[]{
+                        Manifest.permission.RECORD_AUDIO,
+                        Manifest.permission.POST_NOTIFICATIONS,
+                        Manifest.permission.CAMERA
+                };
+            } else {
+                perms = new String[]{
+                        Manifest.permission.RECORD_AUDIO,
+                        Manifest.permission.CAMERA
+                };
+            }
+            requestPermissions(perms, PERMISSION_REQUEST_CODE);
         }
     }
 
     private int dpToPx(int dp) {
-        float density = getResources().getDisplayMetrics().density;
-        return Math.round(dp * density);
-    }
-
-    private void updateSystemBarsAppearance() {
-        try {
-            int nightMode = getResources().getConfiguration().uiMode & Configuration.UI_MODE_NIGHT_MASK;
-            boolean isNight = (nightMode == Configuration.UI_MODE_NIGHT_YES);
-
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-                android.view.WindowInsetsController controller = getWindow().getInsetsController();
-                if (controller != null) {
-                    int flags = android.view.WindowInsetsController.APPEARANCE_LIGHT_STATUS_BARS |
-                                android.view.WindowInsetsController.APPEARANCE_LIGHT_NAVIGATION_BARS;
-                    controller.setSystemBarsAppearance(isNight ? 0 : flags, flags);
-                }
-            } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                View decor = getWindow().getDecorView();
-                int flags = decor.getSystemUiVisibility();
-                if (isNight) {
-                    flags &= ~View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR;
-                } else {
-                    flags |= View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR;
-                }
-                decor.setSystemUiVisibility(flags);
-            }
-        } catch (Throwable t) {
-            Log.w(TAG, "Failed to update system bars appearance", t);
-        }
-    }
-
-    private void checkPreviousCrashLog() {
-        try {
-            File crashFile = new File(getFilesDir(), "last_crash.txt");
-            if (crashFile.exists()) {
-                byte[] bytes = java.nio.file.Files.readAllBytes(crashFile.toPath());
-                String details = new String(bytes, java.nio.charset.StandardCharsets.UTF_8);
-                crashFile.delete();
-                new AlertDialog.Builder(this)
-                        .setTitle("Previous Crash Diagnostic")
-                        .setMessage(details.length() > 800 ? details.substring(0, 800) + "\n..." : details)
-                        .setPositiveButton("OK", null)
-                        .show();
-            }
-        } catch (Throwable ignored) {}
-    }
-
-    private void setAppTheme(String mode) {
-        prefs.edit().putString(KEY_THEME, mode).apply();
-        updateThemeButtons(mode);
-        recreate();
-    }
-
-    private void updateThemeButtons(String mode) {
-        if (btnThemeSystem == null || btnThemeLight == null || btnThemeDark == null) return;
-        boolean isSystem = "system".equalsIgnoreCase(mode);
-        boolean isLight = "light".equalsIgnoreCase(mode);
-        boolean isDark = "dark".equalsIgnoreCase(mode);
-
-        btnThemeSystem.setBackgroundResource(isSystem ? R.drawable.bg_btn_primary : R.drawable.bg_input_field);
-        btnThemeSystem.setTextColor(getColor(isSystem ? R.color.tab_text_active : R.color.text_primary));
-
-        btnThemeLight.setBackgroundResource(isLight ? R.drawable.bg_btn_primary : R.drawable.bg_input_field);
-        btnThemeLight.setTextColor(getColor(isLight ? R.color.tab_text_active : R.color.text_primary));
-
-        btnThemeDark.setBackgroundResource(isDark ? R.drawable.bg_btn_primary : R.drawable.bg_input_field);
-        btnThemeDark.setTextColor(getColor(isDark ? R.color.tab_text_active : R.color.text_primary));
-    }
-
-    @Override
-    protected void onDestroy() {
-        super.onDestroy();
-        mainHandler.removeCallbacks(timerRunnable);
-        mainHandler.removeCallbacks(pingRunnable);
-        if (previewPlayer != null) {
-            previewPlayer.release();
-            previewPlayer = null;
-        }
+        return (int) (dp * getResources().getDisplayMetrics().density);
     }
 }

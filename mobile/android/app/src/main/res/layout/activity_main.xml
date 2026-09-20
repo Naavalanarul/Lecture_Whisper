@@ -5,22 +5,21 @@
     android:layout_height="match_parent"
     android:background="@color/background">
 
-    <!-- LAYER 1: MAIN APPLICATION VIEW -->
+    <!-- LAYER 1: MAIN APPLICATION SHELL -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:orientation="vertical">
 
-        <!-- Top App Bar -->
-        <!-- Top App Bar: 390px Floating Pill Navbar -->
+        <!-- TOP APP BAR: FLOATING PILL NAVBAR -->
         <LinearLayout
             android:id="@+id/top_app_bar"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
             android:paddingHorizontal="16dp"
-            android:paddingTop="42dp"
-            android:paddingBottom="8dp"
+            android:paddingTop="38dp"
+            android:paddingBottom="6dp"
             android:clipToPadding="false">
 
             <LinearLayout
@@ -29,13 +28,13 @@
                 android:orientation="horizontal"
                 android:gravity="center_vertical"
                 android:background="@drawable/bg_nav_pill_floating"
-                android:paddingHorizontal="6dp">
+                android:paddingHorizontal="8dp">
 
-                <!-- 40dp Circular Logo Badge with Brand Mark -->
+                <!-- 38dp Circular Logo Badge with Brand Mark -->
                 <ImageView
                     android:id="@+id/img_nav_logo_badge"
-                    android:layout_width="40dp"
-                    android:layout_height="40dp"
+                    android:layout_width="38dp"
+                    android:layout_height="38dp"
                     android:background="@drawable/bg_brand_badge_circle"
                     android:padding="8dp"
                     android:src="@drawable/ic_brand_mark_white"
@@ -47,44 +46,46 @@
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
                     android:orientation="vertical"
-                    android:paddingStart="10dp"
+                    android:paddingStart="12dp"
                     android:paddingEnd="6dp">
 
                     <TextView
                         android:id="@+id/text_current_page_title"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Live Recorder"
+                        android:text="Today"
                         android:textColor="@color/text_primary"
-                        android:textSize="14sp"
+                        android:textSize="15sp"
                         android:textStyle="bold"
                         android:singleLine="true"
                         android:ellipsize="end" />
 
                     <TextView
+                        android:id="@+id/text_current_page_subtitle"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Pixel 8a • Local Intelligence"
+                        android:text="Pixel 8a"
                         android:textColor="@color/text_muted"
-                        android:textSize="10sp"
+                        android:textSize="11sp"
                         android:singleLine="true" />
                 </LinearLayout>
 
-                <!-- Live Connection Status Chip -->
+                <!-- Live Morphing Connection Status Chip -->
                 <LinearLayout
                     android:id="@+id/chip_connection_status"
                     android:layout_width="wrap_content"
-                    android:layout_height="28dp"
+                    android:layout_height="32dp"
                     android:orientation="horizontal"
                     android:gravity="center_vertical"
                     android:background="@drawable/bg_pill_connected"
-                    android:paddingHorizontal="8dp"
-                    android:layout_marginEnd="6dp">
+                    android:paddingHorizontal="10dp"
+                    android:clickable="true"
+                    android:focusable="true">
 
                     <View
                         android:id="@+id/view_connection_dot"
-                        android:layout_width="7dp"
-                        android:layout_height="7dp"
+                        android:layout_width="8dp"
+                        android:layout_height="8dp"
                         android:background="@drawable/bg_hero_record_idle"
                         android:backgroundTint="@color/status_connected_text" />
 
@@ -94,34 +95,24 @@
                         android:layout_height="wrap_content"
                         android:text="Connected"
                         android:textColor="@color/status_connected_text"
-                        android:textSize="10sp"
+                        android:textSize="11sp"
                         android:textStyle="bold"
-                        android:layout_marginStart="4dp" />
+                        android:layout_marginStart="6dp" />
                 </LinearLayout>
-
-                <!-- 40dp Circular Menu Drawer Trigger -->
-                <ImageButton
-                    android:id="@+id/btn_open_drawer"
-                    android:layout_width="40dp"
-                    android:layout_height="40dp"
-                    android:padding="9dp"
-                    android:scaleType="centerInside"
-                    android:background="@drawable/bg_close_btn_circle"
-                    android:src="@drawable/ic_hamburger"
-                    android:tint="@color/text_primary"
-                    android:contentDescription="Open navigation drawer" />
             </LinearLayout>
         </LinearLayout>
 
-        <!-- Main Content Area: Tab Views -->
+        <!-- MAIN CONTENT AREA: 5 TABS -->
         <FrameLayout
             android:layout_width="match_parent"
             android:layout_height="0dp"
             android:layout_weight="1">
 
-            <!-- TAB 1: LIVE RECORDER -->
+            <!-- ======================================================== -->
+            <!-- TAB 0: TODAY VIEW                                        -->
+            <!-- ======================================================== -->
             <ScrollView
-                android:id="@+id/view_tab_recorder"
+                android:id="@+id/view_tab_today"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:visibility="visible">
@@ -132,23 +123,23 @@
                     android:orientation="vertical"
                     android:padding="16dp">
 
-                    <!-- Dynamic Timetable Slot Banner -->
+                    <!-- Dynamic Timetable Class Banner -->
                     <LinearLayout
                         android:id="@+id/banner_timetable_slot"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:orientation="vertical"
                         android:background="@drawable/bg_banner_active_class"
-                        android:padding="14dp"
+                        android:padding="16dp"
                         android:layout_marginBottom="16dp">
 
                         <TextView
                             android:id="@+id/text_banner_type"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="CURRENT CLASS IN PROGRESS"
-                            android:textColor="#34D399"
-                            android:textSize="11sp"
+                            android:text="Current class in progress"
+                            android:textColor="@color/status_connected_text"
+                            android:textSize="12sp"
                             android:textStyle="bold" />
 
                         <TextView
@@ -157,9 +148,9 @@
                             android:layout_height="wrap_content"
                             android:text="CS 101: Data Structures"
                             android:textColor="@color/text_primary"
-                            android:textSize="17sp"
+                            android:textSize="18sp"
                             android:textStyle="bold"
-                            android:layout_marginTop="2dp" />
+                            android:layout_marginTop="4dp" />
 
                         <TextView
                             android:id="@+id/text_banner_details"
@@ -167,24 +158,25 @@
                             android:layout_height="wrap_content"
                             android:text="09:00 – 10:30 • Hall B • Prof. Turing"
                             android:textColor="@color/text_secondary"
-                            android:textSize="12sp"
+                            android:textSize="13sp"
                             android:layout_marginTop="2dp" />
                     </LinearLayout>
 
-                    <!-- Hero Recording Panel -->
+                    <!-- Quick Hero Record Card -->
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:orientation="vertical"
                         android:gravity="center"
                         android:background="@drawable/bg_card"
-                        android:padding="24dp">
+                        android:padding="20dp"
+                        android:layout_marginBottom="16dp">
 
                         <TextView
                             android:id="@+id/text_recording_status"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="@string/status_ready"
+                            android:text="Ready to record"
                             android:textColor="@color/text_secondary"
                             android:textSize="13sp" />
 
@@ -194,102 +186,120 @@
                             android:layout_height="wrap_content"
                             android:text="00:00:00"
                             android:textColor="@color/text_primary"
-                            android:textSize="44sp"
+                            android:textSize="40sp"
                             android:textStyle="bold"
-                            android:layout_marginTop="10dp" />
+                            android:fontFeatureSettings="tnum"
+                            android:layout_marginTop="6dp" />
 
-                        <!-- Circular Record Button -->
                         <Button
                             android:id="@+id/btn_hero_record"
-                            android:layout_width="96dp"
-                            android:layout_height="96dp"
-                            android:background="@drawable/bg_hero_record_idle"
-                            android:text="REC"
-                            android:textColor="@color/text_primary"
-                            android:textSize="20sp"
+                            android:layout_width="140dp"
+                            android:layout_height="48dp"
+                            android:background="@drawable/bg_btn_primary"
+                            android:text="Record now"
+                            android:textColor="@color/on_primary"
+                            android:textSize="14sp"
                             android:textStyle="bold"
-                            android:layout_marginTop="20dp" />
+                            android:layout_marginTop="12dp" />
 
                         <TextView
                             android:id="@+id/text_chunk_info"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="10-Minute Rotating Chunks • 16 kHz Mono AAC"
+                            android:text="10-min rotating chunks"
                             android:textColor="@color/text_muted"
-                            android:textSize="12sp"
-                            android:layout_marginTop="18dp" />
+                            android:textSize="11sp"
+                            android:layout_marginTop="8dp" />
+                    </LinearLayout>
 
-                        <!-- Subject override input -->
-                        <LinearLayout
+                    <!-- Today's Upcoming Classes Deck -->
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Today's schedule"
+                        android:textColor="@color/text_primary"
+                        android:textSize="14sp"
+                        android:textStyle="bold"
+                        android:layout_marginBottom="10dp" />
+
+                    <LinearLayout
+                        android:id="@+id/container_today_classes"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical">
+
+                        <TextView
+                            android:id="@+id/text_today_empty_state"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:orientation="vertical"
-                            android:layout_marginTop="20dp">
-
-                            <TextView
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="Active Lecture Subject:"
-                                android:textColor="@color/text_secondary"
-                                android:textSize="12sp"
-                                android:layout_marginBottom="6dp" />
-
-                            <EditText
-                                android:id="@+id/edit_recording_subject"
-                                android:layout_width="match_parent"
-                                android:layout_height="44dp"
-                                android:background="@drawable/bg_input_field"
-                                android:textColor="@color/text_primary"
-                                android:textSize="14sp"
-                                android:paddingHorizontal="12dp"
-                                android:text="CS 101: Data Structures"
-                                android:singleLine="true" />
-                        </LinearLayout>
+                            android:background="@drawable/bg_card"
+                            android:gravity="center"
+                            android:padding="24dp"
+                            android:text="No more lectures scheduled today"
+                            android:textColor="@color/text_muted"
+                            android:textSize="13sp" />
                     </LinearLayout>
 
                     <!-- Quick Sync Card -->
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:orientation="vertical"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical"
                         android:background="@drawable/bg_card"
                         android:padding="16dp"
                         android:layout_marginTop="16dp">
 
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="Local Wi-Fi Auto-Sync"
-                            android:textColor="@color/text_primary"
-                            android:textSize="14sp"
-                            android:textStyle="bold" />
+                        <ImageView
+                            android:layout_width="28dp"
+                            android:layout_height="28dp"
+                            android:src="@drawable/ic_refresh"
+                            android:tint="@color/primary" />
 
-                        <TextView
-                            android:id="@+id/text_sync_summary"
-                            android:layout_width="wrap_content"
+                        <LinearLayout
+                            android:layout_width="0dp"
                             android:layout_height="wrap_content"
-                            android:text="Syncs audio chunks and timetable updates automatically when connected to MacBook Pro."
-                            android:textColor="@color/text_muted"
-                            android:textSize="12sp"
-                            android:layout_marginTop="4dp" />
+                            android:layout_weight="1"
+                            android:orientation="vertical"
+                            android:paddingStart="12dp">
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Sync with Mac"
+                                android:textColor="@color/text_primary"
+                                android:textSize="14sp"
+                                android:textStyle="bold" />
+
+                            <TextView
+                                android:id="@+id/text_sync_summary"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="All audio sessions synced"
+                                android:textColor="@color/text_secondary"
+                                android:textSize="12sp"
+                                android:layout_marginTop="2dp" />
+                        </LinearLayout>
 
                         <Button
                             android:id="@+id/btn_sync_now"
-                            android:layout_width="match_parent"
-                            android:layout_height="44dp"
+                            android:layout_width="wrap_content"
+                            android:layout_height="38dp"
                             android:background="@drawable/bg_btn_primary"
-                            android:text="Sync Unsynced Audio to Laptop"
-                            android:textColor="@color/text_primary"
-                            android:textSize="13sp"
+                            android:text="Sync"
+                            android:textColor="@color/on_primary"
+                            android:textSize="12sp"
                             android:textStyle="bold"
-                            android:layout_marginTop="12dp" />
+                            android:paddingHorizontal="16dp" />
                     </LinearLayout>
                 </LinearLayout>
             </ScrollView>
 
-            <!-- TAB 2: TIMETABLE & OCR -->
+            <!-- ======================================================== -->
+            <!-- TAB 1: SCHEDULE VIEW                                     -->
+            <!-- ======================================================== -->
             <ScrollView
-                android:id="@+id/view_tab_timetable"
+                android:id="@+id/view_tab_schedule"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:visibility="gone">
@@ -300,97 +310,24 @@
                     android:orientation="vertical"
                     android:padding="16dp">
 
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Weekly Academic Schedule"
-                        android:textColor="@color/text_primary"
-                        android:textSize="18sp"
-                        android:textStyle="bold" />
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Upload a timetable photo for OCR parsing or add classes manually."
-                        android:textColor="@color/text_muted"
-                        android:textSize="12sp"
-                        android:layout_marginTop="2dp" />
-
-                    <!-- Top Timetable Actions -->
-                    <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:orientation="horizontal"
-                        android:layout_marginTop="14dp">
-
-                        <Button
-                            android:id="@+id/btn_upload_timetable_ocr"
-                            android:layout_width="0dp"
-                            android:layout_height="44dp"
-                            android:layout_weight="1"
-                            android:background="@drawable/bg_btn_primary"
-                            android:text="📷 Scan Timetable Photo"
-                            android:textColor="@color/text_primary"
-                            android:textSize="12sp"
-                            android:textStyle="bold"
-                            android:layout_marginEnd="6dp" />
-
-                        <Button
-                            android:id="@+id/btn_add_slot"
-                            android:layout_width="0dp"
-                            android:layout_height="44dp"
-                            android:layout_weight="1"
-                            android:background="@drawable/bg_input_field"
-                            android:text="+ Add Class"
-                            android:textColor="@color/text_primary"
-                            android:textSize="12sp"
-                            android:layout_marginStart="6dp" />
-                    </LinearLayout>
-
-                    <!-- OCR Progress Indicator Card -->
-                    <LinearLayout
-                        android:id="@+id/layout_ocr_progress"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:orientation="horizontal"
-                        android:gravity="center_vertical"
-                        android:background="@drawable/bg_card"
-                        android:padding="14dp"
-                        android:layout_marginTop="12dp"
-                        android:visibility="gone">
-
-                        <ProgressBar
-                            android:layout_width="24dp"
-                            android:layout_height="24dp" />
-
-                        <TextView
-                            android:id="@+id/text_ocr_progress_status"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="Uploading photo to MacBook for ML OCR grid parsing..."
-                            android:textColor="@color/text_secondary"
-                            android:textSize="12sp"
-                            android:layout_marginStart="12dp" />
-                    </LinearLayout>
-
-                    <!-- Weekday Selector -->
+                    <!-- Horizontal 7-Day Strip (Mon - Sun, all visible) -->
                     <HorizontalScrollView
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:scrollbars="none"
-                        android:layout_marginTop="16dp">
+                        android:layout_marginBottom="16dp">
 
                         <LinearLayout
-                            android:id="@+id/layout_weekday_selector"
+                            android:id="@+id/layout_days_strip"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:orientation="horizontal">
 
                             <Button
                                 android:id="@+id/btn_day_mon"
-                                android:layout_width="wrap_content"
-                                android:layout_height="36dp"
-                                android:background="@drawable/bg_btn_primary"
+                                android:layout_width="48dp"
+                                android:layout_height="48dp"
+                                android:background="@drawable/bg_input_field"
                                 android:text="Mon"
                                 android:textColor="@color/text_primary"
                                 android:textSize="12sp"
@@ -398,78 +335,138 @@
 
                             <Button
                                 android:id="@+id/btn_day_tue"
-                                android:layout_width="wrap_content"
-                                android:layout_height="36dp"
+                                android:layout_width="48dp"
+                                android:layout_height="48dp"
                                 android:background="@drawable/bg_input_field"
                                 android:text="Tue"
-                                android:textColor="@color/text_muted"
+                                android:textColor="@color/text_primary"
                                 android:textSize="12sp"
                                 android:layout_marginEnd="6dp" />
 
                             <Button
                                 android:id="@+id/btn_day_wed"
-                                android:layout_width="wrap_content"
-                                android:layout_height="36dp"
+                                android:layout_width="48dp"
+                                android:layout_height="48dp"
                                 android:background="@drawable/bg_input_field"
                                 android:text="Wed"
-                                android:textColor="@color/text_muted"
+                                android:textColor="@color/text_primary"
                                 android:textSize="12sp"
                                 android:layout_marginEnd="6dp" />
 
                             <Button
                                 android:id="@+id/btn_day_thu"
-                                android:layout_width="wrap_content"
-                                android:layout_height="36dp"
+                                android:layout_width="48dp"
+                                android:layout_height="48dp"
                                 android:background="@drawable/bg_input_field"
                                 android:text="Thu"
-                                android:textColor="@color/text_muted"
+                                android:textColor="@color/text_primary"
                                 android:textSize="12sp"
                                 android:layout_marginEnd="6dp" />
 
                             <Button
                                 android:id="@+id/btn_day_fri"
-                                android:layout_width="wrap_content"
-                                android:layout_height="36dp"
+                                android:layout_width="48dp"
+                                android:layout_height="48dp"
                                 android:background="@drawable/bg_input_field"
                                 android:text="Fri"
-                                android:textColor="@color/text_muted"
+                                android:textColor="@color/text_primary"
                                 android:textSize="12sp"
                                 android:layout_marginEnd="6dp" />
 
                             <Button
                                 android:id="@+id/btn_day_sat"
-                                android:layout_width="wrap_content"
-                                android:layout_height="36dp"
+                                android:layout_width="48dp"
+                                android:layout_height="48dp"
                                 android:background="@drawable/bg_input_field"
                                 android:text="Sat"
-                                android:textColor="@color/text_muted"
+                                android:textColor="@color/text_primary"
                                 android:textSize="12sp"
                                 android:layout_marginEnd="6dp" />
 
                             <Button
                                 android:id="@+id/btn_day_sun"
-                                android:layout_width="wrap_content"
-                                android:layout_height="36dp"
+                                android:layout_width="48dp"
+                                android:layout_height="48dp"
                                 android:background="@drawable/bg_input_field"
                                 android:text="Sun"
-                                android:textColor="@color/text_muted"
+                                android:textColor="@color/text_primary"
                                 android:textSize="12sp" />
                         </LinearLayout>
                     </HorizontalScrollView>
 
-                    <!-- Dynamic List of Slots for Selected Day -->
+                    <!-- Schedule Action Bar: Scan Timetable & Add Slot -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:layout_marginBottom="16dp">
+
+                        <Button
+                            android:id="@+id/btn_upload_timetable_ocr"
+                            android:layout_width="0dp"
+                            android:layout_height="48dp"
+                            android:layout_weight="1"
+                            android:background="@drawable/bg_btn_primary"
+                            android:text="Scan timetable"
+                            android:textColor="@color/on_primary"
+                            android:textSize="13sp"
+                            android:textStyle="bold"
+                            android:layout_marginEnd="6dp" />
+
+                        <Button
+                            android:id="@+id/btn_add_slot"
+                            android:layout_width="0dp"
+                            android:layout_height="48dp"
+                            android:layout_weight="1"
+                            android:background="@drawable/bg_input_field"
+                            android:text="Add class"
+                            android:textColor="@color/text_primary"
+                            android:textSize="13sp"
+                            android:textStyle="bold"
+                            android:layout_marginStart="6dp" />
+                    </LinearLayout>
+
+                    <!-- OCR Progress Banner -->
+                    <LinearLayout
+                        android:id="@+id/layout_ocr_progress"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical"
+                        android:background="@drawable/bg_banner_active_class"
+                        android:padding="12dp"
+                        android:layout_marginBottom="16dp"
+                        android:visibility="gone">
+
+                        <ProgressBar
+                            android:layout_width="24dp"
+                            android:layout_height="24dp"
+                            android:indeterminate="true" />
+
+                        <TextView
+                            android:id="@+id/text_ocr_progress_status"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Extracting schedule via Mac OCR..."
+                            android:textColor="@color/text_primary"
+                            android:textSize="12sp"
+                            android:layout_marginStart="12dp" />
+                    </LinearLayout>
+
+                    <!-- Timetable Slots Container -->
                     <LinearLayout
                         android:id="@+id/container_timetable_slots"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:orientation="vertical"
-                        android:layout_marginTop="14dp" />
+                        android:orientation="vertical" />
                 </LinearLayout>
             </ScrollView>
 
-            <!-- TAB 3: RECORDINGS & CHUNKS -->
+            <!-- ======================================================== -->
+            <!-- TAB 2: STUDIO RECORD VIEW (INSTAGRAM-GRADE EXPERIENCE)   -->
+            <!-- ======================================================== -->
             <ScrollView
-                android:id="@+id/view_tab_recordings"
+                android:id="@+id/view_tab_record"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:visibility="gone">
@@ -478,777 +475,784 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="vertical"
-                    android:padding="16dp">
+                    android:gravity="center_horizontal"
+                    android:padding="24dp">
 
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Device Audio Library"
-                        android:textColor="@color/text_primary"
-                        android:textSize="18sp"
-                        android:textStyle="bold" />
-
-                    <TextView
-                        android:id="@+id/text_recordings_stats"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="0 sessions stored • 0 MB cached"
-                        android:textColor="@color/text_muted"
-                        android:textSize="12sp"
-                        android:layout_marginTop="2dp" />
-
-                    <Button
-                        android:id="@+id/btn_sync_all_recordings"
-                        android:layout_width="match_parent"
-                        android:layout_height="44dp"
-                        android:background="@drawable/bg_btn_primary"
-                        android:text="Sync All Sessions to MacBook"
-                        android:textColor="@color/text_primary"
-                        android:textSize="13sp"
-                        android:textStyle="bold"
-                        android:layout_marginTop="14dp" />
-
-                    <!-- List of Recording Sessions -->
+                    <!-- Live Pulsing REC Badge -->
                     <LinearLayout
-                        android:id="@+id/container_recordings_list"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:orientation="vertical"
-                        android:layout_marginTop="14dp" />
-                </LinearLayout>
-            </ScrollView>
+                        android:id="@+id/layout_rec_badge"
+                        android:layout_width="wrap_content"
+                        android:layout_height="32dp"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical"
+                        android:background="@drawable/bg_hero_raised_recording"
+                        android:paddingHorizontal="14dp">
 
-            <!-- TAB 4: CONNECTION & DIAGNOSTICS -->
-            <ScrollView
-                android:id="@+id/view_tab_connection"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:visibility="gone">
+                        <View
+                            android:layout_width="8dp"
+                            android:layout_height="8dp"
+                            android:background="@drawable/bg_hero_record_idle"
+                            android:backgroundTint="#FFFFFF" />
 
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="vertical"
-                    android:padding="16dp">
+                        <TextView
+                            android:id="@+id/text_rec_indicator"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="REC LIVE"
+                            android:textColor="@color/on_recording"
+                            android:textSize="12sp"
+                            android:textStyle="bold"
+                            android:layout_marginStart="6dp" />
+                    </LinearLayout>
 
+                    <!-- Digital Timer Display with Tabular Numerals -->
                     <TextView
+                        android:id="@+id/text_studio_timer"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="MacBook Pro Connection"
+                        android:text="00:00:00"
                         android:textColor="@color/text_primary"
-                        android:textSize="18sp"
-                        android:textStyle="bold" />
+                        android:textSize="54sp"
+                        android:textStyle="bold"
+                        android:fontFeatureSettings="tnum"
+                        android:layout_marginTop="20dp" />
 
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Configure server endpoint and review connection instructions."
-                        android:textColor="@color/text_muted"
-                        android:textSize="12sp"
-                        android:layout_marginTop="2dp" />
+                    <!-- Live Real-Time Audio Amplitude Visualizer (7 Bars) -->
+                    <LinearLayout
+                        android:id="@+id/layout_audio_visualizer"
+                        android:layout_width="match_parent"
+                        android:layout_height="64dp"
+                        android:orientation="horizontal"
+                        android:gravity="center"
+                        android:layout_marginTop="24dp"
+                        android:layout_marginBottom="24dp">
 
-                    <!-- Host Configuration Card -->
+                        <View
+                            android:id="@+id/wave_bar_1"
+                            android:layout_width="8dp"
+                            android:layout_height="14dp"
+                            android:background="@color/primary"
+                            android:layout_marginHorizontal="4dp" />
+
+                        <View
+                            android:id="@+id/wave_bar_2"
+                            android:layout_width="8dp"
+                            android:layout_height="22dp"
+                            android:background="@color/primary"
+                            android:layout_marginHorizontal="4dp" />
+
+                        <View
+                            android:id="@+id/wave_bar_3"
+                            android:layout_width="8dp"
+                            android:layout_height="36dp"
+                            android:background="@color/primary"
+                            android:layout_marginHorizontal="4dp" />
+
+                        <View
+                            android:id="@+id/wave_bar_4"
+                            android:layout_width="8dp"
+                            android:layout_height="48dp"
+                            android:background="@color/recording_active"
+                            android:layout_marginHorizontal="4dp" />
+
+                        <View
+                            android:id="@+id/wave_bar_5"
+                            android:layout_width="8dp"
+                            android:layout_height="36dp"
+                            android:background="@color/primary"
+                            android:layout_marginHorizontal="4dp" />
+
+                        <View
+                            android:id="@+id/wave_bar_6"
+                            android:layout_width="8dp"
+                            android:layout_height="22dp"
+                            android:background="@color/primary"
+                            android:layout_marginHorizontal="4dp" />
+
+                        <View
+                            android:id="@+id/wave_bar_7"
+                            android:layout_width="8dp"
+                            android:layout_height="14dp"
+                            android:background="@color/primary"
+                            android:layout_marginHorizontal="4dp" />
+                    </LinearLayout>
+
+                    <!-- Active Subject Tagging Field -->
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:orientation="vertical"
                         android:background="@drawable/bg_card"
                         android:padding="16dp"
-                        android:layout_marginTop="14dp">
+                        android:layout_marginBottom="20dp">
 
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="MacBook Server Host / IP:"
-                            android:textColor="@color/text_secondary"
-                            android:textSize="12sp"
-                            android:layout_marginBottom="6dp" />
+                            android:text="Subject tag"
+                            android:textColor="@color/text_muted"
+                            android:textSize="11sp"
+                            android:textStyle="bold" />
 
                         <EditText
-                            android:id="@+id/edit_server_host"
+                            android:id="@+id/edit_recording_subject"
                             android:layout_width="match_parent"
-                            android:layout_height="44dp"
+                            android:layout_height="48dp"
                             android:background="@drawable/bg_input_field"
+                            android:hint="e.g. Data Structures Lecture 4"
                             android:textColor="@color/text_primary"
+                            android:textColorHint="@color/text_muted"
                             android:textSize="14sp"
                             android:paddingHorizontal="12dp"
-                            android:text="127.0.0.1"
-                            android:singleLine="true" />
+                            android:layout_marginTop="8dp" />
+                    </LinearLayout>
 
-                        <!-- Quick Host Presets -->
+                    <!-- Primary Action Controls: Stop & Pause -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:gravity="center">
+
+                        <Button
+                            android:id="@+id/btn_studio_stop"
+                            android:layout_width="0dp"
+                            android:layout_height="52dp"
+                            android:layout_weight="1"
+                            android:background="@drawable/bg_btn_recording"
+                            android:text="Stop and sync"
+                            android:textColor="@color/on_recording"
+                            android:textSize="14sp"
+                            android:textStyle="bold"
+                            android:layout_marginEnd="8dp" />
+
+                        <Button
+                            android:id="@+id/btn_lock_guard"
+                            android:layout_width="52dp"
+                            android:layout_height="52dp"
+                            android:background="@drawable/bg_input_field"
+                            android:text="🔒"
+                            android:textSize="18sp"
+                            android:contentDescription="Lock screen against accidental taps" />
+                    </LinearLayout>
+                </LinearLayout>
+            </ScrollView>
+
+            <!-- ======================================================== -->
+            <!-- TAB 3: LIBRARY VIEW                                      -->
+            <!-- ======================================================== -->
+            <ScrollView
+                android:id="@+id/view_tab_library"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:visibility="gone">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="16dp">
+
+                    <!-- Header Stats & Sync Action -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical"
+                        android:layout_marginBottom="16dp">
+
+                        <LinearLayout
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:orientation="vertical">
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Audio library"
+                                android:textColor="@color/text_primary"
+                                android:textSize="16sp"
+                                android:textStyle="bold" />
+
+                            <TextView
+                                android:id="@+id/text_recordings_stats"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="0 recordings • 0 MB"
+                                android:textColor="@color/text_secondary"
+                                android:textSize="12sp"
+                                android:layout_marginTop="2dp" />
+                        </LinearLayout>
+
+                        <Button
+                            android:id="@+id/btn_sync_all_recordings"
+                            android:layout_width="wrap_content"
+                            android:layout_height="40dp"
+                            android:background="@drawable/bg_btn_primary"
+                            android:text="Sync all"
+                            android:textColor="@color/on_primary"
+                            android:textSize="12sp"
+                            android:textStyle="bold"
+                            android:paddingHorizontal="14dp" />
+                    </LinearLayout>
+
+                    <!-- Saved Recordings List Container -->
+                    <LinearLayout
+                        android:id="@+id/container_recordings_list"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical" />
+                </LinearLayout>
+            </ScrollView>
+
+            <!-- ======================================================== -->
+            <!-- TAB 4: SETTINGS & DIAGNOSTICS VIEW                       -->
+            <!-- ======================================================== -->
+            <ScrollView
+                android:id="@+id/view_tab_settings"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:visibility="gone">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="16dp">
+
+                    <!-- Paired Mac Card -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:background="@drawable/bg_card"
+                        android:padding="16dp"
+                        android:layout_marginBottom="16dp">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="PAIRED MACBOOK"
+                            android:textColor="@color/text_muted"
+                            android:textSize="11sp"
+                            android:textStyle="bold" />
+
+                        <TextView
+                            android:id="@+id/text_settings_mac_name"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="MacBook Pro"
+                            android:textColor="@color/text_primary"
+                            android:textSize="16sp"
+                            android:textStyle="bold"
+                            android:layout_marginTop="4dp" />
+
+                        <TextView
+                            android:id="@+id/text_settings_server_id"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Server: Not paired"
+                            android:textColor="@color/text_secondary"
+                            android:textSize="12sp"
+                            android:layout_marginTop="2dp" />
+
                         <LinearLayout
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:orientation="horizontal"
-                            android:layout_marginTop="8dp">
+                            android:layout_marginTop="12dp">
 
                             <Button
-                                android:id="@+id/btn_preset_usb"
+                                android:id="@+id/btn_settings_pair_qr"
                                 android:layout_width="0dp"
-                                android:layout_height="36dp"
+                                android:layout_height="40dp"
                                 android:layout_weight="1"
-                                android:background="@drawable/bg_input_field"
-                                android:text="⚡ USB: 127.0.0.1"
-                                android:textColor="@color/accent"
-                                android:textSize="11sp"
-                                android:textAllCaps="false"
-                                android:layout_marginEnd="4dp" />
+                                android:background="@drawable/bg_btn_primary"
+                                android:text="Pair with QR"
+                                android:textColor="@color/on_primary"
+                                android:textSize="12sp"
+                                android:textStyle="bold"
+                                android:layout_marginEnd="6dp" />
 
                             <Button
-                                android:id="@+id/btn_preset_wifi"
+                                android:id="@+id/btn_settings_forget_mac"
                                 android:layout_width="0dp"
-                                android:layout_height="36dp"
+                                android:layout_height="40dp"
                                 android:layout_weight="1"
                                 android:background="@drawable/bg_input_field"
-                                android:text="🌐 Wi-Fi: 172.17.180.61"
-                                android:textColor="@color/primary_light"
-                                android:textSize="11sp"
-                                android:textAllCaps="false"
-                                android:layout_marginStart="4dp" />
+                                android:text="Forget Mac"
+                                android:textColor="@color/recording_active"
+                                android:textSize="12sp"
+                                android:textStyle="bold"
+                                android:layout_marginStart="6dp" />
                         </LinearLayout>
+                    </LinearLayout>
+
+                    <!-- Storage Manager Card -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:background="@drawable/bg_card"
+                        android:padding="16dp"
+                        android:layout_marginBottom="16dp">
 
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="Port (default: 8420):"
-                            android:textColor="@color/text_secondary"
-                            android:textSize="12sp"
-                            android:layout_marginTop="12dp"
-                            android:layout_marginBottom="6dp" />
+                            android:text="STORAGE &amp; CACHE"
+                            android:textColor="@color/text_muted"
+                            android:textSize="11sp"
+                            android:textStyle="bold" />
 
-                        <EditText
-                            android:id="@+id/edit_server_port"
-                            android:layout_width="match_parent"
-                            android:layout_height="44dp"
-                            android:background="@drawable/bg_input_field"
-                            android:textColor="@color/text_primary"
-                            android:textSize="14sp"
-                            android:paddingHorizontal="12dp"
-                            android:text="8420"
-                            android:inputType="number"
-                            android:singleLine="true" />
-
-                        <Button
-                            android:id="@+id/btn_test_connection"
-                            android:layout_width="match_parent"
-                            android:layout_height="44dp"
-                            android:background="@drawable/bg_btn_primary"
-                            android:text="Test Connection"
+                        <TextView
+                            android:id="@+id/text_storage_available"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Internal Storage: Calculating..."
                             android:textColor="@color/text_primary"
                             android:textSize="13sp"
+                            android:layout_marginTop="6dp" />
+
+                        <TextView
+                            android:id="@+id/text_storage_app_usage"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Audio Cache: 0 MB"
+                            android:textColor="@color/text_secondary"
+                            android:textSize="12sp"
+                            android:layout_marginTop="2dp" />
+
+                        <Button
+                            android:id="@+id/btn_clean_synced_chunks"
+                            android:layout_width="match_parent"
+                            android:layout_height="40dp"
+                            android:background="@drawable/bg_input_field"
+                            android:text="Clean synced audio files"
+                            android:textColor="@color/text_primary"
+                            android:textSize="12sp"
                             android:textStyle="bold"
-                            android:layout_marginTop="16dp" />
+                            android:layout_marginTop="12dp" />
+                    </LinearLayout>
+
+                    <!-- Appearance Theme Card -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:background="@drawable/bg_card"
+                        android:padding="16dp"
+                        android:layout_marginBottom="16dp">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="APPEARANCE"
+                            android:textColor="@color/text_muted"
+                            android:textSize="11sp"
+                            android:textStyle="bold" />
+
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:orientation="horizontal"
+                            android:layout_marginTop="10dp">
+
+                            <Button
+                                android:id="@+id/btn_theme_system"
+                                android:layout_width="0dp"
+                                android:layout_height="38dp"
+                                android:layout_weight="1"
+                                android:background="@drawable/bg_input_field"
+                                android:text="System"
+                                android:textColor="@color/text_primary"
+                                android:textSize="12sp"
+                                android:layout_marginEnd="4dp" />
+
+                            <Button
+                                android:id="@+id/btn_theme_light"
+                                android:layout_width="0dp"
+                                android:layout_height="38dp"
+                                android:layout_weight="1"
+                                android:background="@drawable/bg_input_field"
+                                android:text="Light"
+                                android:textColor="@color/text_primary"
+                                android:textSize="12sp"
+                                android:layout_marginHorizontal="2dp" />
+
+                            <Button
+                                android:id="@+id/btn_theme_dark"
+                                android:layout_width="0dp"
+                                android:layout_height="38dp"
+                                android:layout_weight="1"
+                                android:background="@drawable/bg_input_field"
+                                android:text="Dark"
+                                android:textColor="@color/text_primary"
+                                android:textSize="12sp"
+                                android:layout_marginStart="4dp" />
+                        </LinearLayout>
+                    </LinearLayout>
+
+                    <!-- Collapsible Diagnostics Section -->
+                    <LinearLayout
+                        android:id="@+id/layout_diagnostics_card"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:background="@drawable/bg_card"
+                        android:padding="16dp"
+                        android:layout_marginBottom="24dp">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="DIAGNOSTICS &amp; USB MODE"
+                            android:textColor="@color/text_muted"
+                            android:textSize="11sp"
+                            android:textStyle="bold" />
 
                         <TextView
                             android:id="@+id/text_connection_diagnostic"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="Status: Ready to test connection"
+                            android:text="Network state: Idle"
+                            android:textColor="@color/text_secondary"
+                            android:textSize="12sp"
+                            android:layout_marginTop="6dp" />
+
+                        <TextView
+                            android:id="@+id/text_usb_instructions"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="USB tethering: run 'adb reverse tcp:8420 tcp:8420' to connect without Wi-Fi."
                             android:textColor="@color/text_muted"
-                            android:textSize="12sp"
-                            android:layout_marginTop="10dp" />
-                    </LinearLayout>
-
-                    <!-- Interactive Connection Guide Card -->
-                    <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:orientation="vertical"
-                        android:background="@drawable/bg_card"
-                        android:padding="16dp"
-                        android:layout_marginTop="16dp">
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="📖 How to Connect (3 Simple Options)"
-                            android:textColor="@color/text_primary"
-                            android:textSize="15sp"
-                            android:textStyle="bold" />
-
-                        <!-- Option 1 -->
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="1. Wi-Fi Local Area Network (LAN)"
-                            android:textColor="@color/primary_light"
-                            android:textSize="13sp"
-                            android:textStyle="bold"
-                            android:layout_marginTop="10dp" />
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="• Ensure MacBook and Pixel 8a are on the same Wi-Fi.\n• Run 'lecturewhisper serve' in terminal on your Mac.\n• Enter your Mac's LAN IP (e.g. 192.168.1.x) above and tap Test Connection."
-                            android:textColor="@color/text_secondary"
-                            android:textSize="12sp"
-                            android:layout_marginTop="4dp" />
-
-                        <!-- Option 2 -->
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="2. Personal Hotspot (Campus / Dorm)"
-                            android:textColor="@color/primary_light"
-                            android:textSize="13sp"
-                            android:textStyle="bold"
-                            android:layout_marginTop="12dp" />
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="• Turn on Personal Hotspot on Pixel 8a or Mac.\n• Connect the other device to the hotspot.\n• This bypasses campus Wi-Fi device isolation."
-                            android:textColor="@color/text_secondary"
-                            android:textSize="12sp"
-                            android:layout_marginTop="4dp" />
-
-                        <!-- Option 3 -->
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="3. Zero-Latency USB Cable (Fastest)"
-                            android:textColor="@color/primary_light"
-                            android:textSize="13sp"
-                            android:textStyle="bold"
-                            android:layout_marginTop="12dp" />
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="• Connect Pixel 8a to MacBook with USB-C cable.\n• In MacBook terminal run:\n  adb reverse tcp:8420 tcp:8420\n• In app set Host to '127.0.0.1' or 'localhost'.\n• Works instantly without any network setup!"
-                            android:textColor="@color/text_secondary"
-                            android:textSize="12sp"
-                            android:layout_marginTop="4dp" />
+                            android:textSize="11sp"
+                            android:layout_marginTop="6dp" />
                     </LinearLayout>
                 </LinearLayout>
             </ScrollView>
         </FrameLayout>
 
-        <!-- Bottom Navigation Bar Divider -->
-        <View
-            android:layout_width="match_parent"
-            android:layout_height="1dp"
-            android:background="@color/card_border" />
-
-        <!-- Bottom Navigation Bar -->
+        <!-- ======================================================== -->
+        <!-- PERSISTENT 5-TAB INSTAGRAM BOTTOM NAVIGATION BAR         -->
+        <!-- ======================================================== -->
         <LinearLayout
-            android:id="@+id/bottom_nav_bar"
+            android:id="@+id/bottom_navigation_bar"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:minHeight="60dp"
+            android:layout_height="64dp"
             android:orientation="horizontal"
-            android:gravity="center"
-            android:paddingTop="6dp"
-            android:paddingBottom="16dp"
-            android:background="@color/tab_bar_bg">
+            android:gravity="center_vertical"
+            android:background="@drawable/bg_tab_bar"
+            android:paddingHorizontal="4dp">
 
-            <Button
-                android:id="@+id/nav_btn_recorder"
+            <!-- Tab 0: Today -->
+            <LinearLayout
+                android:id="@+id/tab_btn_today"
                 android:layout_width="0dp"
-                android:layout_height="wrap_content"
+                android:layout_height="match_parent"
                 android:layout_weight="1"
-                android:background="?android:attr/selectableItemBackground"
-                android:drawableTop="@drawable/ic_mic"
-                android:drawablePadding="3dp"
-                android:drawableTint="@color/primary_light"
-                android:text="Record"
-                android:textColor="@color/primary_light"
-                android:textSize="11sp"
-                android:textStyle="bold"
-                android:textAllCaps="false" />
+                android:orientation="vertical"
+                android:gravity="center"
+                android:clickable="true"
+                android:focusable="true">
 
-            <Button
-                android:id="@+id/nav_btn_timetable"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:background="?android:attr/selectableItemBackground"
-                android:drawableTop="@drawable/ic_calendar"
-                android:drawablePadding="3dp"
-                android:drawableTint="@color/text_muted"
-                android:text="Schedule"
-                android:textColor="@color/text_muted"
-                android:textSize="11sp"
-                android:textAllCaps="false" />
+                <ImageView
+                    android:id="@+id/icon_tab_today"
+                    android:layout_width="22dp"
+                    android:layout_height="22dp"
+                    android:src="@drawable/ic_tab_today"
+                    android:tint="@color/tab_icon_active" />
 
-            <Button
-                android:id="@+id/nav_btn_recordings"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:background="?android:attr/selectableItemBackground"
-                android:drawableTop="@drawable/ic_folder"
-                android:drawablePadding="3dp"
-                android:drawableTint="@color/text_muted"
-                android:text="Audio"
-                android:textColor="@color/text_muted"
-                android:textSize="11sp"
-                android:textAllCaps="false" />
+                <TextView
+                    android:id="@+id/text_tab_today"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Today"
+                    android:textColor="@color/tab_text_active"
+                    android:textSize="11sp"
+                    android:textStyle="bold"
+                    android:layout_marginTop="2dp" />
+            </LinearLayout>
 
-            <Button
-                android:id="@+id/nav_btn_connection"
+            <!-- Tab 1: Schedule -->
+            <LinearLayout
+                android:id="@+id/tab_btn_schedule"
                 android:layout_width="0dp"
-                android:layout_height="wrap_content"
+                android:layout_height="match_parent"
                 android:layout_weight="1"
-                android:background="?android:attr/selectableItemBackground"
-                android:drawableTop="@drawable/ic_wifi"
-                android:drawablePadding="3dp"
-                android:drawableTint="@color/text_muted"
-                android:text="MacBook"
-                android:textColor="@color/text_muted"
-                android:textSize="11sp"
-                android:textAllCaps="false" />
+                android:orientation="vertical"
+                android:gravity="center"
+                android:clickable="true"
+                android:focusable="true">
+
+                <ImageView
+                    android:id="@+id/icon_tab_schedule"
+                    android:layout_width="22dp"
+                    android:layout_height="22dp"
+                    android:src="@drawable/ic_tab_schedule"
+                    android:tint="@color/tab_icon_inactive" />
+
+                <TextView
+                    android:id="@+id/text_tab_schedule"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Schedule"
+                    android:textColor="@color/tab_text_inactive"
+                    android:textSize="11sp"
+                    android:layout_marginTop="2dp" />
+            </LinearLayout>
+
+            <!-- Tab 2: Record (Raised Center Hero Circle) -->
+            <LinearLayout
+                android:id="@+id/tab_btn_record"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1.1"
+                android:orientation="vertical"
+                android:gravity="center"
+                android:clickable="true"
+                android:focusable="true">
+
+                <FrameLayout
+                    android:layout_width="48dp"
+                    android:layout_height="48dp"
+                    android:background="@drawable/bg_hero_raised_record">
+
+                    <ImageView
+                        android:id="@+id/icon_tab_record"
+                        android:layout_width="22dp"
+                        android:layout_height="22dp"
+                        android:layout_gravity="center"
+                        android:src="@drawable/ic_tab_record"
+                        android:tint="#FFFFFF" />
+                </FrameLayout>
+            </LinearLayout>
+
+            <!-- Tab 3: Library -->
+            <LinearLayout
+                android:id="@+id/tab_btn_library"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:orientation="vertical"
+                android:gravity="center"
+                android:clickable="true"
+                android:focusable="true">
+
+                <ImageView
+                    android:id="@+id/icon_tab_library"
+                    android:layout_width="22dp"
+                    android:layout_height="22dp"
+                    android:src="@drawable/ic_tab_library"
+                    android:tint="@color/tab_icon_inactive" />
+
+                <TextView
+                    android:id="@+id/text_tab_library"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Library"
+                    android:textColor="@color/tab_text_inactive"
+                    android:textSize="11sp"
+                    android:layout_marginTop="2dp" />
+            </LinearLayout>
+
+            <!-- Tab 4: Settings -->
+            <LinearLayout
+                android:id="@+id/tab_btn_settings"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:orientation="vertical"
+                android:gravity="center"
+                android:clickable="true"
+                android:focusable="true">
+
+                <ImageView
+                    android:id="@+id/icon_tab_settings"
+                    android:layout_width="22dp"
+                    android:layout_height="22dp"
+                    android:src="@drawable/ic_tab_settings"
+                    android:tint="@color/tab_icon_inactive" />
+
+                <TextView
+                    android:id="@+id/text_tab_settings"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Settings"
+                    android:textColor="@color/tab_text_inactive"
+                    android:textSize="11sp"
+                    android:layout_marginTop="2dp" />
+            </LinearLayout>
         </LinearLayout>
     </LinearLayout>
 
-    <!-- LAYER 2: DRAWER SCRIM (DIMMER OVERLAY) -->
-    <View
-        android:id="@+id/drawer_scrim"
+    <!-- LAYER 2: QR SCANNER & PAIRING MODAL SHEET OVERLAY -->
+    <FrameLayout
+        android:id="@+id/overlay_qr_scanner"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:background="@color/drawer_scrim"
-        android:visibility="gone" />
-
-    <!-- LAYER 3: 390PX MOBILE BOTTOM SHEET DRAWER -->
-    <LinearLayout
-        android:id="@+id/sidebar_drawer"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:layout_marginTop="80dp"
-        android:layout_gravity="bottom"
-        android:orientation="vertical"
-        android:background="@drawable/bg_bottom_sheet"
-        android:paddingHorizontal="20dp"
-        android:paddingTop="12dp"
-        android:paddingBottom="24dp"
+        android:background="#D9000000"
+        android:visibility="gone"
         android:clickable="true"
-        android:focusable="true"
-        android:visibility="gone">
+        android:focusable="true">
 
-        <!-- Grab Handle Pill -->
-        <View
-            android:layout_width="48dp"
-            android:layout_height="5dp"
-            android:layout_gravity="center_horizontal"
-            android:background="@drawable/bg_bottom_sheet_handle"
-            android:layout_marginBottom="16dp" />
-
-        <!-- Drawer Header -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:gravity="center_vertical"
-            android:paddingBottom="12dp">
+            android:layout_gravity="bottom"
+            android:orientation="vertical"
+            android:background="@drawable/bg_bottom_sheet"
+            android:padding="20dp">
 
-            <ImageView
-                android:layout_width="40dp"
-                android:layout_height="40dp"
-                android:background="@drawable/bg_brand_badge_circle"
-                android:padding="8dp"
-                android:src="@drawable/ic_brand_mark_white"
-                android:layout_marginEnd="12dp"
-                android:contentDescription="Lecture Whisper Logo" />
-
-            <LinearLayout
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:orientation="vertical">
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Lecture Whisper"
-                    android:textColor="@color/text_primary"
-                    android:textSize="17sp"
-                    android:textStyle="bold" />
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Offline Speech &amp; Local Notes • v1.0"
-                    android:textColor="@color/accent"
-                    android:textSize="11sp" />
-            </LinearLayout>
-
-            <Button
-                android:id="@+id/btn_close_drawer"
+            <!-- Sheet Handle -->
+            <View
                 android:layout_width="36dp"
-                android:layout_height="36dp"
-                android:background="@drawable/bg_close_btn_circle"
-                android:text="✕"
-                android:textColor="@color/text_secondary"
-                android:textSize="15sp"
-                android:gravity="center"
-                android:padding="0dp" />
-        </LinearLayout>
+                android:layout_height="4dp"
+                android:layout_gravity="center_horizontal"
+                android:background="@drawable/bg_bottom_sheet_handle"
+                android:layout_marginBottom="16dp" />
 
-        <View
-            android:layout_width="match_parent"
-            android:layout_height="1dp"
-            android:background="@color/card_border"
-            android:layout_marginBottom="12dp" />
-
-        <ScrollView
-            android:layout_width="match_parent"
-            android:layout_height="0dp"
-            android:layout_weight="1"
-            android:fillViewport="true"
-            android:scrollbars="none">
-
+            <!-- Title & Close -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="vertical">
+                android:orientation="horizontal"
+                android:gravity="center_vertical">
 
-                <!-- 390px Sheet Navigation Items -->
+                <ImageView
+                    android:layout_width="28dp"
+                    android:layout_height="28dp"
+                    android:src="@drawable/ic_qr_scan"
+                    android:tint="@color/primary" />
+
                 <TextView
-                    android:layout_width="wrap_content"
+                    android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:text="NAVIGATION"
-                    android:textColor="@color/text_muted"
-                    android:textSize="11sp"
+                    android:layout_weight="1"
+                    android:text="Pair with MacBook"
+                    android:textColor="@color/text_primary"
+                    android:textSize="16sp"
                     android:textStyle="bold"
-                    android:layout_marginBottom="8dp" />
+                    android:layout_marginStart="10dp" />
 
-                <!-- Sheet Nav Item: Live Audio Recorder -->
-                <LinearLayout
-                    android:id="@+id/btn_sheet_nav_recorder"
-                    android:layout_width="match_parent"
+                <ImageButton
+                    android:id="@+id/btn_close_qr_scanner"
+                    android:layout_width="36dp"
+                    android:layout_height="36dp"
+                    android:background="@drawable/bg_close_btn_circle"
+                    android:src="@drawable/ic_hamburger"
+                    android:tint="@color/text_secondary"
+                    android:contentDescription="Close pairing sheet" />
+            </LinearLayout>
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Scan the QR code shown on your Mac dashboard or enter the 6-digit code."
+                android:textColor="@color/text_secondary"
+                android:textSize="13sp"
+                android:layout_marginTop="8dp" />
+
+            <!-- 6-Digit Code Fallback Input -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:layout_marginTop="16dp">
+
+                <EditText
+                    android:id="@+id/edit_fallback_code"
+                    android:layout_width="0dp"
                     android:layout_height="48dp"
-                    android:orientation="horizontal"
-                    android:gravity="center_vertical"
-                    android:background="@drawable/bg_sheet_nav_item_active"
-                    android:paddingHorizontal="14dp"
-                    android:layout_marginBottom="4dp"
-                    android:clickable="true"
-                    android:focusable="true">
+                    android:layout_weight="1"
+                    android:background="@drawable/bg_input_field"
+                    android:hint="Enter 6-digit code"
+                    android:inputType="number"
+                    android:maxLength="6"
+                    android:textColor="@color/text_primary"
+                    android:textColorHint="@color/text_muted"
+                    android:textSize="15sp"
+                    android:paddingHorizontal="14dp" />
 
-                    <ImageView
-                        android:id="@+id/icon_sheet_nav_recorder"
-                        android:layout_width="20dp"
-                        android:layout_height="20dp"
-                        android:src="@drawable/ic_mic"
-                        android:tint="@color/primary" />
-
-                    <TextView
-                        android:id="@+id/text_sheet_nav_recorder"
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:text="Live Audio Recorder"
-                        android:textColor="@color/primary"
-                        android:textSize="14sp"
-                        android:textStyle="bold"
-                        android:layout_marginStart="12dp" />
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="g h"
-                        android:textColor="@color/text_muted"
-                        android:textSize="11sp"
-                        android:fontFamily="monospace" />
-                </LinearLayout>
-
-                <!-- Sheet Nav Item: Class Schedule -->
-                <LinearLayout
-                    android:id="@+id/btn_sheet_nav_timetable"
-                    android:layout_width="match_parent"
-                    android:layout_height="48dp"
-                    android:orientation="horizontal"
-                    android:gravity="center_vertical"
-                    android:background="@drawable/bg_sheet_nav_item_idle"
-                    android:paddingHorizontal="14dp"
-                    android:layout_marginBottom="4dp"
-                    android:clickable="true"
-                    android:focusable="true">
-
-                    <ImageView
-                        android:id="@+id/icon_sheet_nav_timetable"
-                        android:layout_width="20dp"
-                        android:layout_height="20dp"
-                        android:src="@drawable/ic_calendar"
-                        android:tint="@color/text_muted" />
-
-                    <TextView
-                        android:id="@+id/text_sheet_nav_timetable"
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:text="Schedule &amp; Timetable"
-                        android:textColor="@color/text_primary"
-                        android:textSize="14sp"
-                        android:textStyle="bold"
-                        android:layout_marginStart="12dp" />
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="g s"
-                        android:textColor="@color/text_muted"
-                        android:textSize="11sp"
-                        android:fontFamily="monospace" />
-                </LinearLayout>
-
-                <!-- Sheet Nav Item: Audio Library -->
-                <LinearLayout
-                    android:id="@+id/btn_sheet_nav_recordings"
-                    android:layout_width="match_parent"
-                    android:layout_height="48dp"
-                    android:orientation="horizontal"
-                    android:gravity="center_vertical"
-                    android:background="@drawable/bg_sheet_nav_item_idle"
-                    android:paddingHorizontal="14dp"
-                    android:layout_marginBottom="4dp"
-                    android:clickable="true"
-                    android:focusable="true">
-
-                    <ImageView
-                        android:id="@+id/icon_sheet_nav_recordings"
-                        android:layout_width="20dp"
-                        android:layout_height="20dp"
-                        android:src="@drawable/ic_folder"
-                        android:tint="@color/text_muted" />
-
-                    <TextView
-                        android:id="@+id/text_sheet_nav_recordings"
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:text="Audio Library &amp; History"
-                        android:textColor="@color/text_primary"
-                        android:textSize="14sp"
-                        android:textStyle="bold"
-                        android:layout_marginStart="12dp" />
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="g l"
-                        android:textColor="@color/text_muted"
-                        android:textSize="11sp"
-                        android:fontFamily="monospace" />
-                </LinearLayout>
-
-                <!-- Sheet Nav Item: MacBook Sync -->
-                <LinearLayout
-                    android:id="@+id/btn_sheet_nav_connection"
-                    android:layout_width="match_parent"
-                    android:layout_height="48dp"
-                    android:orientation="horizontal"
-                    android:gravity="center_vertical"
-                    android:background="@drawable/bg_sheet_nav_item_idle"
-                    android:paddingHorizontal="14dp"
-                    android:layout_marginBottom="16dp"
-                    android:clickable="true"
-                    android:focusable="true">
-
-                    <ImageView
-                        android:id="@+id/icon_sheet_nav_connection"
-                        android:layout_width="20dp"
-                        android:layout_height="20dp"
-                        android:src="@drawable/ic_wifi"
-                        android:tint="@color/text_muted" />
-
-                    <TextView
-                        android:id="@+id/text_sheet_nav_connection"
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:text="MacBook Sync &amp; Tethering"
-                        android:textColor="@color/text_primary"
-                        android:textSize="14sp"
-                        android:textStyle="bold"
-                        android:layout_marginStart="12dp" />
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="g d"
-                        android:textColor="@color/text_muted"
-                        android:textSize="11sp"
-                        android:fontFamily="monospace" />
-                </LinearLayout>
-
-                <!-- Appearance & Theme Section -->
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="APPEARANCE &amp; THEME"
-                    android:textColor="@color/text_muted"
-                    android:textSize="11sp"
-                    android:textStyle="bold"
-                    android:layout_marginBottom="8dp" />
-
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="horizontal"
-                    android:background="@drawable/bg_card"
-                    android:padding="6dp"
-                    android:layout_marginBottom="16dp">
-
-                    <Button
-                        android:id="@+id/btn_theme_system"
-                        android:layout_width="0dp"
-                        android:layout_height="36dp"
-                        android:layout_weight="1"
-                        android:background="@drawable/bg_btn_primary"
-                        android:text="🌓 Auto"
-                        android:textColor="@color/tab_text_active"
-                        android:textSize="11sp"
-                        android:textStyle="bold" />
-
-                    <Button
-                        android:id="@+id/btn_theme_light"
-                        android:layout_width="0dp"
-                        android:layout_height="36dp"
-                        android:layout_weight="1"
-                        android:layout_marginStart="4dp"
-                        android:background="@drawable/bg_input_field"
-                        android:text="☀️ Light"
-                        android:textColor="@color/text_primary"
-                        android:textSize="11sp" />
-
-                    <Button
-                        android:id="@+id/btn_theme_dark"
-                        android:layout_width="0dp"
-                        android:layout_height="36dp"
-                        android:layout_weight="1"
-                        android:layout_marginStart="4dp"
-                        android:background="@drawable/bg_input_field"
-                        android:text="🌙 Dark"
-                        android:textColor="@color/text_primary"
-                        android:textSize="11sp" />
-                </LinearLayout>
-
-                <!-- Storage Information Section -->
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="STORAGE INFORMATION"
-                    android:textColor="@color/text_muted"
-                    android:textSize="11sp"
-                    android:textStyle="bold"
-                    android:layout_marginBottom="8dp" />
-
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="vertical"
-                    android:background="@drawable/bg_card"
-                    android:padding="14dp">
-
-                    <TextView
-                        android:id="@+id/text_storage_available"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Available: 64.20 GB / 128.00 GB"
-                        android:textColor="@color/text_primary"
-                        android:textSize="13sp"
-                        android:textStyle="bold" />
-
-                    <TextView
-                        android:id="@+id/text_storage_app_usage"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Lecture Whisper Cache: 0 MB"
-                        android:textColor="@color/text_secondary"
-                        android:textSize="12sp"
-                        android:layout_marginTop="4dp" />
-
-                    <TextView
-                        android:id="@+id/text_storage_synced_status"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Synced: 0 • Pending: 0"
-                        android:textColor="@color/text_muted"
-                        android:textSize="12sp"
-                        android:layout_marginTop="4dp" />
-
-                    <Button
-                        android:id="@+id/btn_drawer_prune_cache"
-                        android:layout_width="match_parent"
-                        android:layout_height="38dp"
-                        android:background="@drawable/bg_input_field"
-                        android:text="🧹 Clean Synced Chunks"
-                        android:textColor="@color/text_primary"
-                        android:textSize="11sp"
-                        android:layout_marginTop="10dp" />
-                </LinearLayout>
-
-                <!-- System & Hardware Specs -->
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="DEVICE &amp; ENGINE SPECS"
-                    android:textColor="@color/text_muted"
-                    android:textSize="11sp"
-                    android:textStyle="bold"
-                    android:layout_marginTop="20dp"
-                    android:layout_marginBottom="8dp" />
-
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="vertical"
-                    android:background="@drawable/bg_card"
-                    android:padding="14dp">
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Target: Google Pixel 8a"
-                        android:textColor="@color/text_primary"
-                        android:textSize="12sp" />
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Platform: API 35 (Android 15) Forward-Ready"
-                        android:textColor="@color/text_secondary"
-                        android:textSize="12sp"
-                        android:layout_marginTop="4dp" />
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Audio: 16 kHz Mono AAC @ 64 kbps"
-                        android:textColor="@color/text_secondary"
-                        android:textSize="12sp"
-                        android:layout_marginTop="4dp" />
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Mic Source: VOICE_RECOGNITION"
-                        android:textColor="@color/text_secondary"
-                        android:textSize="12sp"
-                        android:layout_marginTop="4dp" />
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="WakeLock: PARTIAL_WAKE_LOCK"
-                        android:textColor="@color/text_secondary"
-                        android:textSize="12sp"
-                        android:layout_marginTop="4dp" />
-                </LinearLayout>
-
-                <!-- Battery Optimization Check -->
                 <Button
-                    android:id="@+id/btn_drawer_battery_opt"
+                    android:id="@+id/btn_submit_code"
+                    android:layout_width="wrap_content"
+                    android:layout_height="48dp"
+                    android:background="@drawable/bg_btn_primary"
+                    android:text="Pair"
+                    android:textColor="@color/on_primary"
+                    android:textSize="13sp"
+                    android:textStyle="bold"
+                    android:layout_marginStart="8dp"
+                    android:paddingHorizontal="20dp" />
+            </LinearLayout>
+
+            <!-- Manual Host & Port Configuration (Moved to secondary position) -->
+            <TextView
+                android:id="@+id/text_toggle_advanced_host"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Advanced Host Settings ▼"
+                android:textColor="@color/primary"
+                android:textSize="12sp"
+                android:textStyle="bold"
+                android:layout_marginTop="16dp"
+                android:clickable="true"
+                android:focusable="true" />
+
+            <LinearLayout
+                android:id="@+id/layout_advanced_host"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:layout_marginTop="10dp"
+                android:visibility="gone">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal">
+
+                    <EditText
+                        android:id="@+id/edit_server_host"
+                        android:layout_width="0dp"
+                        android:layout_height="44dp"
+                        android:layout_weight="2"
+                        android:background="@drawable/bg_input_field"
+                        android:hint="Host (e.g. 192.168.1.50)"
+                        android:textColor="@color/text_primary"
+                        android:textColorHint="@color/text_muted"
+                        android:textSize="13sp"
+                        android:paddingHorizontal="10dp" />
+
+                    <EditText
+                        android:id="@+id/edit_server_port"
+                        android:layout_width="0dp"
+                        android:layout_height="44dp"
+                        android:layout_weight="1"
+                        android:background="@drawable/bg_input_field"
+                        android:hint="Port (8420)"
+                        android:inputType="number"
+                        android:textColor="@color/text_primary"
+                        android:textColorHint="@color/text_muted"
+                        android:textSize="13sp"
+                        android:paddingHorizontal="10dp"
+                        android:layout_marginStart="6dp" />
+                </LinearLayout>
+
+                <Button
+                    android:id="@+id/btn_manual_connect"
                     android:layout_width="match_parent"
                     android:layout_height="40dp"
                     android:background="@drawable/bg_input_field"
-                    android:text="Check Battery Optimization"
+                    android:text="Connect to Host"
                     android:textColor="@color/text_primary"
                     android:textSize="12sp"
-                    android:layout_marginTop="16dp"
-                    android:layout_marginBottom="24dp" />
+                    android:textStyle="bold"
+                    android:layout_marginTop="8dp" />
             </LinearLayout>
-        </ScrollView>
-    </LinearLayout>
+        </LinearLayout>
+    </FrameLayout>
 </FrameLayout>

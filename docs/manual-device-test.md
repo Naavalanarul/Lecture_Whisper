@@ -12,44 +12,42 @@ Since no device was connected via adb during automated test runs, execute this m
 - [ ] Grant **Exact Alarm Permission** in Settings (`SCHEDULE_EXACT_ALARM`).
 - [ ] Accept **Battery Optimization Exemption** prompt (`REQUEST_IGNORE_BATTERY_OPTIMIZATIONS`).
 
-## 2. Pairing Verification
+## 2. Pairing & ConnectionManager Verification
 - [ ] On laptop, run `lecturewhisper serve` or `lecturewhisper pair`.
-- [ ] On phone, tap **Pair Device** and scan the QR code displayed in the terminal or web dashboard.
-- [ ] Confirm phone displays **"Paired with Server: <hostname>"** and receives a persistent long-lived device token (`lw_tok_...`).
-- [ ] Check laptop SQLite database (`lecturewhisper.db`): verify new entry in `paireddevicerow`.
+- [ ] Open the web dashboard (`http://localhost:8420`) and tap **Pair Pixel 8a**, or view the terminal QR code.
+- [ ] On phone, tap the Connection status chip in the top header, or tap **Pair Mac** in Settings.
+- [ ] **QR Camera Scanner**: Point camera at the QR code on laptop. Verify viewfinder brackets, animated scan line, and instant capture.
+- [ ] **6-Digit Fallback**: Alternatively, enter the 6-digit code displayed on laptop (e.g. `961577`) and tap **Submit**.
+- [ ] Verify instant pairing: server completes cryptographic handshake (`POST /api/v1/pair/complete`), sets `lw_tok_...`, and returns server identity.
+- [ ] **Connection States**:
+  - `CONNECTED`: Header chip displays `🟢 Connected` with Mac name and ping latency.
+  - Turn off Mac Wi-Fi: Phone automatically transitions to `SEARCHING` then `UNREACHABLE` (`🟠 Offline`).
+  - Turn Mac Wi-Fi back on: Phone `ConnectionManager` automatically rediscovers Mac via MRU cache / mDNS and reconnects without user intervention.
 
-## 3. Recording & Foreground Service
-- [ ] Tap **Record Now**.
+## 3. Recording & Real-Time Waveform Visualizer
+- [ ] Navigate to the center **Record** tab (raised hero button).
+- [ ] Tap the large circular Record button.
+- [ ] Verify haptic feedback and spring transition into active recording mode.
+- [ ] **Live Audio Visualizer**: Speak into the microphone. Verify the 7-band real-time audio visualizer bars animate with your voice volume.
+- [ ] Verify digital timer incrementing (`00:00:01`, `00:00:02`, ...).
 - [ ] Verify persistent foreground notification appears: *"Lecture Whisper — Recording in progress"*.
-- [ ] Check notification icon: mic indicator active in status bar.
 - [ ] Lock the phone screen for 5 minutes.
-- [ ] Unlock phone: verify recording timer continued incrementing without pause.
-- [ ] Tap **Stop Recording**. Verify chunk files are listed under **Saved Recordings**.
+- [ ] Unlock phone: verify recording continued smoothly without dropouts.
+- [ ] Tap **Stop Recording**. Verify session is cataloged in the **Library** tab.
 
-## 4. Scheduling Modes Evaluation (Test each mode)
+## 4. 5-Tab Navigation & UI Polish
+- [ ] **Today Tab**: Shows dynamic class banner (current or upcoming class), today's scheduled slots, quick action cards.
+- [ ] **Schedule Tab**: 7-day selector, weekly class schedule, "Add Class" dialog, and photo OCR upload.
+- [ ] **Record Tab**: Elevated center button, live waveform meter, class subject selector.
+- [ ] **Library Tab**: Stored sessions with chunk counts, total MB, sync state badges (`✓ Synced` / `▲ Local Only`), and storage metrics.
+- [ ] **Settings Tab**: Paired Mac identity, TLS certificate details, Theme switcher (System / Light / Dark), storage reclamation cleaner.
+- [ ] **Theming**: Toggle System, Light, and Dark modes. Verify strict 2-hue discipline (Brand Indigo `#6366F1` and Alert `#EF4444`) with high contrast text in all modes.
 
-### Mode 1: Alarm → Notification Tap
-- [ ] Set a class slot in Timetable for 2 minutes from now. Select **Mode 1: Alarm Tap**.
-- [ ] Lock phone and wait.
-- [ ] At start time: verify high-priority notification pops up (*"Class starting — tap to record"*).
-- [ ] Tap notification: verify recording foreground service starts immediately.
-
-### Mode 2: Class Day Mode
-- [ ] Set a class slot for 5 minutes from now. Select **Mode 2: Class Day**.
-- [ ] Keep service pre-warmed in morning mode.
-- [ ] At scheduled slot time: verify mic activates automatically and begins recording.
-
-### Mode 3: Assistant-Role Mode (Optional)
-- [ ] Go to Android Settings -> Apps -> Default apps -> Digital assistant app -> select **Lecture Whisper**.
-- [ ] Verify background session launch privileges. Note findings in `docs/android-findings.md`.
-
-## 5. Resumable Upload (TUS Protocol)
+## 5. Resumable Upload & Auto-Sync
 - [ ] Ensure laptop server is running (`lecturewhisper serve`).
-- [ ] Open Lecture Whisper app on phone.
-- [ ] Verify queued recordings show progress bar and auto-upload over LAN.
-- [ ] While upload is at ~50%, toggle Wi-Fi off for 5 seconds on phone, then turn it back on.
-- [ ] Verify upload **resumes** from where it stopped (check `HEAD /api/files/<id>` and `Upload-Offset`).
-- [ ] When upload finishes: verify server completes SHA-256 validation and local audio is safely deleted from phone storage only after server returns SHA-256 confirmation.
+- [ ] In the app, trigger **Sync to Mac** or let background `ConnectionManager` sync automatically.
+- [ ] Verify chunks are transmitted to Mac via `/api/recordings/upload`.
+- [ ] When upload finishes: verify server completes SHA-256 validation and local session updates to `✓ Synced`.
 - [ ] Open laptop web dashboard (`http://localhost:8420`): verify new recording appears in Inbox and processing pipeline starts.
 
 Report any unexpected behavior or logs using:

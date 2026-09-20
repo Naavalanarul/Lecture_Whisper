@@ -46,7 +46,12 @@ def verify_device_token(
         raise HTTPException(status_code=401, detail="Unauthorized: missing device token")
 
     token = authorization.removeprefix("Bearer ").strip()
-    device = db.exec(select(PairedDeviceRow).where(PairedDeviceRow.token == token)).first()
+    token_hash = hashlib.sha256(token.encode()).hexdigest()
+    device = db.exec(
+        select(PairedDeviceRow).where(
+            (PairedDeviceRow.token == token) | (PairedDeviceRow.token == token_hash)
+        )
+    ).first()
     if not device:
         raise HTTPException(status_code=401, detail="Unauthorized: invalid or revoked device token")
 
